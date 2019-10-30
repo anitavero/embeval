@@ -1,0 +1,4 @@
+pytorch torchvision
+gluoncv
+argh
+spacy

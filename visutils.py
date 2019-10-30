@@ -1,7 +1,7 @@
 import os, re
 import numpy as np
 from PIL import Image
-import mxnet
+
 
 def crop_bbox(image, x, y, w, h):
     """

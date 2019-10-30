@@ -66,13 +66,16 @@ from matplotlib import pyplot as plt
 import numpy as np
 
 MSCOCO = '/Users/anitavero/projects/data/mscoco_mini'
+val_dataset = None
 
-if __name__ == "__main__":
+
+def load_data():
     # train_dataset = data.COCODetection(splits=['instances_train2017'], root=MSCOCO)
     val_dataset = data.COCODetection(splits=['instances_val2017'], root=MSCOCO)
     # print('Num of training images:', len(train_dataset))
     print('Num of validation images:', len(val_dataset))
 
+if __name__ == "__main__":
 
     ################################################################
     # Now let's visualize one example.
@@ -88,17 +91,19 @@ if __name__ == "__main__":
           bounding_boxes)
     print('Class IDs (num_boxes, ):\n', classes)
 
+    val_dataset.coco.getImgIds(catIds=[62])
+
     for i in range(bounding_boxes.shape[0]):
         x, y, w, h = bounding_boxes[i]
         bbox_img = visutils.crop_bbox(val_image.asnumpy(), x, y, w, h)
-
-        utils.viz.plot_image(np.array(bbox_img))
-        plt.title(classes[i])
-        plt.show()
-
-    utils.viz.plot_bbox(val_image.asnumpy(), bounding_boxes, scores=None,
-                        labels=class_ids, class_names=val_dataset.classes)
-    plt.show()
+    #
+    #     utils.viz.plot_image(np.array(bbox_img))
+    #     plt.title(classes[i])
+    #     plt.show()
+    #
+    # utils.viz.plot_bbox(val_image.asnumpy(), bounding_boxes, scores=None,
+    #                     labels=class_ids, class_names=val_dataset.classes)
+    # plt.show()
 
 
 ##################################################################
