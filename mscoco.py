@@ -62,40 +62,47 @@ For example, assuming the files are saved in ``~/coco/``, you can run:
 
 from gluoncv import data, utils
 import visutils
+import eval
 from matplotlib import pyplot as plt
 import numpy as np
 
-MSCOCO = '/Users/anitavero/projects/data/mscoco_mini'
+DATADIR = '/Users/anitavero/projects/data'
+MSCOCO = DATADIR + '/mscoco_mini'
 val_dataset = None
 
 
 def load_data():
+    global val_dataset
     # train_dataset = data.COCODetection(splits=['instances_train2017'], root=MSCOCO)
     val_dataset = data.COCODetection(splits=['instances_val2017'], root=MSCOCO)
     # print('Num of training images:', len(train_dataset))
     print('Num of validation images:', len(val_dataset))
 
 if __name__ == "__main__":
+    load_data()
+
+    eval.load_datasets(DATADIR)
+    eval.coverage(val_dataset.classes)
 
     ################################################################
     # Now let's visualize one example.
 
-    val_image, val_label = val_dataset[0]
-    bounding_boxes = val_label[:, :4]
-    class_ids = val_label[:, 4:5]
-    classes = [val_dataset.classes[int(cid)] for cid in class_ids.reshape(20)]
-    height, width, RGB = val_image.shape
-    print('Image size (height, width, RGB):', val_image.shape)
-    print('Num of objects:', bounding_boxes.shape[0])
-    print('Bounding boxes (num_boxes, x_min, y_min, x_max, y_max):\n',
-          bounding_boxes)
-    print('Class IDs (num_boxes, ):\n', classes)
-
-    val_dataset.coco.getImgIds(catIds=[62])
-
-    for i in range(bounding_boxes.shape[0]):
-        x, y, w, h = bounding_boxes[i]
-        bbox_img = visutils.crop_bbox(val_image.asnumpy(), x, y, w, h)
+    # val_image, val_label = val_dataset[0]
+    # bounding_boxes = val_label[:, :4]
+    # class_ids = val_label[:, 4:5]
+    # classes = [val_dataset.classes[int(cid)] for cid in class_ids.reshape(20)]
+    # height, width, RGB = val_image.shape
+    # print('Image size (height, width, RGB):', val_image.shape)
+    # print('Num of objects:', bounding_boxes.shape[0])
+    # print('Bounding boxes (num_boxes, x_min, y_min, x_max, y_max):\n',
+    #       bounding_boxes)
+    # print('Class IDs (num_boxes, ):\n', classes)
+    #
+    # val_dataset.coco.getImgIds(catIds=[62])
+    #
+    # for i in range(bounding_boxes.shape[0]):
+    #     x, y, w, h = bounding_boxes[i]
+    #     bbox_img = visutils.crop_bbox(val_image.asnumpy(), x, y, w, h)
     #
     #     utils.viz.plot_image(np.array(bbox_img))
     #     plt.title(classes[i])
