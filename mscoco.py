@@ -61,7 +61,9 @@ For example, assuming the files are saved in ``~/coco/``, you can run:
 
 
 from gluoncv import data, utils
+import visutils
 from matplotlib import pyplot as plt
+import numpy as np
 
 MSCOCO = '/Users/anitavero/projects/data/mscoco_mini'
 
@@ -78,11 +80,21 @@ if __name__ == "__main__":
     val_image, val_label = val_dataset[0]
     bounding_boxes = val_label[:, :4]
     class_ids = val_label[:, 4:5]
+    classes = [val_dataset.classes[int(cid)] for cid in class_ids.reshape(20)]
+    height, width, RGB = val_image.shape
     print('Image size (height, width, RGB):', val_image.shape)
     print('Num of objects:', bounding_boxes.shape[0])
     print('Bounding boxes (num_boxes, x_min, y_min, x_max, y_max):\n',
           bounding_boxes)
-    print('Class IDs (num_boxes, ):\n', [val_dataset.classes[int(cid)] for cid in class_ids.reshape(20)])
+    print('Class IDs (num_boxes, ):\n', classes)
+
+    for i in range(bounding_boxes.shape[0]):
+        x, y, w, h = bounding_boxes[i]
+        bbox_img = visutils.crop_bbox(val_image.asnumpy(), x, y, w, h)
+
+        utils.viz.plot_image(np.array(bbox_img))
+        plt.title(classes[i])
+        plt.show()
 
     utils.viz.plot_bbox(val_image.asnumpy(), bounding_boxes, scores=None,
                         labels=class_ids, class_names=val_dataset.classes)
