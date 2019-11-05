@@ -61,10 +61,12 @@ For example, assuming the files are saved in ``~/coco/``, you can run:
 
 
 from gluoncv import data, utils
+import torchvision.datasets as dset
 import visutils
 import eval
 from matplotlib import pyplot as plt
 import numpy as np
+import torchvision.transforms as transforms
 
 DATADIR = '/Users/anitavero/projects/data'
 MSCOCO = DATADIR + '/mscoco_mini'
@@ -77,6 +79,24 @@ def load_data():
     val_dataset = data.COCODetection(splits=['instances_val2017'], root=MSCOCO)
     # print('Num of training images:', len(train_dataset))
     print('Num of validation images:', len(val_dataset))
+
+
+def main():
+    det = dset.CocoDetection(root=MSCOCO + '/val2017',
+                             annFile=MSCOCO + '/annotations/stuff_val2017.json',
+                             transform=transforms.ToTensor())
+
+    img, target = det[0]
+
+    print("Image Size: ", img.size())
+    print('\n'.join(target))
+
+    # Get image ids for categories
+    cats = det.coco.loadCats([s['category_id'] for s in target])
+
+    print(cats)
+    print(det.coco.getImgIds(catIds=cats[0]['id']))
+
 
 if __name__ == "__main__":
     load_data()
