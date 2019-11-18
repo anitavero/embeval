@@ -1,4 +1,5 @@
 # coding: utf-8
+import os
 import numpy as np
 from sklearn.metrics.pairwise import cosine_distances, cosine_similarity
 from scipy.stats import spearmanr
@@ -7,6 +8,7 @@ import spacy
 from tqdm import tqdm
 import json
 import argh
+import bop
 
 
 def load_datasets(datadir):
@@ -17,10 +19,10 @@ def load_datasets(datadir):
     men = json.load(open(datadir + '/men.json'))
     simlex = json.load(open(datadir + '/simlex.json'))
 
-    # w2v = json.load(open(datadir + '/w2v_simverb.json'))
-    # w2v_simrel = json.load(open(datadir + '/simrel-wikipedia.json'))
-    # w2v.update(w2v_simrel)
-    # w2v = dict([(k, np.array(v)) for k, v in w2v.items()])
+    w2v = json.load(open(datadir + '/w2v_simverb.json'))
+    w2v_simrel = json.load(open(datadir + '/simrel-wikipedia.json'))
+    w2v.update(w2v_simrel)
+    w2v = dict([(k, np.array(v)) for k, v in w2v.items()])
 
 
 def dataset_vocab(dataset):
@@ -67,10 +69,12 @@ def covered(dataset, vocab):
     return list(filter(lambda s: s[0] in vocab and s[1] in vocab, dataset))
 
 
-def coverage(vocabulary):
+def coverage(vocabulary=None):
+    if not vocabulary:
+        vocabulary = vvocab
     nlp = spacy.load('en')
-    vocab_lemma = [[t for t in nlp(str(w))][0].lemma_ for w in vocabulary]
-    vocab = set(list(vocabulary) + vocab_lemma)
+    vvocab_lemma = [[t for t in nlp(str(w))][0].lemma_ for w in vocabulary]
+    vocab = set(list(vocabulary) + vvocab_lemma)
 
     print('Vocab size:', len(vocabulary))
     print('Vocab size with lemmas:', len(vocab))
@@ -85,7 +89,7 @@ def coverage(vocabulary):
 
 
 def get_vec(word):
-    return vecs[np.where(vvocab == word)[0][0]].toarray().reshape(1, -1)
+    return vecs[np.where(vvocab == word)[0][0]].reshape(1, -1)
 
 
 def eval_dataset(dataset):
@@ -131,21 +135,30 @@ def qa(res, dataset='simlex'):
     return scores, pairs
 
 
-def main(datadir, vecs_name=None):
-    # if vecs_name == 'BOP':
-    #     print("Creating BOP...")
-    #     global vecs, vvocab
-    #     BOP = bop.BOP('/Users/anitavero/projects/data')
-    #     V = list(BOP.phondict.keys())
-    #     BOP.w2bop(V)
-    #     vecs = BOP.embedding
-    #     vvocab = np.array(BOP.wordlist)
-    # else:
-    #     load_vecs(vecs_name, datadir)
+def main(datadir, vecs_name, vecsdir=None, save=False, savedir=None):
+    if vecs_name == 'BOP':
+        print("Creating BOP...")
+        global vecs, vvocab
+        BOP = bop.BOP('/Users/anitavero/projects/data')
+        V = list(BOP.phondict.keys())
+        BOP.w2bop(V)
+        vecs = BOP.embedding
+        vvocab = np.array(BOP.wordlist)
+    else:
+        if not vecsdir:
+            vecsdir = datadir
+        load_vecs(vecs_name, vecsdir)
     load_datasets(datadir)
-    coverage(['person', 'chair', 'table', 'woman'])
-    # res = eval()
-    # return res
+    coverage()
+    res = eval()
+
+    if save:
+        if not savedir:
+            savedir = datadir
+        with open(os.path.join(savedir, vecs_name +'_res.json'), 'w') as f:
+            json.dump(res, f)
+
+#    return res
 
 if __name__ == '__main__':
     argh.dispatch_command(main)
