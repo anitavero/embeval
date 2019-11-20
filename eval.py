@@ -8,7 +8,6 @@ import spacy
 from tqdm import tqdm
 import json
 import argh
-from collections import defaultdict
 from typing import List, Tuple
 import matplotlib.pyplot as plt
 import copy
@@ -190,18 +189,23 @@ def qa(res, dataset='simlex'):
     return scores, pairs
 
 
-def main(datadir, vecs_name, vecsdir=None, save=False, savedir=None):
-    if not vecsdir:
-        vecsdir = datadir
+def main(datadir, vecs_name, vecsdir=None, save=False, savedir=None, loadfile=None):
 
-    vecs, vocab = load_vecs(vecs_name, vecsdir)
-    men, simlex, simverb, w2v_vecs, w2v_vocab,\
-        fasttext_vecs, fasttext_vocab = load_datasets(datadir)
-    # coverage()
+    if not loadfile:
+        if not vecsdir:
+            vecsdir = datadir
 
-    scores, pairs = eval_dataset(simlex, [fasttext_vecs, vecs], [fasttext_vocab, vocab], ['fasttext', 'vecs'])
-   # plot_scores(np.sort(scores, order='ground_truth'))
-   # plot_scores(np.sort(scores, order='fasttext'))
+        vecs, vocab = load_vecs(vecs_name, vecsdir)
+        men, simlex, simverb, w2v_vecs, w2v_vocab,\
+            fasttext_vecs, fasttext_vocab = load_datasets(datadir)
+        # coverage()
+
+        scores, pairs = eval_dataset(simlex, [fasttext_vecs, vecs], [fasttext_vocab, vocab], ['fasttext', 'vecs'])
+
+    else:
+       scores = np.load(loadfile, allow_pickle=True)
+       plot_scores(np.sort(scores, order='ground_truth'))
+       plot_scores(np.sort(scores, order='fasttext'))
 
     # eval()
 
