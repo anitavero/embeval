@@ -26,8 +26,10 @@ def load_datasets(datadir: str) -> None:
     w2v = json.load(open(datadir + '/w2v_simverb.json'))
     w2v_simrel = json.load(open(datadir + '/simrel-wikipedia.json'))
     w2v.update(w2v_simrel)
-    w2v_vecs = list(w2v.values())
-    w2v_vocab = list(w2v.keys())
+    w2v_vecs = np.array(list(w2v.values()))
+    w2v_vocab = np.array(list(w2v.keys()))
+
+    return men, simlex, simverb, w2v_vecs, w2v_vocab
 
 
 def dataset_vocab(dataset: str) -> list:
@@ -93,7 +95,7 @@ def coverage(vocabulary=None):
               coverage, f'({round(100 * coverage / len(dataset))}%)')
 
 
-def get_vec(word, embeddings=vecs, vocab=vvocab):
+def get_vec(word, embeddings, vocab):
     return embeddings[np.where(vocab == word)[0][0]].reshape(1, -1)
 
 
@@ -116,9 +118,9 @@ def eval_vg_dataset(dataset):
 
 
 def eval_dataset(dataset: List[Tuple[str, str, float]],
-                 embeddings: List[np.ndarray]=[w2v_vecs, vecs],
-                 vocabs: List[List[str]]=[vvocab, vvocab],
-                 labels: List[str]=['w2v', 'vc']) -> (np.ndarray, list):
+                 embeddings: List[np.ndarray],
+                 vocabs: List[List[str]],
+                 labels: List[str]) -> (np.ndarray, list):
 
     scores = np.array(np.empty(len(dataset)),
                         dtype=[('ground_truth', np.ndarray)] +
@@ -174,16 +176,23 @@ def qa(res, dataset='simlex'):
 def main(datadir, vecs_name, vecsdir=None, save=False, savedir=None):
     if not vecsdir:
         vecsdir = datadir
-    load_vecs(vecs_name, vecsdir)
-    load_datasets(datadir)
+
+    vecs, vocab = load_vecs(vecs_name, vecsdir)
+    men, simlex, simverb, w2v_vecs, w2v_vocab = load_datasets(datadir)
     # coverage()
-    res = eval_dataset()
+
+    scores, pairs = eval_dataset(simlex, [w2v_vecs, vecs], [w2v_vocab, vocab], ['w2v', 'vecs'])
+    plot_scores(np.sort(scores, order='ground_truth'))
+    plot_scores(np.sort(scores, order='w2v'))
+
+    # eval()
+
 
     if save:
         if not savedir:
             savedir = datadir
         with open(os.path.join(savedir, vecs_name +'_res.json'), 'w') as f:
-            json.dump(res, f)
+            json.dump({'scores': scores, 'pairs': pairs}, f)
 
 #    return res
 
