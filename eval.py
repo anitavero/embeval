@@ -138,7 +138,7 @@ def eval_dataset(dataset: List[Tuple[str, str, float]],
 
 
 def plot_scores(scores: np.ndarray) -> None:
-    '''Scatter plot of a sstructured array.'''
+    """Scatter plot of a structured array."""
     scs = copy.deepcopy(scores)
     scs['ground_truth'] /= 10
     for nm in scs.dtype.names:
