@@ -12,6 +12,7 @@ from collections import defaultdict
 from typing import List, Tuple
 import matplotlib.pyplot as plt
 import copy
+import io
 
 
 
@@ -29,7 +30,21 @@ def load_datasets(datadir: str) -> None:
     w2v_vecs = np.array(list(w2v.values()))
     w2v_vocab = np.array(list(w2v.keys()))
 
-    return men, simlex, simverb, w2v_vecs, w2v_vocab
+    fasttext_vecs, fasttext_vocab = load_fasttext(datadir + '/wiki-news-300d-1M-subword.vec')
+
+    return men, simlex, simverb, w2v_vecs, w2v_vocab, fasttext_vecs, fasttext_vocab
+
+
+def load_fasttext(fname: str) -> Tuple[np.ndarray, np.ndarray]:
+    fin = io.open(fname, 'r', encoding='utf-8', newline='\n', errors='ignore')
+    n, d = map(int, fin.readline().split())
+    fasttext_vocab = []
+    fasttext_vecs = []
+    for line in fin:
+        tokens = line.rstrip().split(' ')
+        fasttext_vocab.append(tokens[0])
+        fasttext_vecs.append(map(float, tokens[1:]))    # TODO: check dimensions
+    return np.array(fasttext_vecs), np.array(fasttext_vocab)
 
 
 def dataset_vocab(dataset: str) -> list:
@@ -144,7 +159,8 @@ def plot_scores(scores: np.ndarray, gt_divisor=10) -> None:
     scs['ground_truth'] /= gt_divisor
     for nm in scs.dtype.names:
         mask = scs[nm] > -2   # Leave out the pairs which aren't covered
-        plt.scatter(np.arange(scs[nm].shape[0])[mask], scs[nm][mask])
+        plt.scatter(np.arange(scs[nm].shape[0])[mask], scs[nm][mask], label=nm)
+    plt.legend()
     plt.show()
 
 
@@ -178,12 +194,13 @@ def main(datadir, vecs_name, vecsdir=None, save=False, savedir=None):
         vecsdir = datadir
 
     vecs, vocab = load_vecs(vecs_name, vecsdir)
-    men, simlex, simverb, w2v_vecs, w2v_vocab = load_datasets(datadir)
+    men, simlex, simverb, w2v_vecs, w2v_vocab,\
+        fasttext_vecs, fasttext_vocab = load_datasets(datadir)
     # coverage()
 
-    scores, pairs = eval_dataset(simlex, [w2v_vecs, vecs], [w2v_vocab, vocab], ['w2v', 'vecs'])
+    scores, pairs = eval_dataset(simlex, [fasttext_vecs, vecs], [fasttext_vocab, vocab], ['fasttext', 'vecs'])
     plot_scores(np.sort(scores, order='ground_truth'))
-    plot_scores(np.sort(scores, order='w2v'))
+    plot_scores(np.sort(scores, order='fasttext'))
 
     # eval()
 
