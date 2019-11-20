@@ -8,10 +8,11 @@ import spacy
 from tqdm import tqdm
 import json
 import argh
-import bop
+from collections import defaultdict
+# import bop
 
 
-def load_datasets(datadir):
+def load_datasets(datadir: str) -> None:
     global men, simlex, simverb, w2v
     SIMVERB = datadir + '/simverb-3500-data'
     simverb_full = list(csv.reader(open(SIMVERB + '/SimVerb-3500.txt'), delimiter='\t'))
@@ -25,12 +26,12 @@ def load_datasets(datadir):
     w2v = dict([(k, np.array(v)) for k, v in w2v.items()])
 
 
-def dataset_vocab(dataset):
+def dataset_vocab(dataset: str) -> list:
     pairs = list(zip(*dataset))[:2]
     return list(set(pairs[0] + pairs[1]))
 
 
-def load_vecs(vecs_name, datadir, filter_vocab=[]):
+def load_vecs(vecs_name: str, datadir: str, filter_vocab=[]):
     global vecs, vvocab
     vecs = np.load(datadir + f'/{vecs_name}.npy')
     vvocab = open(datadir + f'/{vecs_name}.vocab').read().split()
@@ -88,11 +89,12 @@ def coverage(vocabulary=None):
               coverage, f'({round(100 * coverage / len(dataset))}%)')
 
 
-def get_vec(word):
-    return vecs[np.where(vvocab == word)[0][0]].reshape(1, -1)
+def get_vec(word, embeddings=vecs, vocab=vvocab):
+    return embeddings[np.where(vocab == word)[0][0]].reshape(1, -1)
 
 
-def eval_dataset(dataset):
+
+def eval_vg_dataset(dataset):
     scores = []
     pred_scores = []
     w2v_scores = []
@@ -110,15 +112,31 @@ def eval_dataset(dataset):
     return vg_spearman, w2v_spearman, scores, pred_scores, w2v_scores, pairs
 
 
+def eval_dataset(dataset, embeddings=[w2v, vecs], vocabs=[vvocab, vvocab], labels=['w2v', 'vc']) -> (defaultdict, list):
+    scores = defaultdict(list)
+    pairs = []
+    for w1, w2, score in tqdm(dataset):
+        scores['ground_truth'].append(float(score))
+        for emb, vocab, label in zip(embeddings, vocabs, labels):
+            try:
+                scores[label].append(cosine_similarity(get_vec(w1, emb, vocab), get_vec(w2, emb, vocab))[0][0])
+            except:
+                scores[label].append(-2)
+        # w2v_scores.append(cosine_similarity(w2v[w1].reshape(1, -1), w2v[w2].reshape(1, -1))[0][0])
+        pairs.append((w1, w2))
+
+    return scores, pairs
+
+
 def eval(vecs_name=None):
     if vecs_name:
         load_vecs(vecs_name)
     print('MEN')
-    men_results     = [x for x in eval_dataset(men)]
+    men_results     = [x for x in eval_vg_dataset(men)]
     print('SimLex')
-    simlex_results  = [x for x in eval_dataset(simlex)]
+    simlex_results  = [x for x in eval_vg_dataset(simlex)]
     print('SimVerb')
-    simverb_results = [x for x in eval_dataset(simverb)]
+    simverb_results = [x for x in eval_vg_dataset(simverb)]
     res_names = ['vg_spearman', 'w2v_spearman', 'scores', 'pred_scores', 'w2v_scores', 'pairs']
 
     results = {'men':     dict(zip(res_names, men_results)),
@@ -136,21 +154,12 @@ def qa(res, dataset='simlex'):
 
 
 def main(datadir, vecs_name, vecsdir=None, save=False, savedir=None):
-    if vecs_name == 'BOP':
-        print("Creating BOP...")
-        global vecs, vvocab
-        BOP = bop.BOP('/Users/anitavero/projects/data')
-        V = list(BOP.phondict.keys())
-        BOP.w2bop(V)
-        vecs = BOP.embedding
-        vvocab = np.array(BOP.wordlist)
-    else:
-        if not vecsdir:
-            vecsdir = datadir
-        load_vecs(vecs_name, vecsdir)
+    if not vecsdir:
+        vecsdir = datadir
+    load_vecs(vecs_name, vecsdir)
     load_datasets(datadir)
-    coverage()
-    res = eval()
+    # coverage()
+    res = eval_dataset()
 
     if save:
         if not savedir:
