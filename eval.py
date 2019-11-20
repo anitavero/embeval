@@ -16,7 +16,7 @@ import copy
 
 
 def load_datasets(datadir: str) -> None:
-    global men, simlex, simverb, w2v
+    global men, simlex, simverb, w2v_vecs, w2v_vocab
     SIMVERB = datadir + '/simverb-3500-data'
     simverb_full = list(csv.reader(open(SIMVERB + '/SimVerb-3500.txt'), delimiter='\t'))
     simverb = list(map(lambda x: [x[0], x[1], x[3]], simverb_full))
@@ -26,7 +26,8 @@ def load_datasets(datadir: str) -> None:
     w2v = json.load(open(datadir + '/w2v_simverb.json'))
     w2v_simrel = json.load(open(datadir + '/simrel-wikipedia.json'))
     w2v.update(w2v_simrel)
-    w2v = dict([(k, np.array(v)) for k, v in w2v.items()])
+    w2v_vecs = list(w2v.values())
+    w2v_vocab = list(w2v.keys())
 
 
 def dataset_vocab(dataset: str) -> list:
@@ -96,7 +97,6 @@ def get_vec(word, embeddings=vecs, vocab=vvocab):
     return embeddings[np.where(vocab == word)[0][0]].reshape(1, -1)
 
 
-
 def eval_vg_dataset(dataset):
     scores = []
     pred_scores = []
@@ -116,7 +116,7 @@ def eval_vg_dataset(dataset):
 
 
 def eval_dataset(dataset: List[Tuple[str, str, float]],
-                 embeddings: List[np.ndarray]=[w2v, vecs],
+                 embeddings: List[np.ndarray]=[w2v_vecs, vecs],
                  vocabs: List[List[str]]=[vvocab, vvocab],
                  labels: List[str]=['w2v', 'vc']) -> (np.ndarray, list):
 
@@ -131,16 +131,15 @@ def eval_dataset(dataset: List[Tuple[str, str, float]],
                 scores[label][i] = cosine_similarity(get_vec(w1, emb, vocab), get_vec(w2, emb, vocab))[0][0]
             except:
                 scores[label][i] = -2
-        # w2v_scores.append(cosine_similarity(w2v[w1].reshape(1, -1), w2v[w2].reshape(1, -1))[0][0])
         pairs.append((w1, w2))
 
     return scores, pairs
 
 
-def plot_scores(scores: np.ndarray) -> None:
+def plot_scores(scores: np.ndarray, gt_divisor=10) -> None:
     """Scatter plot of a structured array."""
     scs = copy.deepcopy(scores)
-    scs['ground_truth'] /= 10
+    scs['ground_truth'] /= gt_divisor
     for nm in scs.dtype.names:
         mask = scs[nm] > -2   # Leave out the pairs which aren't covered
         plt.scatter(np.arange(scs[nm].shape[0])[mask], scs[nm][mask])
