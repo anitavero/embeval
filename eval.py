@@ -9,7 +9,10 @@ from tqdm import tqdm
 import json
 import argh
 from collections import defaultdict
-# import bop
+from typing import List, Tuple
+import matplotlib.pyplot as plt
+import copy
+
 
 
 def load_datasets(datadir: str) -> None:
@@ -112,20 +115,36 @@ def eval_vg_dataset(dataset):
     return vg_spearman, w2v_spearman, scores, pred_scores, w2v_scores, pairs
 
 
-def eval_dataset(dataset, embeddings=[w2v, vecs], vocabs=[vvocab, vvocab], labels=['w2v', 'vc']) -> (defaultdict, list):
-    scores = defaultdict(list)
+def eval_dataset(dataset: List[Tuple[str, str, float]],
+                 embeddings: List[np.ndarray]=[w2v, vecs],
+                 vocabs: List[List[str]]=[vvocab, vvocab],
+                 labels: List[str]=['w2v', 'vc']) -> (np.ndarray, list):
+
+    scores = np.array(np.empty(len(dataset)),
+                        dtype=[('ground_truth', np.ndarray)] +
+                              [(label, np.ndarray) for label in labels])
     pairs = []
-    for w1, w2, score in tqdm(dataset):
-        scores['ground_truth'].append(float(score))
+    for i, (w1, w2, score) in enumerate(tqdm(dataset)):
+        scores['ground_truth'][i] = float(score)
         for emb, vocab, label in zip(embeddings, vocabs, labels):
             try:
-                scores[label].append(cosine_similarity(get_vec(w1, emb, vocab), get_vec(w2, emb, vocab))[0][0])
+                scores[label][i] = cosine_similarity(get_vec(w1, emb, vocab), get_vec(w2, emb, vocab))[0][0]
             except:
-                scores[label].append(-2)
+                scores[label][i] = -2
         # w2v_scores.append(cosine_similarity(w2v[w1].reshape(1, -1), w2v[w2].reshape(1, -1))[0][0])
         pairs.append((w1, w2))
 
     return scores, pairs
+
+
+def plot_scores(scores: np.ndarray) -> None:
+    '''Scatter plot of a sstructured array.'''
+    scs = copy.deepcopy(scores)
+    scs['ground_truth'] /= 10
+    for nm in scs.dtype.names:
+        mask = scs[nm] > -2   # Leave out the pairs which aren't covered
+        plt.scatter(np.arange(scs[nm].shape[0])[mask], scs[nm][mask])
+    plt.show()
 
 
 def eval(vecs_name=None):
