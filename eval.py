@@ -30,6 +30,7 @@ def load_datasets(datadir: str) -> None:
     w2v_vecs = np.array(list(w2v.values()))
     w2v_vocab = np.array(list(w2v.keys()))
 
+    print('Loading FastText...')
     fasttext_vecs, fasttext_vocab = load_fasttext(datadir + '/wiki-news-300d-1M-subword.vec')
 
     return men, simlex, simverb, w2v_vecs, w2v_vocab, fasttext_vecs, fasttext_vocab
