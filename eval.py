@@ -31,7 +31,7 @@ def load_datasets(datadir: str) -> None:
     w2v_vocab = np.array(list(w2v.keys()))
 
     print('Loading FastText...')
-    fasttext_vecs, fasttext_vocab = load_fasttext(datadir + '/wiki-news-300d-1M-subword.vec')
+    fasttext_vecs, fasttext_vocab = load_fasttext(datadir + '/wiki-news-300d-1M.vec')
 
     return men, simlex, simverb, w2v_vecs, w2v_vocab, fasttext_vecs, fasttext_vocab
 
@@ -200,8 +200,8 @@ def main(datadir, vecs_name, vecsdir=None, save=False, savedir=None):
     # coverage()
 
     scores, pairs = eval_dataset(simlex, [fasttext_vecs, vecs], [fasttext_vocab, vocab], ['fasttext', 'vecs'])
-    plot_scores(np.sort(scores, order='ground_truth'))
-    plot_scores(np.sort(scores, order='fasttext'))
+   # plot_scores(np.sort(scores, order='ground_truth'))
+   # plot_scores(np.sort(scores, order='fasttext'))
 
     # eval()
 
@@ -209,8 +209,9 @@ def main(datadir, vecs_name, vecsdir=None, save=False, savedir=None):
     if save:
         if not savedir:
             savedir = datadir
-        with open(os.path.join(savedir, vecs_name +'_res.json'), 'w') as f:
-            json.dump({'scores': scores, 'pairs': pairs}, f)
+        np.save(savedir + '/scores_{}.npy'.format(vecs_name), scores)
+        with open(os.path.join(savedir, vecs_name +'_pairs.json'), 'w') as f:
+            json.dump(pairs, f)
 
 #    return res
 
