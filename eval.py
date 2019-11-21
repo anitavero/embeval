@@ -216,19 +216,27 @@ def qa(res, dataset='simlex'):
 
 
 @arg('-a', '--actions', choices=['printcorr', 'plotscores', 'coverage'], default='printcorr')
-def main(datadir, vecs_name, vecsdir=None, save=False, savedir=None, loadfile=None,
+def main(datadir, vecs_names, vecsdir=None, save=False, savedir=None, loadfile=None,
          actions=['plotcorr']):
 
     if not loadfile:
         if not vecsdir:
             vecsdir = datadir
 
-        vecs, vocab = load_vecs(vecs_name, vecsdir)
+        vis_embeddings = []
+        vis_vocabs = []
+        for vecs_name in vecs_names:
+            vecs, vocab = load_vecs(vecs_name, vecsdir)
+            vis_embeddings.append(vecs)
+            vis_vocabs.append(vocab)
+
         men, simlex, simverb, w2v_vecs, w2v_vocab,\
             fasttext_vecs, fasttext_vocab = load_datasets(datadir)
 
-        scores, pairs = eval_dataset(simlex, [fasttext_vecs, vecs], [fasttext_vocab, vocab],
-                                     ['fasttext', 'vecs'])
+        scores, pairs = eval_dataset(men,
+                                     [w2v_vecs, fasttext_vecs] + vis_embeddings,
+                                     [w2v_vocab, fasttext_vocab] + vis_vocabs,
+                                     ['w2v', 'fasttext'] + vecs_names)
 
     else:
        scores = np.load(loadfile, allow_pickle=True)
