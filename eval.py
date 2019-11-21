@@ -114,10 +114,6 @@ def coverage(vocabulary):
               coverage, f'({round(100 * coverage / len(dataset))}%)')
 
 
-def get_vec(word, embeddings, vocab):
-    return embeddings[np.where(vocab == word)[0][0]].reshape(1, -1)
-
-
 # def eval_vg_dataset(dataset):
 #     scores = []
 #     pred_scores = []
@@ -134,6 +130,10 @@ def get_vec(word, embeddings, vocab):
 #     print(f'\nVG Spearman: {vg_spearman.correlation} (p={vg_spearman.pvalue})')
 #     print(f'w2v Spearman: {w2v_spearman.correlation} (p={w2v_spearman.pvalue})')
 #     return vg_spearman, w2v_spearman, scores, pred_scores, w2v_scores, pairs
+
+
+def get_vec(word, embeddings, vocab):
+    return embeddings[np.where(vocab == word)[0][0]].reshape(1, -1)
 
 
 def compute_correlations(scores: (np.ndarray, list), name_pairs: List[Tuple[str, str]] = None):
