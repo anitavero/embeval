@@ -31,6 +31,7 @@ def load_datasets(datadir: str) -> None:
 
     print('Loading FastText...')
     fasttext_vecs, fasttext_vocab = load_fasttext(datadir + '/wiki-news-300d-1M.vec')
+    print('Done.')
 
     return men, simlex, simverb, w2v_vecs, w2v_vocab, fasttext_vecs, fasttext_vocab
 
@@ -43,7 +44,7 @@ def load_fasttext(fname: str) -> Tuple[np.ndarray, np.ndarray]:
     for line in fin:
         tokens = line.rstrip().split(' ')
         fasttext_vocab.append(tokens[0])
-        fasttext_vecs.append(map(float, tokens[1:]))    # TODO: check dimensions
+        fasttext_vecs.append(list(map(float, tokens[1:])))
     return np.array(fasttext_vecs), np.array(fasttext_vocab)
 
 
@@ -146,7 +147,7 @@ def eval_dataset(dataset: List[Tuple[str, str, float]],
         for emb, vocab, label in zip(embeddings, vocabs, labels):
             try:
                 scores[label][i] = cosine_similarity(get_vec(w1, emb, vocab), get_vec(w2, emb, vocab))[0][0]
-            except:
+            except IndexError:
                 scores[label][i] = -2
         pairs.append((w1, w2))
 
