@@ -8,10 +8,12 @@ import spacy
 from tqdm import tqdm
 import json
 import argh
+from argh import arg
 from typing import List, Tuple
 import matplotlib.pyplot as plt
 import copy
 import io
+from itertools import combinations
 
 
 
@@ -54,7 +56,7 @@ def dataset_vocab(dataset: str) -> list:
 
 
 def load_vecs(vecs_name: str, datadir: str, filter_vocab=[]):
-    global vecs, vvocab
+    # global vecs, vvocab
     vecs = np.load(datadir + f'/{vecs_name}.npy')
     vvocab = open(datadir + f'/{vecs_name}.vocab').read().split()
     vvocab = np.array(vvocab)
@@ -73,28 +75,29 @@ def filter_by_vocab(vecs, vocab, filter_vocab):
     return fvecs, fvocab
 
 
-dists = []
-def compute_dists():
+def compute_dists(vecs):
     global dists
     dists = cosine_distances(vecs, vecs)
+    return dists
 
 
-def neighbors(words, n=10):
+def neighbors(words, vocab, vecs, n=10):
+    dists = compute_dists(vecs)
     if type(words[0]) == str:
-        indices = [np.where(vvocab == w)[0][0] for w in words]
+        indices = [np.where(vocab == w)[0][0] for w in words]
     else:
         indices = words
     for i in indices:
-        print(vvocab[i], vvocab[np.argsort(dists[i])[:n]])
+        print(vocab[i], vocab[np.argsort(dists[i])[:n]])
 
 
 def covered(dataset, vocab):
     return list(filter(lambda s: s[0] in vocab and s[1] in vocab, dataset))
 
 
-def coverage(vocabulary=None):
-    if not vocabulary:
-        vocabulary = vvocab
+def coverage(vocabulary):
+    # if not vocabulary:
+    #     vocabulary = vvocab
     nlp = spacy.load('en')
     vvocab_lemma = [[t for t in nlp(str(w))][0].lemma_ for w in vocabulary]
     vocab = set(list(vocabulary) + vvocab_lemma)
@@ -115,22 +118,44 @@ def get_vec(word, embeddings, vocab):
     return embeddings[np.where(vocab == word)[0][0]].reshape(1, -1)
 
 
-def eval_vg_dataset(dataset):
-    scores = []
-    pred_scores = []
-    w2v_scores = []
-    pairs = []
-    for w1, w2, score in tqdm(dataset):
-        if w1 in vvocab and w2 in vvocab:
-            scores.append(float(score))
-            pred_scores.append(cosine_similarity(get_vec(w1), get_vec(w2))[0][0])
-            w2v_scores.append(cosine_similarity(w2v[w1].reshape(1, -1), w2v[w2].reshape(1, -1))[0][0])
-            pairs.append((w1, w2))
-    vg_spearman = spearmanr(scores, pred_scores)
-    w2v_spearman = spearmanr(scores, w2v_scores)
-    print(f'\nVG Spearman: {vg_spearman.correlation} (p={vg_spearman.pvalue})')
-    print(f'w2v Spearman: {w2v_spearman.correlation} (p={w2v_spearman.pvalue})')
-    return vg_spearman, w2v_spearman, scores, pred_scores, w2v_scores, pairs
+# def eval_vg_dataset(dataset):
+#     scores = []
+#     pred_scores = []
+#     w2v_scores = []
+#     pairs = []
+#     for w1, w2, score in tqdm(dataset):
+#         if w1 in vvocab and w2 in vvocab:
+#             scores.append(float(score))
+#             pred_scores.append(cosine_similarity(get_vec(w1), get_vec(w2))[0][0])
+#             w2v_scores.append(cosine_similarity(w2v[w1].reshape(1, -1), w2v[w2].reshape(1, -1))[0][0])
+#             pairs.append((w1, w2))
+#     vg_spearman = spearmanr(scores, pred_scores)
+#     w2v_spearman = spearmanr(scores, w2v_scores)
+#     print(f'\nVG Spearman: {vg_spearman.correlation} (p={vg_spearman.pvalue})')
+#     print(f'w2v Spearman: {w2v_spearman.correlation} (p={w2v_spearman.pvalue})')
+#     return vg_spearman, w2v_spearman, scores, pred_scores, w2v_scores, pairs
+
+
+def compute_correlations(scores: (np.ndarray, list), name_pairs: List[Tuple[str, str]] = None):
+    """Computer correlation between score series.
+        :param scores: Structured array of scores with embedding/ground_truth names.
+        :param name_pairs: pairs of scores to correlate. If None, every pair will be computed.
+    """
+    if not name_pairs:
+        name_pairs = list(combinations(scores.dtype.names, 2))
+
+    correlations = {}
+    for nm1, nm2 in name_pairs:
+        correlations['-'.join([nm1, nm2])] = spearmanr(scores[nm1], scores[nm2])
+
+    return correlations
+
+
+def print_correlations(scores: (np.ndarray, list), name_pairs: List[Tuple[str, str]] = None):
+    correlations = compute_correlations(scores, name_pairs)
+    print('Spearman correlations:')
+    for np, corr in correlations.items():
+        print(f'{np}: {corr.correlation} (p={corr.pvalue})')
 
 
 def eval_dataset(dataset: List[Tuple[str, str, float]],
@@ -165,21 +190,21 @@ def plot_scores(scores: np.ndarray, gt_divisor=10) -> None:
     plt.show()
 
 
-def eval(vecs_name=None):
-    if vecs_name:
-        load_vecs(vecs_name)
-    print('MEN')
-    men_results     = [x for x in eval_vg_dataset(men)]
-    print('SimLex')
-    simlex_results  = [x for x in eval_vg_dataset(simlex)]
-    print('SimVerb')
-    simverb_results = [x for x in eval_vg_dataset(simverb)]
-    res_names = ['vg_spearman', 'w2v_spearman', 'scores', 'pred_scores', 'w2v_scores', 'pairs']
-
-    results = {'men':     dict(zip(res_names, men_results)),
-               'simlex':  dict(zip(res_names, simlex_results)),
-               'simverb': dict(zip(res_names, simverb_results))}
-    return results
+# def eval(vecs_name=None):
+#     if vecs_name:
+#         load_vecs(vecs_name)
+#     print('MEN')
+#     men_results     = [x for x in eval_vg_dataset(men)]
+#     print('SimLex')
+#     simlex_results  = [x for x in eval_vg_dataset(simlex)]
+#     print('SimVerb')
+#     simverb_results = [x for x in eval_vg_dataset(simverb)]
+#     res_names = ['vg_spearman', 'w2v_spearman', 'scores', 'pred_scores', 'w2v_scores', 'pairs']
+#
+#     results = {'men':     dict(zip(res_names, men_results)),
+#                'simlex':  dict(zip(res_names, simlex_results)),
+#                'simverb': dict(zip(res_names, simverb_results))}
+#     return results
 
 
 def qa(res, dataset='simlex'):
@@ -190,7 +215,9 @@ def qa(res, dataset='simlex'):
     return scores, pairs
 
 
-def main(datadir, vecs_name, vecsdir=None, save=False, savedir=None, loadfile=None):
+@arg('-a', '--actions', choices=['printcorr', 'plotscores', 'coverage'], default='printcorr')
+def main(datadir, vecs_name, vecsdir=None, save=False, savedir=None, loadfile=None,
+         actions=['plotcorr']):
 
     if not loadfile:
         if not vecsdir:
@@ -199,17 +226,22 @@ def main(datadir, vecs_name, vecsdir=None, save=False, savedir=None, loadfile=No
         vecs, vocab = load_vecs(vecs_name, vecsdir)
         men, simlex, simverb, w2v_vecs, w2v_vocab,\
             fasttext_vecs, fasttext_vocab = load_datasets(datadir)
-        # coverage()
 
-        scores, pairs = eval_dataset(simlex, [fasttext_vecs, vecs], [fasttext_vocab, vocab], ['fasttext', 'vecs'])
+        scores, pairs = eval_dataset(simlex, [fasttext_vecs, vecs], [fasttext_vocab, vocab],
+                                     ['fasttext', 'vecs'])
 
     else:
        scores = np.load(loadfile, allow_pickle=True)
+
+    if 'plotscores' in actions:
        plot_scores(np.sort(scores, order='ground_truth'))
        plot_scores(np.sort(scores, order='fasttext'))
 
-    # eval()
+    if 'printcorr' in actions:
+        print_correlations(scores)
 
+    if 'coverage' in actions:
+        coverage()  # TODO: generalise
 
     if save:
         if not savedir:
@@ -218,7 +250,6 @@ def main(datadir, vecs_name, vecsdir=None, save=False, savedir=None, loadfile=No
         with open(os.path.join(savedir, vecs_name +'_pairs.json'), 'w') as f:
             json.dump(pairs, f)
 
-#    return res
 
 if __name__ == '__main__':
     argh.dispatch_command(main)
