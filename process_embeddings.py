@@ -24,7 +24,7 @@ def agg_img_embeddings(filepath, savedir, maxnum=10):
     embeddings = np.empty((len(data_dict), np.array(list(list(data_dict.values())[0].values())).shape[1]))
     for i, imgs in enumerate(tqdm(data_dict.values())):
         vecs = np.array(list(imgs.values()))
-        embeddings[i] = vecs[:min(maxnum, vecs.shape[0])].mean(axis=1).shape
+        embeddings[i] = vecs[:min(maxnum, vecs.shape[0])].mean(axis=1)
 
     np.save(os.path.join(savedir, filename + '.npy'), embeddings)
 
