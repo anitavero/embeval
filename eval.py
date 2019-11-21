@@ -216,6 +216,7 @@ def qa(res, dataset='simlex'):
 
 
 @arg('-a', '--actions', choices=['printcorr', 'plotscores', 'coverage'], default='printcorr')
+@argh.arg('-vns', '--vecs_names', nargs='+', type=str)
 def main(datadir, vecs_names, vecsdir=None, save=False, savedir=None, loadfile=None,
          actions=['plotcorr']):
 
