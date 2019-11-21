@@ -56,7 +56,6 @@ def dataset_vocab(dataset: str) -> list:
 
 
 def load_vecs(vecs_name: str, datadir: str, filter_vocab=[]):
-    # global vecs, vvocab
     vecs = np.load(datadir + f'/{vecs_name}.npy')
     vvocab = open(datadir + f'/{vecs_name}.vocab').read().split()
     vvocab = np.array(vvocab)
@@ -96,8 +95,6 @@ def covered(dataset, vocab):
 
 
 def coverage(vocabulary):
-    # if not vocabulary:
-    #     vocabulary = vvocab
     nlp = spacy.load('en')
     vvocab_lemma = [[t for t in nlp(str(w))][0].lemma_ for w in vocabulary]
     vocab = set(list(vocabulary) + vvocab_lemma)
@@ -112,24 +109,6 @@ def coverage(vocabulary):
               coverage_lemma, f'({round(100 * coverage_lemma / len(dataset))}%)')
         print(f'{name} pair coverage without lemmas:',
               coverage, f'({round(100 * coverage / len(dataset))}%)')
-
-
-# def eval_vg_dataset(dataset):
-#     scores = []
-#     pred_scores = []
-#     w2v_scores = []
-#     pairs = []
-#     for w1, w2, score in tqdm(dataset):
-#         if w1 in vvocab and w2 in vvocab:
-#             scores.append(float(score))
-#             pred_scores.append(cosine_similarity(get_vec(w1), get_vec(w2))[0][0])
-#             w2v_scores.append(cosine_similarity(w2v[w1].reshape(1, -1), w2v[w2].reshape(1, -1))[0][0])
-#             pairs.append((w1, w2))
-#     vg_spearman = spearmanr(scores, pred_scores)
-#     w2v_spearman = spearmanr(scores, w2v_scores)
-#     print(f'\nVG Spearman: {vg_spearman.correlation} (p={vg_spearman.pvalue})')
-#     print(f'w2v Spearman: {w2v_spearman.correlation} (p={w2v_spearman.pvalue})')
-#     return vg_spearman, w2v_spearman, scores, pred_scores, w2v_scores, pairs
 
 
 def get_vec(word, embeddings, vocab):
@@ -185,7 +164,7 @@ def plot_scores(scores: np.ndarray, gt_divisor=10) -> None:
     scs['ground_truth'] /= gt_divisor
     for nm in scs.dtype.names:
         mask = scs[nm] > -2   # Leave out the pairs which aren't covered
-        plt.scatter(np.arange(scs[nm].shape[0])[mask], scs[nm][mask], label=nm)
+        plt.scatter(np.arange(scs[nm].shape[0])[mask], scs[nm][mask], label=nm, alpha=0.5)
     plt.legend()
     plt.show()
 
@@ -217,8 +196,9 @@ def qa(res, dataset='simlex'):
 
 @arg('-a', '--actions', choices=['printcorr', 'plotscores', 'coverage'], default='printcorr')
 @argh.arg('-vns', '--vecs_names', nargs='+', type=str)
+@argh.arg('-plto', '--plot_orders', nargs='+', type=str)
 def main(datadir, vecs_names=[], vecsdir=None, save=False, savedir=None, loadfile=None,
-         actions=['plotcorr']):
+         actions=['plotcorr'], gt_normalizer=10, plot_orders=['ground_truth']):
 
     if not loadfile:
         if not vecsdir:
@@ -243,8 +223,8 @@ def main(datadir, vecs_names=[], vecsdir=None, save=False, savedir=None, loadfil
        scores = np.load(loadfile, allow_pickle=True)
 
     if 'plotscores' in actions:
-       plot_scores(np.sort(scores, order='ground_truth'))
-       plot_scores(np.sort(scores, order='fasttext'))
+        for plot_order in plot_orders:  # order similarity scores of these datasets or embeddings
+            plot_scores(np.sort(scores, order=plot_order), gt_divisor=gt_normalizer)
 
     if 'printcorr' in actions:
         print_correlations(scores)

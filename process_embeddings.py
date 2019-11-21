@@ -3,6 +3,7 @@ import pickle
 import numpy as np
 from tqdm import tqdm
 import argh
+from typing import List
 
 
 def agg_img_embeddings(filepath, savedir, maxnum=10):
@@ -27,6 +28,12 @@ def agg_img_embeddings(filepath, savedir, maxnum=10):
         embeddings[i] = vecs[:min(maxnum, vecs.shape[0])].mean(axis=0)
 
     np.save(os.path.join(savedir, filename + '.npy'), embeddings)
+
+
+def mid_fusion(embeddings: List[np.ndarray], vocabs: List[List[str]]):
+    """Concatenate embeddings pairwise for words in the intersection of their vocabulary."""
+    pass
+
 
 
 if __name__ == '__main__':
