@@ -219,7 +219,7 @@ def qa(res, dataset='simlex'):
     return scores, pairs
 
 
-@arg('-a', '--actions', choices=['printcorr', 'plotscores', 'coverage', 'scores'], default='printcorr')
+@arg('-a', '--actions', choices=['printcorr', 'plotscores', 'coverage', 'compscores'], default='printcorr')
 @argh.arg('-vns', '--vecs_names', nargs='+', type=str)
 @argh.arg('-plto', '--plot_orders', nargs='+', type=str)
 def main(datadir, vecs_names=[], vecsdir: str=None, savepath=None, loadfile=None,
@@ -254,7 +254,8 @@ def main(datadir, vecs_names=[], vecsdir: str=None, savepath=None, loadfile=None
     else:
        scores = np.load(loadfile, allow_pickle=True)
 
-    if 'scores' in actions:
+    if 'compscores' in actions:
+        print(actions)
         embs = vis_embeddings
         vocabs = vis_vocabs
         names = vecs_names
