@@ -14,11 +14,8 @@ import matplotlib.pyplot as plt
 import copy
 import io
 from itertools import combinations
-from dataclasses import dataclass
 
 
-
-@dataclass
 class DataSets:
     """Class for storing evaluation datasets and linguistic embeddings."""
     men: List[Tuple[str, str, float]]
