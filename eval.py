@@ -15,7 +15,10 @@ import copy
 import io
 from itertools import combinations
 
+import utils
 
+
+# TODO: use dataclass decorator in case of python 3.7
 class DataSets:
     """Class for storing evaluation datasets and linguistic embeddings."""
     men: List[Tuple[str, str, float]]
@@ -27,22 +30,23 @@ class DataSets:
     fasttext_vocab: List[str]
     fmri_vocab: List[str]
 
-    def __init__(self, datadir: str):
+    def __init__(self, datadir: str, ling: bool=True):
         SIMVERB = datadir + '/simverb-3500-data'
         simverb_full = list(csv.reader(open(SIMVERB + '/SimVerb-3500.txt'), delimiter='\t'))
         self.simverb = list(map(lambda x: [x[0], x[1], x[3]], simverb_full))
         self.men = json.load(open(datadir + '/men.json'))
         self.simlex = json.load(open(datadir + '/simlex.json'))
 
-        w2v = json.load(open(datadir + '/w2v_simverb.json'))
-        w2v_simrel = json.load(open(datadir + '/simrel-wikipedia.json'))
-        w2v.update(w2v_simrel)
-        self.w2v_vecs = np.array(list(w2v.values()))
-        self.w2v_vocab = np.array(list(w2v.keys()))
+        if ling:    # only load linguistic embeddings if ling==True
+            w2v = json.load(open(datadir + '/w2v_simverb.json'))
+            w2v_simrel = json.load(open(datadir + '/simrel-wikipedia.json'))
+            w2v.update(w2v_simrel)
+            self.w2v_vecs = np.array(list(w2v.values()))
+            self.w2v_vocab = np.array(list(w2v.keys()))
 
-        print('Loading FastText...')
-        self.fasttext_vecs, self.fasttext_vocab = load_fasttext(datadir + '/wiki-news-300d-1M.vec')
-        print('Done.')
+            print('Loading FastText...')
+            self.fasttext_vecs, self.fasttext_vocab = load_fasttext(datadir + '/wiki-news-300d-1M.vec')
+            print('Done.')
 
         self.fmri_vocab = ['airplane', 'ant', 'apartment', 'arch', 'arm', 'barn', 'bear', 'bed', 'bee', 'beetle', 'bell',
                           'bicycle', 'bottle', 'butterfly', 'car', 'carrot', 'cat', 'celery', 'chair', 'chimney', 'chisel',
@@ -50,29 +54,6 @@ class DataSets:
                           'eye', 'fly', 'foot', 'glass', 'hammer', 'hand', 'horse', 'house', 'igloo', 'key', 'knife', 'leg',
                           'lettuce', 'pants', 'pliers', 'refrigerator', 'saw', 'screwdriver', 'shirt', 'skirt', 'spoon',
                           'table', 'telephone', 'tomato', 'train', 'truck', 'watch', 'window']
-
-
-# def load_datasets(datadir: str, airplane=None) -> None:
-#     global men, simlex, simverb, w2v_vecs, w2v_vocab
-#     SIMVERB = datadir + '/simverb-3500-data'
-#     simverb_full = list(csv.reader(open(SIMVERB + '/SimVerb-3500.txt'), delimiter='\t'))
-#     simverb = list(map(lambda x: [x[0], x[1], x[3]], simverb_full))
-#     men = json.load(open(datadir + '/men.json'))
-#     simlex = json.load(open(datadir + '/simlex.json'))
-#
-#     w2v = json.load(open(datadir + '/w2v_simverb.json'))
-#     w2v_simrel = json.load(open(datadir + '/simrel-wikipedia.json'))
-#     w2v.update(w2v_simrel)
-#     w2v_vecs = np.array(list(w2v.values()))
-#     w2v_vocab = np.array(list(w2v.keys()))
-#
-#     print('Loading FastText...')
-#     fasttext_vecs, fasttext_vocab = load_fasttext(datadir + '/wiki-news-300d-1M.vec')
-#     print('Done.')
-#
-#     fmri_vocab = ['airplane', 'ant', 'apartment', 'arch', 'arm', 'barn', 'bear', 'bed', 'bee', 'beetle', 'bell', 'bicycle', 'bottle', 'butterfly', 'car', 'carrot', 'cat', 'celery', 'chair', 'chimney', 'chisel', 'church', 'closet', 'coat', 'corn', 'cow', 'cup', 'desk', 'dog', 'door', 'dress', 'dresser', 'eye', 'fly', 'foot', 'glass', 'hammer', 'hand', 'horse', 'house', 'igloo', 'key', 'knife', 'leg', 'lettuce', 'pants', 'pliers', 'refrigerator', 'saw', 'screwdriver', 'shirt', 'skirt', 'spoon', 'table', 'telephone', 'tomato', 'train', 'truck', 'watch', 'window']
-#
-#     return men, simlex, simverb, w2v_vecs, w2v_vocab, fasttext_vecs, fasttext_vocab, fmri_vocab
 
 
 def load_fasttext(fname: str) -> Tuple[np.ndarray, np.ndarray]:
@@ -241,8 +222,21 @@ def qa(res, dataset='simlex'):
 @arg('-a', '--actions', choices=['printcorr', 'plotscores', 'coverage', 'scores'], default='printcorr')
 @argh.arg('-vns', '--vecs_names', nargs='+', type=str)
 @argh.arg('-plto', '--plot_orders', nargs='+', type=str)
-def main(datadir, vecs_names=[], vecsdir=None, save=False, savedir=None, loadfile=None,
-         actions=['plotcorr'], gt_normalizer=10, plot_orders=['ground_truth']):
+def main(datadir, vecs_names=[], vecsdir: str=None, savepath=None, loadfile=None,
+         actions=['plotcorr'], gt_normalizer=10, plot_orders=['ground_truth'], ling=True,
+         pre_score_file: str=None):
+    """
+    :param datadir:
+    :param vecs_names:
+    :param vecsdir:
+    :param savepath: Full path to the file to save scores without extension. None if there's no saving.
+    :param loadfile:
+    :param actions:
+    :param gt_normalizer:
+    :param plot_orders:
+    :param ling: True if we load linguistic embeddings.
+    :param pre_score_file: Previously saved score file path, which the new scores will be merged with
+    """
 
     if not loadfile:
         if not vecsdir:
@@ -255,18 +249,27 @@ def main(datadir, vecs_names=[], vecsdir=None, save=False, savedir=None, loadfil
             vis_embeddings.append(vecs)
             vis_vocabs.append(vocab)
 
-        data = DataSets(datadir)
-        # men, simlex, simverb, w2v_vecs, w2v_vocab,\
-        #     fasttext_vecs, fasttext_vocab = load_datasets(datadir)
+        data = DataSets(datadir, ling)
 
     else:
        scores = np.load(loadfile, allow_pickle=True)
 
     if 'scores' in actions:
-        scores, pairs = eval_dataset(data.men,
-                                     [data.w2v_vecs, data.fasttext_vecs] + vis_embeddings,
-                                     [data.w2v_vocab, data.fasttext_vocab] + vis_vocabs,
-                                     ['w2v', 'fasttext'] + vecs_names)
+        embs = vis_embeddings
+        vocabs = vis_vocabs
+        names = vecs_names
+
+        if ling:
+            embs += [data.w2v_vecs, data.fasttext_vecs]
+            vocabs += [data.w2v_vocab, data.fasttext_vocab]
+            names += ['w2v', 'fasttext']
+
+        scores, pairs = eval_dataset(data.men, embs, vocabs, names)
+
+        if pre_score_file:   # Load previously saves score file and add the new scores.
+            print(f'Load {pre_score_file} and join with new scores...')
+            pre_scores = np.load(pre_score_file, allow_pickle=True)
+            scores = utils.join_struct_arrays([pre_scores, scores])
 
     if 'plotscores' in actions:
         for plot_order in plot_orders:  # order similarity scores of these datasets or embeddings
@@ -281,11 +284,10 @@ def main(datadir, vecs_names=[], vecsdir=None, save=False, savedir=None, loadfil
             print('\n--------------' + name + '--------------\n')
             coverage(vocab, data)
 
-    if save:
-        if not savedir:
-            savedir = datadir
-        np.save(savedir + '/scores_{}.npy'.format(vecs_name), scores)
-        with open(os.path.join(savedir, vecs_name +'_pairs.json'), 'w') as f:
+    if savepath:
+        print('Saving...')
+        np.save(savepath + '.npy', scores)
+        with open(savepath + '_pairs.json', 'w') as f:
             json.dump(pairs, f)
 
 
