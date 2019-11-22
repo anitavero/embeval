@@ -223,7 +223,7 @@ def qa(res, dataset='simlex'):
 @argh.arg('-vns', '--vecs_names', nargs='+', type=str)
 @argh.arg('-plto', '--plot_orders', nargs='+', type=str)
 def main(datadir, vecs_names=[], vecsdir: str=None, savepath=None, loadfile=None,
-         actions=['plotcorr'], gt_normalizer=10, plot_orders=['ground_truth'], ling=True,
+         actions=['plotcorr'], gt_normalizer=10, plot_orders=['ground_truth'], ling=False,
          pre_score_file: str=None):
     """
     :param datadir:
