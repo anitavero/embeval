@@ -14,28 +14,68 @@ import matplotlib.pyplot as plt
 import copy
 import io
 from itertools import combinations
+from dataclasses import dataclass
 
 
 
-def load_datasets(datadir: str) -> None:
-    global men, simlex, simverb, w2v_vecs, w2v_vocab
-    SIMVERB = datadir + '/simverb-3500-data'
-    simverb_full = list(csv.reader(open(SIMVERB + '/SimVerb-3500.txt'), delimiter='\t'))
-    simverb = list(map(lambda x: [x[0], x[1], x[3]], simverb_full))
-    men = json.load(open(datadir + '/men.json'))
-    simlex = json.load(open(datadir + '/simlex.json'))
+@dataclass
+class DataSets:
+    """Class for storing evaluation datasets and linguistic embeddings."""
+    men: List[Tuple[str, str, float]]
+    simlex: List[Tuple[str, str, float]]
+    simverb: List[Tuple[str, str, float]]
+    w2v_vecs: np.ndarray
+    w2v_vocab: List[str]
+    fasttext_vecs: np.ndarray
+    fasttext_vocab: List[str]
+    fmri_vocab: List[str]
 
-    w2v = json.load(open(datadir + '/w2v_simverb.json'))
-    w2v_simrel = json.load(open(datadir + '/simrel-wikipedia.json'))
-    w2v.update(w2v_simrel)
-    w2v_vecs = np.array(list(w2v.values()))
-    w2v_vocab = np.array(list(w2v.keys()))
+    def __init__(self, datadir: str):
+        SIMVERB = datadir + '/simverb-3500-data'
+        simverb_full = list(csv.reader(open(SIMVERB + '/SimVerb-3500.txt'), delimiter='\t'))
+        self.simverb = list(map(lambda x: [x[0], x[1], x[3]], simverb_full))
+        self.men = json.load(open(datadir + '/men.json'))
+        self.simlex = json.load(open(datadir + '/simlex.json'))
 
-    print('Loading FastText...')
-    fasttext_vecs, fasttext_vocab = load_fasttext(datadir + '/wiki-news-300d-1M.vec')
-    print('Done.')
+        w2v = json.load(open(datadir + '/w2v_simverb.json'))
+        w2v_simrel = json.load(open(datadir + '/simrel-wikipedia.json'))
+        w2v.update(w2v_simrel)
+        self.w2v_vecs = np.array(list(w2v.values()))
+        self.w2v_vocab = np.array(list(w2v.keys()))
 
-    return men, simlex, simverb, w2v_vecs, w2v_vocab, fasttext_vecs, fasttext_vocab
+        print('Loading FastText...')
+        self.fasttext_vecs, self.fasttext_vocab = load_fasttext(datadir + '/wiki-news-300d-1M.vec')
+        print('Done.')
+
+        self.fmri_vocab = ['airplane', 'ant', 'apartment', 'arch', 'arm', 'barn', 'bear', 'bed', 'bee', 'beetle', 'bell',
+                          'bicycle', 'bottle', 'butterfly', 'car', 'carrot', 'cat', 'celery', 'chair', 'chimney', 'chisel',
+                          'church', 'closet', 'coat', 'corn', 'cow', 'cup', 'desk', 'dog', 'door', 'dress', 'dresser',
+                          'eye', 'fly', 'foot', 'glass', 'hammer', 'hand', 'horse', 'house', 'igloo', 'key', 'knife', 'leg',
+                          'lettuce', 'pants', 'pliers', 'refrigerator', 'saw', 'screwdriver', 'shirt', 'skirt', 'spoon',
+                          'table', 'telephone', 'tomato', 'train', 'truck', 'watch', 'window']
+
+
+# def load_datasets(datadir: str, airplane=None) -> None:
+#     global men, simlex, simverb, w2v_vecs, w2v_vocab
+#     SIMVERB = datadir + '/simverb-3500-data'
+#     simverb_full = list(csv.reader(open(SIMVERB + '/SimVerb-3500.txt'), delimiter='\t'))
+#     simverb = list(map(lambda x: [x[0], x[1], x[3]], simverb_full))
+#     men = json.load(open(datadir + '/men.json'))
+#     simlex = json.load(open(datadir + '/simlex.json'))
+#
+#     w2v = json.load(open(datadir + '/w2v_simverb.json'))
+#     w2v_simrel = json.load(open(datadir + '/simrel-wikipedia.json'))
+#     w2v.update(w2v_simrel)
+#     w2v_vecs = np.array(list(w2v.values()))
+#     w2v_vocab = np.array(list(w2v.keys()))
+#
+#     print('Loading FastText...')
+#     fasttext_vecs, fasttext_vocab = load_fasttext(datadir + '/wiki-news-300d-1M.vec')
+#     print('Done.')
+#
+#     fmri_vocab = ['airplane', 'ant', 'apartment', 'arch', 'arm', 'barn', 'bear', 'bed', 'bee', 'beetle', 'bell', 'bicycle', 'bottle', 'butterfly', 'car', 'carrot', 'cat', 'celery', 'chair', 'chimney', 'chisel', 'church', 'closet', 'coat', 'corn', 'cow', 'cup', 'desk', 'dog', 'door', 'dress', 'dresser', 'eye', 'fly', 'foot', 'glass', 'hammer', 'hand', 'horse', 'house', 'igloo', 'key', 'knife', 'leg', 'lettuce', 'pants', 'pliers', 'refrigerator', 'saw', 'screwdriver', 'shirt', 'skirt', 'spoon', 'table', 'telephone', 'tomato', 'train', 'truck', 'watch', 'window']
+#
+#     return men, simlex, simverb, w2v_vecs, w2v_vocab, fasttext_vecs, fasttext_vocab, fmri_vocab
 
 
 def load_fasttext(fname: str) -> Tuple[np.ndarray, np.ndarray]:
@@ -94,7 +134,7 @@ def covered(dataset, vocab):
     return list(filter(lambda s: s[0] in vocab and s[1] in vocab, dataset))
 
 
-def coverage(vocabulary):
+def coverage(vocabulary, data):
     nlp = spacy.load('en')
     vvocab_lemma = [[t for t in nlp(str(w))][0].lemma_ for w in vocabulary]
     vocab = set(list(vocabulary) + vvocab_lemma)
@@ -102,13 +142,20 @@ def coverage(vocabulary):
     print('Vocab size:', len(vocabulary))
     print('Vocab size with lemmas:', len(vocab))
 
-    for name, dataset in {'MEN': men, 'SimLex': simlex, 'SimVerb': simverb}.items():
+    # Semantic similarity/relatedness datasets
+    for name, dataset in {'MEN': data.men, 'SimLex': data.simlex, 'SimVerb': data.simverb}.items():
         coverage = len(covered(dataset, vocabulary))
         coverage_lemma = len(covered(dataset, vocab))
         print(f'{name} pair coverage:',
               coverage_lemma, f'({round(100 * coverage_lemma / len(dataset))}%)')
         print(f'{name} pair coverage without lemmas:',
               coverage, f'({round(100 * coverage / len(dataset))}%)')
+
+    # Mitchell (2008) fMRI data: 60 nouns
+    coverage = len(list(set(vocabulary).intersection(set(data.fmri_vocab))))
+    coverage_lemma = len(list(set(vocab).intersection(set(data.fmri_vocab))))
+    print(f'fMRI coverage:', coverage_lemma, f'({round(100 * coverage_lemma / len(data.fmri_vocab))}%)')
+    print(f'fMRI coverage without lemmas:', coverage, f'({round(100 * coverage / len(data.fmri_vocab))}%)')
 
 
 def get_vec(word, embeddings, vocab):
@@ -194,7 +241,7 @@ def qa(res, dataset='simlex'):
     return scores, pairs
 
 
-@arg('-a', '--actions', choices=['printcorr', 'plotscores', 'coverage'], default='printcorr')
+@arg('-a', '--actions', choices=['printcorr', 'plotscores', 'coverage', 'scores'], default='printcorr')
 @argh.arg('-vns', '--vecs_names', nargs='+', type=str)
 @argh.arg('-plto', '--plot_orders', nargs='+', type=str)
 def main(datadir, vecs_names=[], vecsdir=None, save=False, savedir=None, loadfile=None,
@@ -211,16 +258,18 @@ def main(datadir, vecs_names=[], vecsdir=None, save=False, savedir=None, loadfil
             vis_embeddings.append(vecs)
             vis_vocabs.append(vocab)
 
-        men, simlex, simverb, w2v_vecs, w2v_vocab,\
-            fasttext_vecs, fasttext_vocab = load_datasets(datadir)
-
-        scores, pairs = eval_dataset(men,
-                                     [w2v_vecs, fasttext_vecs] + vis_embeddings,
-                                     [w2v_vocab, fasttext_vocab] + vis_vocabs,
-                                     ['w2v', 'fasttext'] + vecs_names)
+        data = DataSets(datadir)
+        # men, simlex, simverb, w2v_vecs, w2v_vocab,\
+        #     fasttext_vecs, fasttext_vocab = load_datasets(datadir)
 
     else:
        scores = np.load(loadfile, allow_pickle=True)
+
+    if 'scores' in actions:
+        scores, pairs = eval_dataset(data.men,
+                                     [data.w2v_vecs, data.fasttext_vecs] + vis_embeddings,
+                                     [data.w2v_vocab, data.fasttext_vocab] + vis_vocabs,
+                                     ['w2v', 'fasttext'] + vecs_names)
 
     if 'plotscores' in actions:
         for plot_order in plot_orders:  # order similarity scores of these datasets or embeddings
@@ -230,7 +279,10 @@ def main(datadir, vecs_names=[], vecsdir=None, save=False, savedir=None, loadfil
         print_correlations(scores)
 
     if 'coverage' in actions:
-        coverage()  # TODO: generalise
+        for vocab, name in zip([data.w2v_vocab, data.fasttext_vocab] + vis_vocabs,
+                               ['w2v', 'fasttext'] + vecs_names):
+            print('\n--------------' + name + '--------------\n')
+            coverage(vocab, data)
 
     if save:
         if not savedir:
