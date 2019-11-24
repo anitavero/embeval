@@ -9,13 +9,16 @@ from tqdm import tqdm
 import json
 import argh
 from argh import arg
+import argparse
 from typing import List, Tuple
 import matplotlib.pyplot as plt
 import copy
 import io
 from itertools import combinations
+from process_embeddings import mid_fusion
 
 import utils
+from utils import get_vec
 
 
 # TODO: use dataclass decorator in case of python 3.7
@@ -136,10 +139,6 @@ def coverage(vocabulary, data):
     print(f'fMRI coverage without lemmas:', coverage, f'({round(100 * coverage / len(data.fmri_vocab))}%)')
 
 
-def get_vec(word, embeddings, vocab):
-    return embeddings[np.where(vocab == word)[0][0]].reshape(1, -1)
-
-
 def compute_correlations(scores: (np.ndarray, list), name_pairs: List[Tuple[str, str]] = None):
     """Computer correlation between score series.
         :param scores: Structured array of scores with embedding/ground_truth names.
@@ -219,12 +218,25 @@ def qa(res, dataset='simlex'):
     return scores, pairs
 
 
+def tuple_list(arg):
+    """List[Tuple[str]] argument type.
+        format: whitespace separated str lists, separated by |. eg. 'embs1 embs2 | embs2 embs3 embs4'
+    """
+    try:
+        tplist = [tuple(t.split()) for t in arg.split('|')]
+        return tplist
+    except:
+        raise argparse.ArgumentTypeError("Tuple list must be whitespace separated str lists, " +
+                                         "separated by |. eg. embs1 embs2 | embs2 embs3 embs4")
+
+
 @arg('-a', '--actions', choices=['printcorr', 'plotscores', 'coverage', 'compscores'], default='printcorr')
 @argh.arg('-vns', '--vecs_names', nargs='+', type=str)
 @argh.arg('-plto', '--plot_orders', nargs='+', type=str)
-def main(datadir, vecs_names=[], vecsdir: str=None, savepath=None, loadfile=None,
-         actions=['plotcorr'], gt_normalizer=10, plot_orders=['ground_truth'], ling=False,
-         pre_score_file: str=None):
+@argh.arg('-mmembs', '--mm_embs_of', nargs='+', type=tuple_list)
+def main(datadir, vecs_names=[], vecsdir: str = None, savepath = None, loadfile = None,
+         actions=['plotcorr'], gt_normalizer = 10, plot_orders = ['ground_truth'], ling = False,
+         pre_score_file: str = None, mm_embs_of: List[Tuple[str]] = None):
     """
     :param datadir:
     :param vecs_names:
@@ -236,6 +248,8 @@ def main(datadir, vecs_names=[], vecsdir: str=None, savepath=None, loadfile=None
     :param plot_orders:
     :param ling: True if we load linguistic embeddings.
     :param pre_score_file: Previously saved score file path, which the new scores will be merged with
+    :param mm_embs_of: List of str tuples, where the tuples contain names of embeddings which are to
+                       be concatenated into a multi-modal mid-fusion embedding.
     """
 
     if not loadfile:
@@ -264,6 +278,13 @@ def main(datadir, vecs_names=[], vecsdir: str=None, savepath=None, loadfile=None
             embs += [data.w2v_vecs, data.fasttext_vecs]
             vocabs += [data.w2v_vocab, data.fasttext_vocab]
             names += ['w2v', 'fasttext']
+
+        if mm_embs_of:  # Create MM Embeddings based on the given embedding labels
+            # TODO: create emb vocab and label tuple lists
+            mm_embeddings, mm_vocabs, mm_labels = mid_fusion()
+            embs += mm_embeddings
+            vocabs += mm_vocabs
+            names += mm_labels
 
         scores, pairs = eval_dataset(data.men, embs, vocabs, names)
 

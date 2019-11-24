@@ -8,3 +8,7 @@ def join_struct_arrays(arrays):
         for nm in a.dtype.names:
             joint[nm] = a[nm]
     return joint
+
+
+def get_vec(word, embeddings, vocab):
+    return embeddings[np.where(vocab == word)[0][0]].reshape(1, -1)
