@@ -32,7 +32,7 @@ def agg_img_embeddings(filepath: str, savedir: str, maxnum: int = 10):
 
 
 def mid_fusion(embeddings, vocabs, labels,
-               padding: bool, combnum: int = 2) -> (List[np.ndarray], List[str]):
+               padding: bool, combnum: int = 2) -> (List[np.ndarray], List[np.ndarray], List[str]):
     """Concatenate embeddings pairwise for words in the intersection of their vocabulary.
         :param embeddings: List[np.ndarray] or List[Tuple[np.ndarray]]
         :param vocabs: List[np.ndarray] or List[Tuple[np.ndarray]]
@@ -64,7 +64,7 @@ def mid_fusion(embeddings, vocabs, labels,
         shape1 = emb1.shape[1]
         shape2 = emb2.shape[1]
         label = '-'.join([label1, label2])
-        if padding:     # TODO: Too slow, make it more efficient.
+        if padding:     # TODO: Too slow, use broadcasting instead of for loop
             print(f'MM {label} with padding:')
             mm_vocab = list(set(vocab1).union(set(vocab2)))
             mm_embedding = np.zeros((len(mm_vocab), shape1 + shape2))
@@ -86,7 +86,7 @@ def mid_fusion(embeddings, vocabs, labels,
                 mm_embedding[mm_vocab.index(w), shape1:] = get_vec(w, emb2, vocab2)
 
         mm_embeddings.append(mm_embedding)
-        mm_vocabs.append(mm_vocab)
+        mm_vocabs.append(np.array(mm_vocab))
         mm_labels.append(label)
 
         assert mm_embedding.shape == (len(mm_vocab), emb1.shape[1] + emb2.shape[1])
