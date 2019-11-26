@@ -5,7 +5,7 @@ from tqdm import tqdm
 import argh
 from typing import List
 from itertools import combinations
-from source.utils import get_vec
+from utils import get_vec
 
 
 def agg_img_embeddings(filepath: str, savedir: str, maxnum: int = 10):

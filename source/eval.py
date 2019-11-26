@@ -16,9 +16,9 @@ import copy
 import io
 from itertools import combinations
 
-from source.process_embeddings import mid_fusion
-from source import utils
-from source.utils import get_vec
+from process_embeddings import mid_fusion
+import utils
+from utils import get_vec
 
 sys.path.append('../2v2_software_privatefork/')
 import two_vs_two
