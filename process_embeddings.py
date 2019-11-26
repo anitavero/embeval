@@ -64,8 +64,8 @@ def mid_fusion(embeddings, vocabs, labels,
         shape1 = emb1.shape[1]
         shape2 = emb2.shape[1]
         label = '-'.join([label1, label2])
-        print(f'MM {label}:')
-        if padding:
+        if padding:     # TODO: Too slow, make it more efficient.
+            print(f'MM {label} with padding:')
             mm_vocab = list(set(vocab1).union(set(vocab2)))
             mm_embedding = np.zeros((len(mm_vocab), shape1 + shape2))
             for w in tqdm(mm_vocab):
@@ -78,6 +78,7 @@ def mid_fusion(embeddings, vocabs, labels,
                 except IndexError:
                     pass    # If the embedding doesn't have this word leave the second vector part full zeros
         else:
+            print(f'MM {label} without padding:')
             mm_vocab = list(set(vocab1).intersection(set(vocab2)))
             mm_embedding = np.zeros((len(mm_vocab), shape1 + shape2))
             for w in tqdm(mm_vocab):

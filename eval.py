@@ -48,7 +48,7 @@ class DataSets:
             self.w2v_vocab = np.array(list(w2v.keys()))
 
             print('Loading FastText...')
-            self.fasttext_vecs, self.fasttext_vocab = load_fasttext(datadir + '/wiki-news-300d-1M_MINI.vec')
+            self.fasttext_vecs, self.fasttext_vocab = load_fasttext(datadir + '/wiki-news-300d-1M.vec')
             print('Done.')
 
         self.fmri_vocab = ['airplane', 'ant', 'apartment', 'arch', 'arm', 'barn', 'bear', 'bed', 'bee', 'beetle', 'bell',
