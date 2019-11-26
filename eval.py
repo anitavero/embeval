@@ -1,5 +1,5 @@
 # coding: utf-8
-import os
+import os, sys
 import numpy as np
 from sklearn.metrics.pairwise import cosine_distances, cosine_similarity
 from scipy.stats import spearmanr
@@ -15,10 +15,13 @@ import matplotlib.pyplot as plt
 import copy
 import io
 from itertools import combinations
-from process_embeddings import mid_fusion
 
+from process_embeddings import mid_fusion
 import utils
 from utils import get_vec
+
+sys.path.append('../2v2_software_privatefork/')
+import two_vs_two
 
 
 # TODO: use dataclass decorator in case of python 3.7
@@ -244,13 +247,13 @@ def tuple_list(arg):
                                          "separated by |. eg. embs1 embs2 | embs2 embs3 embs4")
 
 
-@arg('-a', '--actions', choices=['printcorr', 'plotscores', 'coverage', 'compscores'], default='printcorr')
+@arg('-a', '--actions', nargs='+', choices=['printcorr', 'plotscores', 'coverage', 'compscores', 'compbrain'], default='printcorr')
 @argh.arg('-vns', '--vecs_names', nargs='+', type=str)
 @argh.arg('-plto', '--plot_orders', nargs='+', type=str)
 @argh.arg('-mmembs', '--mm_embs_of', type=tuple_list)
 def main(datadir, vecs_names=[], vecsdir: str = None, savepath = None, loadfile = None,
          actions=['plotcorr'], gt_normalizer = 10, plot_orders = ['ground_truth'], ling = False,
-         pre_score_file: str = None, mm_embs_of: List[Tuple[str]] = None, mm_padding=False):
+         pre_score_file: str = None, mm_embs_of: List[Tuple[str]] = None, mm_padding = False):
     """
     :param datadir:
     :param vecs_names:
@@ -266,9 +269,10 @@ def main(datadir, vecs_names=[], vecsdir: str = None, savepath = None, loadfile 
                        be concatenated into a multi-modal mid-fusion embedding.
     """
 
+    scores = None
     if not loadfile:
         if not vecsdir:
-            vecsdir = datadir
+            vecsdir = datadir + '/mmdeed'
 
         vis_embeddings = []
         vis_vocabs = []
@@ -282,7 +286,7 @@ def main(datadir, vecs_names=[], vecsdir: str = None, savepath = None, loadfile 
     else:
        scores = np.load(loadfile, allow_pickle=True)
 
-    if 'compscores' in actions:
+    if 'compscores' in actions or 'compbrain' in actions:
         print(actions)
         embs = vis_embeddings
         vocabs = vis_vocabs
@@ -302,19 +306,33 @@ def main(datadir, vecs_names=[], vecsdir: str = None, savepath = None, loadfile 
             vocabs += mm_vocabs
             names += mm_labels
 
-        scores, pairs = eval_dataset(data.datasets['MEN'], 'MEN', embs, vocabs, names)
+        if 'compbrain' not in actions:
+            scores, pairs = eval_dataset(data.datasets['MEN'], 'MEN', embs, vocabs, names)
 
-        if pre_score_file:   # Load previously saves score file and add the new scores.
-            print(f'Load {pre_score_file} and join with new scores...')
-            pre_scores = np.load(pre_score_file, allow_pickle=True)
-            scores = utils.join_struct_arrays([pre_scores, scores])
+            if pre_score_file:   # Load previously saves score file and add the new scores.
+                print(f'Load {pre_score_file} and join with new scores...')
+                pre_scores = np.load(pre_score_file, allow_pickle=True)
+                scores = utils.join_struct_arrays([pre_scores, scores])
+
+        # Brain scores
+        brain_scores = {}
+        for emb, vocab, name in zip(embs, vocabs, names):
+            fMRI_score, MEG_score, length = two_vs_two.run_test(embedding=emb, vocab=vocab)
+            brain_scores[name] = {'fMRI': fMRI_score, 'MEG': MEG_score, 'lenght': length}
 
     if 'plotscores' in actions:
         for plot_order in plot_orders:  # order similarity scores of these datasets or embeddings
             plot_scores(np.sort(scores, order=plot_order), gt_divisor=gt_normalizer)
 
     if 'printcorr' in actions:
-        print_correlations(scores)
+        if scores is not None:
+            print_correlations(scores)
+        print('\n-------- Brain scores -------\n')
+        for name in names:
+            print(name)
+            print("There are %d words found from the input" % brain_scores[name]['lenght'])
+            print("The fMRI avg score is %f" % brain_scores[name]['fMRI'])
+            print("The MEG avg score is %f" % brain_scores[name]['MEG'])
 
     if 'coverage' in actions:
         for vocab, name in zip([data.w2v_vocab, data.fasttext_vocab] + vis_vocabs,
@@ -327,6 +345,8 @@ def main(datadir, vecs_names=[], vecsdir: str = None, savepath = None, loadfile 
         np.save(savepath + '.npy', scores)
         with open(savepath + '_pairs.json', 'w') as f:
             json.dump(pairs, f)
+        with open(savepath + '_brain.json', 'w') as f:
+            json.dump(brain_scores, f)
 
 
 if __name__ == '__main__':
