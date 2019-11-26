@@ -64,10 +64,11 @@ def mid_fusion(embeddings, vocabs, labels,
         shape1 = emb1.shape[1]
         shape2 = emb2.shape[1]
         label = '-'.join([label1, label2])
+        print(f'MM {label}:')
         if padding:
             mm_vocab = list(set(vocab1).union(set(vocab2)))
             mm_embedding = np.zeros((len(mm_vocab), shape1 + shape2))
-            for w in mm_vocab:
+            for w in tqdm(mm_vocab):
                 try:
                     mm_embedding[mm_vocab.index(w), :shape1] = get_vec(w, emb1, vocab1)
                 except IndexError:
@@ -79,7 +80,7 @@ def mid_fusion(embeddings, vocabs, labels,
         else:
             mm_vocab = list(set(vocab1).intersection(set(vocab2)))
             mm_embedding = np.zeros((len(mm_vocab), shape1 + shape2))
-            for w in mm_vocab:
+            for w in tqdm(mm_vocab):
                 mm_embedding[mm_vocab.index(w), :shape1] = get_vec(w, emb1, vocab1)
                 mm_embedding[mm_vocab.index(w), shape1:] = get_vec(w, emb2, vocab2)
 
