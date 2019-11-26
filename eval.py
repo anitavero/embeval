@@ -186,6 +186,8 @@ def eval_dataset(dataset: List[Tuple[str, str, float]],
                 scores[label][i] = cosine_similarity(get_vec(w1, emb, vocab), get_vec(w2, emb, vocab))[0][0]
             except IndexError:
                 scores[label][i] = -2
+            if (scores[label] == 2).all():
+                print('Warning: No word pairs were found!')
         pairs.append((w1, w2))
 
     return scores, pairs
