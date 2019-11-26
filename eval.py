@@ -48,7 +48,7 @@ class DataSets:
             self.w2v_vocab = np.array(list(w2v.keys()))
 
             print('Loading FastText...')
-            self.fasttext_vecs, self.fasttext_vocab = load_fasttext(datadir + '/wiki-news-300d-1M.vec')
+            self.fasttext_vecs, self.fasttext_vocab = load_fasttext(datadir + '/wiki-news-300d-1M_MINI.vec')
             print('Done.')
 
         self.fmri_vocab = ['airplane', 'ant', 'apartment', 'arch', 'arm', 'barn', 'bear', 'bed', 'bee', 'beetle', 'bell',
@@ -223,7 +223,10 @@ def tuple_list(arg):
         format: whitespace separated str lists, separated by |. eg. 'embs1 embs2 | embs2 embs3 embs4'
     """
     try:
-        tplist = [tuple(t.split()) for t in arg.split('|')]
+        if '|' in arg:
+            tplist = [tuple(t.split()) for t in arg.split('|')]
+        else:
+            tplist = [tuple(arg.split())]
         return tplist
     except:
         raise argparse.ArgumentTypeError("Tuple list must be whitespace separated str lists, " +
@@ -233,10 +236,10 @@ def tuple_list(arg):
 @arg('-a', '--actions', choices=['printcorr', 'plotscores', 'coverage', 'compscores'], default='printcorr')
 @argh.arg('-vns', '--vecs_names', nargs='+', type=str)
 @argh.arg('-plto', '--plot_orders', nargs='+', type=str)
-@argh.arg('-mmembs', '--mm_embs_of', nargs='+', type=tuple_list)
+@argh.arg('-mmembs', '--mm_embs_of', type=tuple_list)
 def main(datadir, vecs_names=[], vecsdir: str = None, savepath = None, loadfile = None,
          actions=['plotcorr'], gt_normalizer = 10, plot_orders = ['ground_truth'], ling = False,
-         pre_score_file: str = None, mm_embs_of: List[Tuple[str]] = None):
+         pre_score_file: str = None, mm_embs_of: List[Tuple[str]] = None, mm_padding=False):
     """
     :param datadir:
     :param vecs_names:
@@ -280,8 +283,10 @@ def main(datadir, vecs_names=[], vecsdir: str = None, savepath = None, loadfile 
             names += ['w2v', 'fasttext']
 
         if mm_embs_of:  # Create MM Embeddings based on the given embedding labels
-            # TODO: create emb vocab and label tuple lists
-            mm_embeddings, mm_vocabs, mm_labels = mid_fusion()
+            emb_tuples = [tuple(embs[names.index(l)] for l in t) for t in mm_embs_of]
+            vocab_tuples = [tuple(vocabs[names.index(l)] for l in t) for t in mm_embs_of]
+            mm_labels = [tuple(l for l in t) for t in mm_embs_of]
+            mm_embeddings, mm_vocabs, mm_labels = mid_fusion(emb_tuples, vocab_tuples, mm_labels, mm_padding)
             embs += mm_embeddings
             vocabs += mm_vocabs
             names += mm_labels

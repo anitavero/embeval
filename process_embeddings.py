@@ -42,6 +42,7 @@ def mid_fusion(embeddings, vocabs, labels,
                         padded with zeros.
         :param combnum: number of modalities concatenated in the final multi-modal vector
     """
+    # TODO: generalise to MM embeddings containing more than 2 modalities
     if isinstance(embeddings[0], np.ndarray):
         id_pairs = list(combinations(range(len(embeddings)), combnum))
         emb_pairs = []
@@ -59,7 +60,7 @@ def mid_fusion(embeddings, vocabs, labels,
     mm_embeddings = []
     mm_vocabs = []
     mm_labels = []
-    for emb1, emb2, vocab1, vocab2, label1, label2 in zip(emb_pairs, vocab_pairs, label_pairs):
+    for (emb1, emb2), (vocab1, vocab2), (label1, label2) in zip(emb_pairs, vocab_pairs, label_pairs):
         shape1 = emb1.shape[1]
         shape2 = emb2.shape[1]
         label = '-'.join([label1, label2])
@@ -86,7 +87,7 @@ def mid_fusion(embeddings, vocabs, labels,
         mm_vocabs.append(mm_vocab)
         mm_labels.append(label)
 
-        assert mm_embedding.shape == (emb1.shape[0] + emb2.shape[0], len(mm_vocab))
+        assert mm_embedding.shape == (len(mm_vocab), emb1.shape[1] + emb2.shape[1])
 
     return mm_embeddings, mm_vocabs, mm_labels
 
