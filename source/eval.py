@@ -1,5 +1,5 @@
 # coding: utf-8
-import os, sys
+import sys
 import numpy as np
 from sklearn.metrics.pairwise import cosine_distances, cosine_similarity
 from scipy.stats import spearmanr
@@ -16,15 +16,15 @@ import copy
 import io
 from itertools import combinations
 
-from process_embeddings import mid_fusion
-import utils
-from utils import get_vec
+from source.process_embeddings import mid_fusion
+from source import utils
+from source.utils import get_vec
 
 sys.path.append('../2v2_software_privatefork/')
 import two_vs_two
 
 
-# TODO: use dataclass decorator in case of python 3.7
+# We could use dataclass decorator in case of python 3.7
 class DataSets:
     """Class for storing evaluation datasets and linguistic embeddings."""
     # Evaluation datasets
@@ -351,4 +351,3 @@ def main(datadir, vecs_names=[], vecsdir: str = None, savepath = None, loadfile 
 
 if __name__ == '__main__':
     argh.dispatch_command(main)
-

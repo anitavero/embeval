@@ -5,7 +5,7 @@ from tqdm import tqdm
 import argh
 from typing import List
 from itertools import combinations
-from utils import get_vec
+from source.utils import get_vec
 
 
 def agg_img_embeddings(filepath: str, savedir: str, maxnum: int = 10):
@@ -68,15 +68,25 @@ def mid_fusion(embeddings, vocabs, labels,
             print(f'MM {label} with padding:')
             mm_vocab = list(set(vocab1).union(set(vocab2)))
             mm_embedding = np.zeros((len(mm_vocab), shape1 + shape2))
-            for w in tqdm(mm_vocab):
-                try:
-                    mm_embedding[mm_vocab.index(w), :shape1] = get_vec(w, emb1, vocab1)
-                except IndexError:
-                    pass    # If the embedding doesn't have this word leave the first vector part full zeros
-                try:
-                    mm_embedding[mm_vocab.index(w), shape1:] = get_vec(w, emb2, vocab2)
-                except IndexError:
-                    pass    # If the embedding doesn't have this word leave the second vector part full zeros
+
+            print('Creating index...')
+            idx = {x: i for i, x in enumerate(mm_vocab)}
+            idx1 = [idx[w] for w in vocab1]
+            idx2 = [idx[w] for w in vocab2]
+
+            print('Creating MM Embeddings...')
+            mm_embedding[idx1, :shape1] = emb1
+            mm_embedding[idx2, shape1:] = emb2
+
+            # for w in tqdm(mm_vocab):
+            #     try:
+            #         mm_embedding[mm_vocab.index(w), :shape1] = get_vec(w, emb1, vocab1)
+            #     except IndexError:
+            #         pass    # If the embedding doesn't have this word leave the first vector part full zeros
+            #     try:
+            #         mm_embedding[mm_vocab.index(w), shape1:] = get_vec(w, emb2, vocab2)
+            #     except IndexError:
+            #         pass    # If the embedding doesn't have this word leave the second vector part full zeros
         else:
             print(f'MM {label} without padding:')
             mm_vocab = list(set(vocab1).intersection(set(vocab2)))

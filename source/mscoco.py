@@ -60,12 +60,9 @@ For example, assuming the files are saved in ``~/coco/``, you can run:
 # :py:class:`gluoncv.data.COCODetection`.
 
 
-from gluoncv import data, utils
+from gluoncv import data
 import torchvision.datasets as dset
-import visutils
-import eval
-from matplotlib import pyplot as plt
-import numpy as np
+from source import eval
 import torchvision.transforms as transforms
 
 DATADIR = '/Users/anitavero/projects/data'
