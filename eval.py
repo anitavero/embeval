@@ -24,14 +24,19 @@ from utils import get_vec
 # TODO: use dataclass decorator in case of python 3.7
 class DataSets:
     """Class for storing evaluation datasets and linguistic embeddings."""
+    # Evaluation datasets
     men: List[Tuple[str, str, float]]
     simlex: List[Tuple[str, str, float]]
     simverb: List[Tuple[str, str, float]]
+    fmri_vocab: List[str]
+    datasets = {}
+
+    # Linguistic Embeddings
     w2v_vecs: np.ndarray
     w2v_vocab: List[str]
     fasttext_vecs: np.ndarray
     fasttext_vocab: List[str]
-    fmri_vocab: List[str]
+
 
     def __init__(self, datadir: str, ling: bool=True):
         SIMVERB = datadir + '/simverb-3500-data'
@@ -57,6 +62,8 @@ class DataSets:
                           'eye', 'fly', 'foot', 'glass', 'hammer', 'hand', 'horse', 'house', 'igloo', 'key', 'knife', 'leg',
                           'lettuce', 'pants', 'pliers', 'refrigerator', 'saw', 'screwdriver', 'shirt', 'skirt', 'spoon',
                           'table', 'telephone', 'tomato', 'train', 'truck', 'watch', 'window']
+
+        self.datasets = {'MEN': self.men, 'SimLex': self.simlex, 'SimVerb': self.simverb}
 
 
 def load_fasttext(fname: str) -> Tuple[np.ndarray, np.ndarray]:
@@ -162,6 +169,7 @@ def print_correlations(scores: (np.ndarray, list), name_pairs: List[Tuple[str, s
 
 
 def eval_dataset(dataset: List[Tuple[str, str, float]],
+                 dataset_name: str,
                  embeddings: List[np.ndarray],
                  vocabs: List[List[str]],
                  labels: List[str]) -> (np.ndarray, list):
@@ -170,6 +178,7 @@ def eval_dataset(dataset: List[Tuple[str, str, float]],
                         dtype=[('ground_truth', np.ndarray)] +
                               [(label, np.ndarray) for label in labels])
     pairs = []
+    print(f'Evaluate on {dataset_name}')
     for i, (w1, w2, score) in enumerate(tqdm(dataset)):
         scores['ground_truth'][i] = float(score)
         for emb, vocab, label in zip(embeddings, vocabs, labels):
@@ -291,7 +300,7 @@ def main(datadir, vecs_names=[], vecsdir: str = None, savepath = None, loadfile 
             vocabs += mm_vocabs
             names += mm_labels
 
-        scores, pairs = eval_dataset(data.men, embs, vocabs, names)
+        scores, pairs = eval_dataset(data.datasets['MEN'], 'MEN', embs, vocabs, names)
 
         if pre_score_file:   # Load previously saves score file and add the new scores.
             print(f'Load {pre_score_file} and join with new scores...')
