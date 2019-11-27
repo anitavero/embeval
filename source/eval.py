@@ -295,9 +295,12 @@ def main(datadir, vecs_names=[], vecsdir: str = None, savepath = None, loadpath 
             names += mm_labels
 
         if 'compbrain' not in actions:
-            for name, dataset in data.datasets.items():
-                dscores, dpairs = eval_dataset(dataset, name, embs, vocabs, names)
-                scores = utils.join_struct_arrays([scores, dscores])
+            for i, (name, dataset) in enumerate(data.datasets.items()):
+                if i == 0:
+                    scores, dpairs = eval_dataset(dataset, name, embs, vocabs, names)
+                else:
+                    dscores, dpairs = eval_dataset(dataset, name, embs, vocabs, names)
+                    scores = utils.join_struct_arrays([scores, dscores])
                 pairs[name] = dpairs
 
             if pre_score_file:   # Load previously saves score file and add the new scores.
