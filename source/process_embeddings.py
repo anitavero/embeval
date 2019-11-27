@@ -33,13 +33,12 @@ def agg_img_embeddings(filepath: str, savedir: str, maxnum: int = 10):
 
 def mid_fusion(embeddings, vocabs, labels,
                padding: bool, combnum: int = 2) -> (List[np.ndarray], List[np.ndarray], List[str]):
-    """Concatenate embeddings pairwise for words in the intersection of their vocabulary.
+    """Concatenate embeddings pairwise for words in the intersection or union (with padding) of their vocabulary.
         :param embeddings: List[np.ndarray] or List[Tuple[np.ndarray]]
         :param vocabs: List[np.ndarray] or List[Tuple[np.ndarray]]
         :param labels: List[np.ndarray] or List[Tuple[np.ndarray]]
-        :param padding: If true all the vectors are kept from the embedding with the biggest
-                        vocabulary. The vectors without a vector from another modality are
-                        padded with zeros.
+        :param padding: If true, all the vectors are kept from the embeddings' vocabularies.
+                        The vectors parts without a vector from another modality are padded with zeros.
         :param combnum: number of modalities concatenated in the final multi-modal vector
     """
     # TODO: generalise to MM embeddings containing more than 2 modalities
