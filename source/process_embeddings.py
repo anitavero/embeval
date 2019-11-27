@@ -8,13 +8,15 @@ from itertools import combinations
 from utils import get_vec
 
 
-def agg_img_embeddings(filepath: str, savedir: str, maxnum: int = 10):
-    """Aggregate image vectors from a pickled dictionary of to numpy embedding and vocabulary files for eval.
+def pickle2npy(filepath: str, savedir: str, maxnum: int = 10):
+    """Save embedding files from pickle containing dictionary of {word: np.ndarray}
+        into embedding.npy, embedding.vocab, for eval.
         The embedding is a numpy array of shape(vocab size, vector dim)
         Vocabulary is a text file including words separated by new line.
-        :param filepath: Path to a pickle file containing a dict of {word: <image embedding list>}
+        :param filepath: Path to a pickle file containing a dict of
+                either {word: <image embedding list>}
+                or     {word: <image embedding>}        ('descriptors' suffix in mmfeat file names)
     """
-
     with open(filepath, 'rb') as f:
         data_dict = pickle.load(f, encoding='bytes')  # Load python2 pickles
 
@@ -24,14 +26,28 @@ def agg_img_embeddings(filepath: str, savedir: str, maxnum: int = 10):
     with open(os.path.join(savedir, filename + '.vocab'), 'w') as f:
         f.write('\n'.join([str(s, 'utf-8') for s in data_dict.keys()]))
 
-    # Aggregate image vectors for a word, using the fist min(maxnum, imangenum) images
-    embeddings = np.empty((len(data_dict), np.array(list(list(data_dict.values())[0].values())).shape[1]))
-    for i, imgs in enumerate(tqdm(data_dict.values())):
-        vecs = np.array(list(imgs.values()))
-        embeddings[i] = vecs[:min(maxnum, vecs.shape[0])].mean(axis=0)
+    values = list(data_dict.values())
+    if isinstance(values[0], dict):
+        print(f'Aggregating max {maxnum} number of image representations for each word...')
+        embeddings = agg_img_embeddings(values, maxnum)
+    elif isinstance(values[0], np.ndarray):
+        embeddings = np.array(values)
 
     # Save embedding
     np.save(os.path.join(savedir, filename + '.npy'), embeddings)
+
+
+def agg_img_embeddings(values: dict, maxnum: int = 10) -> np.ndarray:
+    """Aggregate image vectors from a dictionary of to numpy embeddings and vocabulary.
+        The embedding is a numpy array of shape(vocab size, vector dim)
+        Vocabulary is a text file including words separated by new line.
+    """
+    # Aggregate image vectors for a word, using the fist min(maxnum, imangenum) images
+    embeddings = np.empty((len(values), np.array(list(values[0].values())).shape[1]))
+    for i, imgs in enumerate(tqdm(values)):
+        vecs = np.array(list(imgs.values()))
+        embeddings[i] = vecs[:min(maxnum, vecs.shape[0])].mean(axis=0)
+    return embeddings
 
 
 def mid_fusion(embeddings, vocabs, labels,
@@ -105,4 +121,4 @@ def mid_fusion(embeddings, vocabs, labels,
 
 
 if __name__ == '__main__':
-    argh.dispatch_command(agg_img_embeddings)
+    argh.dispatch_command(pickle2npy)
