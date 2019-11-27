@@ -64,7 +64,7 @@ def mid_fusion(embeddings, vocabs, labels,
         shape1 = emb1.shape[1]
         shape2 = emb2.shape[1]
         label = '-'.join([label1, label2])
-        if padding:     # TODO: Too slow, use broadcasting instead of for loop
+        if padding:
             print(f'MM {label} with padding:')
             mm_vocab = list(set(vocab1).union(set(vocab2)))
             mm_embedding = np.zeros((len(mm_vocab), shape1 + shape2))
@@ -77,23 +77,21 @@ def mid_fusion(embeddings, vocabs, labels,
             print('Creating MM Embeddings...')
             mm_embedding[idx1, :shape1] = emb1
             mm_embedding[idx2, shape1:] = emb2
-
-            # for w in tqdm(mm_vocab):
-            #     try:
-            #         mm_embedding[mm_vocab.index(w), :shape1] = get_vec(w, emb1, vocab1)
-            #     except IndexError:
-            #         pass    # If the embedding doesn't have this word leave the first vector part full zeros
-            #     try:
-            #         mm_embedding[mm_vocab.index(w), shape1:] = get_vec(w, emb2, vocab2)
-            #     except IndexError:
-            #         pass    # If the embedding doesn't have this word leave the second vector part full zeros
         else:
             print(f'MM {label} without padding:')
             mm_vocab = list(set(vocab1).intersection(set(vocab2)))
             mm_embedding = np.zeros((len(mm_vocab), shape1 + shape2))
-            for w in tqdm(mm_vocab):
-                mm_embedding[mm_vocab.index(w), :shape1] = get_vec(w, emb1, vocab1)
-                mm_embedding[mm_vocab.index(w), shape1:] = get_vec(w, emb2, vocab2)
+
+            print('Creating index...')
+            idx = {x: i for i, x in enumerate(mm_vocab)}
+            idx1 = [idx[w] for w in vocab1 if w in mm_vocab]
+            idx2 = [idx[w] for w in vocab2 if w in mm_vocab]
+            emb1_idx = [i for i, x in enumerate(vocab1) if x in mm_vocab]
+            emb2_idx = [i for i, x in enumerate(vocab2) if x in mm_vocab]
+
+            print('Creating MM Embeddings...')
+            mm_embedding[idx1, :shape1] = emb1[emb1_idx]
+            mm_embedding[idx2, shape1:] = emb2[emb2_idx]
 
         mm_embeddings.append(mm_embedding)
         mm_vocabs.append(np.array(mm_vocab))

@@ -1,3 +1,6 @@
+import sys, os
+sys.path.append(os.getcwd() + '/source')
+
 from source.process_embeddings import *
 
 
@@ -21,3 +24,10 @@ def test_midfusion():
         if np.isin(word, vocab2).any():
             id2 = np.argwhere(vocab2 == word)[0][0]
             assert (mm_embs[0][i, 3:] == emb2[id2]).all()
+
+
+    mm_embs, mm_vocabs, mm_labels = mid_fusion((emb1, emb2), (vocab1, vocab2), labels, padding=False)
+    assert len(mm_vocabs) == 1
+    assert len(mm_embs) == 1
+    assert (mm_vocabs[0] == np.array(['b'])).all()
+    assert (mm_embs[0] == np.array([[4, 5, 6, 7, 8, 9]])).all()
