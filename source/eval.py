@@ -329,7 +329,7 @@ def main(datadir, vecs_names=[], vecsdir: str = None, savepath = None, loadpath 
 
     if savepath:
         print('Saving...')
-        if scores:
+        if scores is not None:
             np.save(savepath + '.npy', scores)
             with open(savepath + '_pairs.json', 'w') as f:
                 json.dump(pairs, f)
