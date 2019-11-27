@@ -254,6 +254,7 @@ def main(datadir, vecs_names=[], vecsdir: str = None, savepath = None, loadpath 
     """
 
     scores = None
+    pairs = {}
     brain_scores = None
     if not loadpath:
         if not vecsdir:
@@ -294,7 +295,10 @@ def main(datadir, vecs_names=[], vecsdir: str = None, savepath = None, loadpath 
             names += mm_labels
 
         if 'compbrain' not in actions:
-            scores, pairs = eval_dataset(data.datasets['MEN'], 'MEN', embs, vocabs, names)
+            for name, dataset in data.datasets.items():
+                dscores, dpairs = eval_dataset(dataset, name, embs, vocabs, names)
+                scores = utils.join_struct_arrays([scores, dscores])
+                pairs[name] = dpairs
 
             if pre_score_file:   # Load previously saves score file and add the new scores.
                 print(f'Load {pre_score_file} and join with new scores...')
