@@ -42,13 +42,13 @@ def get_cnn(image_dir, word_index_file, savedir=None, cnn_model='resnet', agg_ma
 
 
 def create_index_from_fnames(image_dir, savepath):
-    files = glob(image_dir)
+    files = glob(image_dir + '/*.jpg')
     word_index_file = defaultdict(list)
     for f in files:
         fname = os.path.basename(f)
         word = fname.split('_')[0]
         word_index_file[word].append(fname)
-    with open(savepath, 'wb') as f:
+    with open(savepath, 'w') as f:
         json.dump(word_index_file, f)
 
 
