@@ -236,7 +236,7 @@ def tuple_list(arg):
 @argh.arg('-mmembs', '--mm_embs_of', type=tuple_list)
 def main(datadir, vecs_names=[], vecsdir: str = None, savepath = None, loadpath = None,
          actions=['plotcorr'], gt_normalizer = 10, plot_orders = ['ground_truth'], ling = False,
-         pre_score_file: str = None, mm_embs_of: List[Tuple[str]] = None, mm_padding = False):
+         pre_score_files: str = None, mm_embs_of: List[Tuple[str]] = None, mm_padding = False):
     """
     :param datadir:
     :param vecs_names:
@@ -248,7 +248,7 @@ def main(datadir, vecs_names=[], vecsdir: str = None, savepath = None, loadpath 
     :param gt_normalizer:
     :param plot_orders:
     :param ling: True if we load linguistic embeddings.
-    :param pre_score_file: Previously saved score file path, which the new scores will be merged with
+    :param pre_score_file: Previously saved score file path without extension, which the new scores will be merged with
     :param mm_embs_of: List of str tuples, where the tuples contain names of embeddings which are to
                        be concatenated into a multi-modal mid-fusion embedding.
     """
@@ -295,16 +295,16 @@ def main(datadir, vecs_names=[], vecsdir: str = None, savepath = None, loadpath 
             names += mm_labels
 
         if 'compbrain' not in actions:
-            for i, (name, dataset) in enumerate(data.datasets.items()):
+            for name, dataset in data.datasets.items():
                 dscores, dpairs = eval_dataset(dataset, name, embs, vocabs, names)
                 scores[name] = dscores
                 pairs[name] = dpairs
 
-            # TODO: rewrite it so it works with scores dictionary of multiple datasets
-            if pre_score_file:   # Load previously saves score file and add the new scores.
-                print(f'Load {pre_score_file} and join with new scores...')
-                pre_scores = np.load(pre_score_file, allow_pickle=True)
-                scores = utils.join_struct_arrays([pre_scores, scores])
+            if pre_score_files:   # Load previously saved score files and add the new scores.
+                print(f'Load {pre_score_files} and join with new scores...')
+                for name, dataset in data.datasets.items():
+                    pre_scores = np.load(pre_score_files + + f'_{name}.npy', allow_pickle=True)
+                    scores[name] = utils.join_struct_arrays([pre_scores, scores[name]])
 
         # Brain scores
         brain_scores = {}
