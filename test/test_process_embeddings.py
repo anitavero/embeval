@@ -4,7 +4,7 @@ sys.path.append(os.getcwd() + '/source')
 from source.process_embeddings import *
 
 
-def test_midfusion():
+def test_mid_fusion():
 
     emb1 = np.array([[1, 2, 3],
                     [4, 5, 6]])
@@ -25,9 +25,38 @@ def test_midfusion():
             id2 = np.argwhere(vocab2 == word)[0][0]
             assert (mm_embs[0][i, 3:] == emb2[id2]).all()
 
+    ####### Test no padding
 
     mm_embs, mm_vocabs, mm_labels = mid_fusion((emb1, emb2), (vocab1, vocab2), labels, padding=False)
     assert len(mm_vocabs) == 1
     assert len(mm_embs) == 1
     assert (mm_vocabs[0] == np.array(['b'])).all()
     assert (mm_embs[0] == np.array([[4, 5, 6, 7, 8, 9]])).all()
+
+
+    ########## Test order matching ##########
+
+    emb1 = np.array([[1, 1],
+                     [2, 2],
+                     [3, 3]])
+    emb2 = np.array([[11, 11],
+                     [22, 22],
+                     [33, 33]])
+    vocab1 = np.array(['a', 'b', 'c'])
+    vocab2 = np.array(['c', 'a', 'b'])
+    labels = np.array(['one', 'two'])
+
+    mm_embs, mm_vocabs, mm_labels = mid_fusion((emb1, emb2), (vocab1, vocab2), labels, padding=True)
+    assert len(mm_vocabs) == 1
+    assert len(mm_embs) == 1
+    assert (mm_embs[0][np.argwhere(mm_vocabs[0] == 'a')[0][0]] == np.array([1, 1, 22, 22])).all()
+    assert (mm_embs[0][np.argwhere(mm_vocabs[0] == 'b')[0][0]] == np.array([2, 2, 33, 33])).all()
+    assert (mm_embs[0][np.argwhere(mm_vocabs[0] == 'c')[0][0]] == np.array([3, 3, 11, 11])).all()
+
+    ####### No padding should result an equivalent embedding-vocab, however not necessarily the
+    ####### "same" in terms of ordering.
+
+    mm_embs_np, mm_vocabs_np, mm_labels_np = mid_fusion((emb1, emb2), (vocab1, vocab2), labels, padding=False)
+    assert (mm_embs_np[0][np.argwhere(mm_vocabs_np[0] == 'a')[0][0]] == np.array([1, 1, 22, 22])).all()
+    assert (mm_embs_np[0][np.argwhere(mm_vocabs_np[0] == 'b')[0][0]] == np.array([2, 2, 33, 33])).all()
+    assert (mm_embs_np[0][np.argwhere(mm_vocabs_np[0] == 'c')[0][0]] == np.array([3, 3, 11, 11])).all()
