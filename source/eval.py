@@ -253,7 +253,7 @@ def main(datadir, vecs_names=[], vecsdir: str = None, savepath = None, loadpath 
                        be concatenated into a multi-modal mid-fusion embedding.
     """
 
-    scores = None
+    scores = {}
     pairs = {}
     brain_scores = None
     if not loadpath:
@@ -296,13 +296,11 @@ def main(datadir, vecs_names=[], vecsdir: str = None, savepath = None, loadpath 
 
         if 'compbrain' not in actions:
             for i, (name, dataset) in enumerate(data.datasets.items()):
-                if i == 0:
-                    scores, dpairs = eval_dataset(dataset, name, embs, vocabs, names)
-                else:
-                    dscores, dpairs = eval_dataset(dataset, name, embs, vocabs, names)
-                    scores = utils.join_struct_arrays([scores, dscores])
+                dscores, dpairs = eval_dataset(dataset, name, embs, vocabs, names)
+                scores[name] = dscores
                 pairs[name] = dpairs
 
+            # TODO: rewrite it so it works with scores dictionary of multiple datasets
             if pre_score_file:   # Load previously saves score file and add the new scores.
                 print(f'Load {pre_score_file} and join with new scores...')
                 pre_scores = np.load(pre_score_file, allow_pickle=True)
@@ -337,7 +335,8 @@ def main(datadir, vecs_names=[], vecsdir: str = None, savepath = None, loadpath 
     if savepath:
         print('Saving...')
         if scores is not None:
-            np.save(savepath + '.npy', scores)
+            for name, scs in scores.items():
+                np.save(savepath + f'_{name}.npy', scs)
             with open(savepath + '_pairs.json', 'w') as f:
                 json.dump(pairs, f)
         with open(savepath + '_brain.json', 'w') as f:
