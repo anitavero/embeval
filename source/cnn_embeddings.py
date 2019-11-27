@@ -3,6 +3,7 @@ sys.path.append("../../img2vec/img2vec_pytorch")  # Adds higher directory to pyt
 from img_to_vec import Img2Vec
 from PIL import Image
 import json
+from tqdm import tqdm
 import argh
 from argh import arg
 from collections import defaultdict
@@ -14,21 +15,15 @@ def get_cnn(image_dir, word_index_file, cnn_model='resnet'):
     img2vec = Img2Vec(model=cnn_model)
 
     # Dictionary of {words: {img_name: img_representation}}
-    word_img_repr = defaultdict(list)
+    word_img_repr = defaultdict(dict)
 
     with open(word_index_file) as f:
         word_imgs = json.load(f)
 
-    for word, img_names in word_imgs.items():
-        list_pics = []
-        filenames = []
+    for word, img_names in tqdm(word_imgs.items()):
         for imgn in img_names:
             img = Image.open(os.path.join(image_dir, imgn))
-            list_pics.append(img)
-            filenames.append(imgn)
-
-        vectors = img2vec.get_vec(list_pics)
-        word_img_repr[word] = vectors
+            word_img_repr[word][imgn] = img2vec.get_vec(img)
 
     return word_img_repr
 
