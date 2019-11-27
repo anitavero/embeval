@@ -29,7 +29,11 @@ def serialize2npy(filepath: str, savedir: str, maxnum: int = 10):
 
     # Save vocabulary
     with open(os.path.join(savedir, filename + '.vocab'), 'w') as f:
-        f.write('\n'.join([str(s, 'utf-8') for s in data_dict.keys()]))
+        try:    # TODO: review handling str
+            vocab = [str(s, 'utf-8') for s in data_dict.keys()]
+        except:
+            vocab = [str(s) for s in data_dict.keys()]
+        f.write('\n'.join(vocab))
 
     values = list(data_dict.values())
     if isinstance(values[0], dict):
