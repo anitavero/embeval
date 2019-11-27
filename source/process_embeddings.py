@@ -1,5 +1,6 @@
 import os
 import pickle
+import json
 import numpy as np
 from tqdm import tqdm
 import argh
@@ -8,7 +9,7 @@ from itertools import combinations
 from utils import get_vec
 
 
-def pickle2npy(filepath: str, savedir: str, maxnum: int = 10):
+def serialize2npy(filepath: str, savedir: str, maxnum: int = 10):
     """Save embedding files from pickle containing dictionary of {word: np.ndarray}
         into embedding.npy, embedding.vocab, for eval.
         The embedding is a numpy array of shape(vocab size, vector dim)
@@ -17,10 +18,14 @@ def pickle2npy(filepath: str, savedir: str, maxnum: int = 10):
                 either {word: <image embedding list>}
                 or     {word: <image embedding>}        ('descriptors' suffix in mmfeat file names)
     """
-    with open(filepath, 'rb') as f:
-        data_dict = pickle.load(f, encoding='bytes')  # Load python2 pickles
+    filename, ext = os.path.basename(filepath).split('.')
 
-    filename = os.path.basename(filepath).split('.')[0]
+    if ext == 'pkl':
+        with open(filepath, 'rb') as f:
+            data_dict = pickle.load(f, encoding='bytes')  # Load python2 pickles
+    elif ext == 'json':
+        with open(filepath, 'r') as f:
+            data_dict = json.load(f)
 
     # Save vocabulary
     with open(os.path.join(savedir, filename + '.vocab'), 'w') as f:
@@ -121,4 +126,4 @@ def mid_fusion(embeddings, vocabs, labels,
 
 
 if __name__ == '__main__':
-    argh.dispatch_command(pickle2npy)
+    argh.dispatch_command(serialize2npy)
