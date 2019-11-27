@@ -88,8 +88,8 @@ def mid_fusion(embeddings, vocabs, labels,
             idx = {x: i for i, x in enumerate(mm_vocab)}
             idx_v1 = {x: i for i, x in enumerate(vocab1)}
             idx_v2 = {x: i for i, x in enumerate(vocab2)}
-            idx1, idx_emb1 = zip(*[(idx[w], idx_v1[w]) for w in vocab1 if w in mm_vocab])
-            idx2, idx_emb2 = zip(*[(idx[w], idx_v2[w]) for w in vocab2 if w in mm_vocab])
+            idx1, idx_emb1 = zip(*[(idx[w], idx_v1[w]) for w in vocab1 if w in tqdm(mm_vocab)])
+            idx2, idx_emb2 = zip(*[(idx[w], idx_v2[w]) for w in vocab2 if w in tqdm(mm_vocab)])
 
             print('Creating MM Embeddings...')
             mm_embedding[idx1, :shape1] = emb1[idx_emb1, :]
