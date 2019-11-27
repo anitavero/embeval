@@ -13,7 +13,7 @@ from process_embeddings import serialize2npy
 
 
 @arg('-cnn', '--cnn_model', choices=['alexnet', 'resnet-18', 'googlenet'], default='resnet-18')   # TODO
-def get_cnn(image_dir, word_index_file, cnn_model='resnet', agg_maxnum=10):
+def get_cnn(image_dir, word_index_file, savedir=None, cnn_model='resnet', agg_maxnum=10):
     """Extract CNN representations for images in a directory and saves it into a dictionary file."""
     img2vec = Img2Vec(model=cnn_model)
 
@@ -29,12 +29,15 @@ def get_cnn(image_dir, word_index_file, cnn_model='resnet', agg_maxnum=10):
             word_img_repr[word][imgn] = img2vec.get_vec(img)
 
     # Save representations
-    repr_path = os.path.join(image_dir, cnn_model + '.pkl')
+    if savedir is None:
+        savedir = image_dir
+
+    repr_path = os.path.join(savedir, cnn_model + '.pkl')
     with open(repr_path, 'wb') as f:
         pickle.dump(word_img_repr, f)
 
-    # Save  aggregated embeddings
-    serialize2npy(repr_path, image_dir, agg_maxnum)
+    # Save aggregated embeddings
+    serialize2npy(repr_path, savedir, agg_maxnum)
 
 
 if __name__ == '__main__':
