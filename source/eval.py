@@ -316,7 +316,7 @@ def main(datadir, vecs_names=[], vecsdir: str = None, savepath = None, loadpath 
             print_correlations(scores)
         print('\n-------- Brain scores -------\n')
         for name in brain_scores.keys():
-            print(name)
+            print('\n' + name)
             print("There are %d words found from the input" % brain_scores[name]['lenght'])
             print("The fMRI avg score is %f" % brain_scores[name]['fMRI'])
             print("The MEG avg score is %f" % brain_scores[name]['MEG'])
@@ -329,9 +329,10 @@ def main(datadir, vecs_names=[], vecsdir: str = None, savepath = None, loadpath 
 
     if savepath:
         print('Saving...')
-        np.save(savepath + '.npy', scores)
-        with open(savepath + '_pairs.json', 'w') as f:
-            json.dump(pairs, f)
+        if scores:
+            np.save(savepath + '.npy', scores)
+            with open(savepath + '_pairs.json', 'w') as f:
+                json.dump(pairs, f)
         with open(savepath + '_brain.json', 'w') as f:
             json.dump(brain_scores, f)
 
