@@ -9,9 +9,10 @@ from utils import get_vec
 
 
 def agg_img_embeddings(filepath: str, savedir: str, maxnum: int = 10):
-    """Convert a pickled dictionary to numpy embedding end vocabulary files for eval.
+    """Aggregate image vectors from a pickled dictionary of to numpy embedding and vocabulary files for eval.
         The embedding is a numpy array of shape(vocab size, vector dim)
-        Vocabulary is a text file including word separated by new line.
+        Vocabulary is a text file including words separated by new line.
+        :param filepath: Path to a pickle file containing a dict of {word: <image embedding list>}
     """
 
     with open(filepath, 'rb') as f:
@@ -19,6 +20,7 @@ def agg_img_embeddings(filepath: str, savedir: str, maxnum: int = 10):
 
     filename = os.path.basename(filepath).split('.')[0]
 
+    # Save vocabulary
     with open(os.path.join(savedir, filename + '.vocab'), 'w') as f:
         f.write('\n'.join([str(s, 'utf-8') for s in data_dict.keys()]))
 
@@ -28,6 +30,7 @@ def agg_img_embeddings(filepath: str, savedir: str, maxnum: int = 10):
         vecs = np.array(list(imgs.values()))
         embeddings[i] = vecs[:min(maxnum, vecs.shape[0])].mean(axis=0)
 
+    # Save embedding
     np.save(os.path.join(savedir, filename + '.npy'), embeddings)
 
 
