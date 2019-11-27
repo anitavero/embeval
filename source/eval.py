@@ -207,23 +207,6 @@ def plot_scores(scores: np.ndarray, gt_divisor=10) -> None:
     plt.show()
 
 
-# def eval(vecs_name=None):
-#     if vecs_name:
-#         load_vecs(vecs_name)
-#     print('MEN')
-#     men_results     = [x for x in eval_vg_dataset(men)]
-#     print('SimLex')
-#     simlex_results  = [x for x in eval_vg_dataset(simlex)]
-#     print('SimVerb')
-#     simverb_results = [x for x in eval_vg_dataset(simverb)]
-#     res_names = ['vg_spearman', 'w2v_spearman', 'scores', 'pred_scores', 'w2v_scores', 'pairs']
-#
-#     results = {'men':     dict(zip(res_names, men_results)),
-#                'simlex':  dict(zip(res_names, simlex_results)),
-#                'simverb': dict(zip(res_names, simverb_results))}
-#     return results
-
-
 def qa(res, dataset='simlex'):
     scores = np.array([res[dataset]['scores'], res[dataset]['pred_scores'], res[dataset]['w2v_scores']])
     scores = scores.transpose()
@@ -251,7 +234,7 @@ def tuple_list(arg):
 @argh.arg('-vns', '--vecs_names', nargs='+', type=str)
 @argh.arg('-plto', '--plot_orders', nargs='+', type=str)
 @argh.arg('-mmembs', '--mm_embs_of', type=tuple_list)
-def main(datadir, vecs_names=[], vecsdir: str = None, savepath = None, loadfile = None,
+def main(datadir, vecs_names=[], vecsdir: str = None, savepath = None, loadpath = None,
          actions=['plotcorr'], gt_normalizer = 10, plot_orders = ['ground_truth'], ling = False,
          pre_score_file: str = None, mm_embs_of: List[Tuple[str]] = None, mm_padding = False):
     """
@@ -259,7 +242,8 @@ def main(datadir, vecs_names=[], vecsdir: str = None, savepath = None, loadfile 
     :param vecs_names:
     :param vecsdir:
     :param savepath: Full path to the file to save scores without extension. None if there's no saving.
-    :param loadfile:
+    :param loadpath: Full path to the files to load scores and brain results from without extension.
+                     If None, they'll be computed.
     :param actions:
     :param gt_normalizer:
     :param plot_orders:
@@ -270,7 +254,8 @@ def main(datadir, vecs_names=[], vecsdir: str = None, savepath = None, loadfile 
     """
 
     scores = None
-    if not loadfile:
+    brain_scores = None
+    if not loadpath:
         if not vecsdir:
             vecsdir = datadir + '/mmdeed'
 
@@ -284,7 +269,9 @@ def main(datadir, vecs_names=[], vecsdir: str = None, savepath = None, loadfile 
         data = DataSets(datadir, ling)
 
     else:
-       scores = np.load(loadfile, allow_pickle=True)
+       scores = np.load(loadpath + '.npy', allow_pickle=True)
+       with open(loadpath + '_brain.json', 'r') as f:
+           brain_scores = json.load(f)
 
     if 'compscores' in actions or 'compbrain' in actions:
         print(actions)
@@ -328,7 +315,7 @@ def main(datadir, vecs_names=[], vecsdir: str = None, savepath = None, loadfile 
         if scores is not None:
             print_correlations(scores)
         print('\n-------- Brain scores -------\n')
-        for name in names:
+        for name in brain_scores.keys():
             print(name)
             print("There are %d words found from the input" % brain_scores[name]['lenght'])
             print("The fMRI avg score is %f" % brain_scores[name]['fMRI'])
