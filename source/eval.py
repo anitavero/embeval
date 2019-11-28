@@ -271,7 +271,7 @@ def main(datadir, vecs_names=[], vecsdir: str = None, savepath = None, loadpath 
 
     else:
        scores = np.load(loadpath + '.npy', allow_pickle=True)
-       with open(loadpath + '_brain.json', 'r') as f:
+       with open('_'.join(loadpath.split('_')[:-1]) + '_brain.json', 'r') as f:
            brain_scores = json.load(f)
 
     if 'compscores' in actions or 'compbrain' in actions:
