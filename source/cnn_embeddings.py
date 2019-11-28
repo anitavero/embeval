@@ -1,5 +1,6 @@
 import sys, os
 sys.path.append("../../img2vec/img2vec_pytorch")  # Adds higher directory to python modules path.
+sys.path.append("../img2vec/img2vec_pytorch")  # Adds higher directory to python modules path.
 from img_to_vec import Img2Vec
 from PIL import Image
 import json
