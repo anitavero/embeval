@@ -14,7 +14,11 @@ from glob import glob
 from process_embeddings import serialize2npy
 
 # TODO: more models
-@arg('-cnn', '--cnn_model', choices=['alexnet', 'resnet-18', 'googlenet'], default='resnet-18')
+cnn_models = ['alexnet', 'resnet18', 'resnet34', 'resnet50', 'resnet101',
+           'resnet152', 'resnext50_32x4d', 'resnext101_32x8d',
+           'wide_resnet50_2', 'wide_resnet101_2']
+
+@arg('-cnn', '--cnn_model', choices=cnn_models, default='resnet18')
 def get_cnn(image_dir, word_index_file, savedir=None, cnn_model='resnet-18', agg_maxnum=10, gpu=False,
             filename_prefix=''):
     """Extract CNN representations for images in a directory and saves it into a dictionary file."""
