@@ -14,9 +14,9 @@ from process_embeddings import serialize2npy
 
 # TODO: more models
 @arg('-cnn', '--cnn_model', choices=['alexnet', 'resnet-18', 'googlenet'], default='resnet-18')
-def get_cnn(image_dir, word_index_file, savedir=None, cnn_model='resnet', agg_maxnum=10):
+def get_cnn(image_dir, word_index_file, savedir=None, cnn_model='resnet', agg_maxnum=10, gpu=False):
     """Extract CNN representations for images in a directory and saves it into a dictionary file."""
-    img2vec = Img2Vec(model=cnn_model)
+    img2vec = Img2Vec(model=cnn_model, cuda=gpu)
 
     # Dictionary of {words: {img_name: img_representation}}
     word_img_repr = defaultdict(dict)
