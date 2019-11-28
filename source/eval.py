@@ -303,7 +303,7 @@ def main(datadir, vecs_names=[], vecsdir: str = None, savepath = None, loadpath 
             if pre_score_files:   # Load previously saved score files and add the new scores.
                 print(f'Load {pre_score_files} and join with new scores...')
                 for name, dataset in data.datasets.items():
-                    pre_scores = np.load(pre_score_files + + f'_{name}.npy', allow_pickle=True)
+                    pre_scores = np.load(f'{pre_score_files}_{name}.npy', allow_pickle=True)
                     scores[name] = utils.join_struct_arrays([pre_scores, scores[name]])
 
         # Brain scores
