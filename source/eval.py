@@ -73,6 +73,8 @@ class Embeddings:
             print('Done.')
 
         #Load other (visual) embeddings
+        vis_embeddings = []
+        vis_vocabs = []
         for vecs_name in vecs_names:
             vecs, vocab = load_vecs(vecs_name, datadir)
             self.vis_embeddings.append(vecs)
