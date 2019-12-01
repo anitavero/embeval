@@ -244,7 +244,7 @@ def tuple_list(arg):
 @argh.arg('-vns', '--vecs_names', nargs='+', type=str)
 @argh.arg('-plto', '--plot_orders', nargs='+', type=str)
 @argh.arg('-mmembs', '--mm_embs_of', type=tuple_list)
-def main(datadir: str = None, vecs_names=[], savepath = None, loadpath = None,
+def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath = None,
          actions=['plotcorr'], gt_normalizer = 10, plot_orders = ['ground_truth'], ling = False,
          pre_score_files: str = None, mm_embs_of: List[Tuple[str]] = None, mm_padding = False):
     """
@@ -275,7 +275,9 @@ def main(datadir: str = None, vecs_names=[], savepath = None, loadpath = None,
         with open(f'{loadpath}_brain.json', 'r') as f:
             brain_scores = json.load(f)
     else:
-        embeddings = Embeddings(datadir, vecs_names, ling)
+        if not embdir:
+            embdir = datadir
+        embeddings = Embeddings(embdir, vecs_names, ling)
 
     if 'compscores' in actions or 'compbrain' in actions:
         print(actions)
