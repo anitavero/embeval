@@ -303,7 +303,7 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath =
             vocabs += mm_vocabs
             names += mm_labels
 
-        if 'compbrain' not in actions:
+        if 'compbrain' not in actions:  # If compbrain, don't compute semsim scores
             for name, dataset in datasets.datasets.items():
                 dscores, dpairs = eval_dataset(dataset, name, embs, vocabs, names)
                 scores[name] = dscores
@@ -317,13 +317,14 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath =
 
             if pre_score_files:   # Load previously saved score files and add the new scores.
                 print(f'Load {pre_score_files} and join with new scores...')
-                for name, dataset in datasets.datasets.items():
-                    pre_scores = np.load(f'{pre_score_files}_{name}.npy', allow_pickle=True)
-                    scores[name] = utils.join_struct_arrays([pre_scores, scores[name]])
+                if 'compbrain' not in actions:  # If compbrain, don't compute semsim scores
+                    for name, dataset in datasets.datasets.items():
+                        pre_scores = np.load(f'{pre_score_files}_{name}.npy', allow_pickle=True)
+                        scores[name] = utils.join_struct_arrays([pre_scores, scores[name]])
                 with open(f'{pre_score_files}_brain.json', 'r') as f:
                     pre_brain_scores = json.load(f)
-                    for pname, pbscores in pre_brain_scores:
-                        scores[pname] = pbscores
+                    for pname, pbscores in pre_brain_scores.items():
+                        brain_scores[name] = pbscores
 
     if 'plotscores' in actions:
         for plot_order in plot_orders:  # order similarity scores of these datasets or embeddings
