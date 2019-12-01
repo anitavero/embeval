@@ -59,6 +59,7 @@ class Embeddings:
     fasttext_vocab: List[str]
     vis_embeddings = List[np.ndarray]
     vis_vocabs = List[List[str]]
+    vecs_names = List[str]
 
     def __init__(self, datadir: str, vecs_names, ling: bool=True):
         if ling:    # only load linguistic embeddings if ling==True
@@ -73,8 +74,9 @@ class Embeddings:
             print('Done.')
 
         #Load other (visual) embeddings
-        vis_embeddings = []
-        vis_vocabs = []
+        self.vecs_names = vecs_names
+        self.vis_embeddings = []
+        self.vis_vocabs = []
         for vecs_name in vecs_names:
             vecs, vocab = load_vecs(vecs_name, datadir)
             self.vis_embeddings.append(vecs)
