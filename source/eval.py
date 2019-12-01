@@ -34,20 +34,33 @@ class DataSets:
     fmri_vocab: List[str]
     datasets = {}
 
-    # Linguistic Embeddings
-    w2v_vecs: np.ndarray
-    w2v_vocab: List[str]
-    fasttext_vecs: np.ndarray
-    fasttext_vocab: List[str]
-
-
-    def __init__(self, datadir: str, ling: bool=True):
+    def __init__(self, datadir: str):
         SIMVERB = datadir + '/simverb-3500-data'
         simverb_full = list(csv.reader(open(SIMVERB + '/SimVerb-3500.txt'), delimiter='\t'))
         self.simverb = list(map(lambda x: [x[0], x[1], x[3]], simverb_full))
         self.men = json.load(open(datadir + '/men.json'))
         self.simlex = json.load(open(datadir + '/simlex.json'))
+        self.fmri_vocab = ['airplane', 'ant', 'apartment', 'arch', 'arm', 'barn', 'bear', 'bed', 'bee', 'beetle', 'bell',
+                          'bicycle', 'bottle', 'butterfly', 'car', 'carrot', 'cat', 'celery', 'chair', 'chimney', 'chisel',
+                          'church', 'closet', 'coat', 'corn', 'cow', 'cup', 'desk', 'dog', 'door', 'dress', 'dresser',
+                          'eye', 'fly', 'foot', 'glass', 'hammer', 'hand', 'horse', 'house', 'igloo', 'key', 'knife', 'leg',
+                          'lettuce', 'pants', 'pliers', 'refrigerator', 'saw', 'screwdriver', 'shirt', 'skirt', 'spoon',
+                          'table', 'telephone', 'tomato', 'train', 'truck', 'watch', 'window']
 
+        self.datasets = {'MEN': self.men, 'SimLex': self.simlex, 'SimVerb': self.simverb}
+
+
+class Embeddings:
+    """Data class for storing embeddings."""
+    # Linguistic Embeddings
+    w2v_vecs: np.ndarray
+    w2v_vocab: List[str]
+    fasttext_vecs: np.ndarray
+    fasttext_vocab: List[str]
+    vis_embeddings = List[np.ndarray]
+    vis_vocabs = List[List[str]]
+
+    def __init__(self, datadir: str, vecs_names, ling: bool=True):
         if ling:    # only load linguistic embeddings if ling==True
             w2v = json.load(open(datadir + '/w2v_simverb.json'))
             w2v_simrel = json.load(open(datadir + '/simrel-wikipedia.json'))
@@ -59,14 +72,11 @@ class DataSets:
             self.fasttext_vecs, self.fasttext_vocab = load_fasttext(datadir + '/wiki-news-300d-1M.vec')
             print('Done.')
 
-        self.fmri_vocab = ['airplane', 'ant', 'apartment', 'arch', 'arm', 'barn', 'bear', 'bed', 'bee', 'beetle', 'bell',
-                          'bicycle', 'bottle', 'butterfly', 'car', 'carrot', 'cat', 'celery', 'chair', 'chimney', 'chisel',
-                          'church', 'closet', 'coat', 'corn', 'cow', 'cup', 'desk', 'dog', 'door', 'dress', 'dresser',
-                          'eye', 'fly', 'foot', 'glass', 'hammer', 'hand', 'horse', 'house', 'igloo', 'key', 'knife', 'leg',
-                          'lettuce', 'pants', 'pliers', 'refrigerator', 'saw', 'screwdriver', 'shirt', 'skirt', 'spoon',
-                          'table', 'telephone', 'tomato', 'train', 'truck', 'watch', 'window']
-
-        self.datasets = {'MEN': self.men, 'SimLex': self.simlex, 'SimVerb': self.simverb}
+        #Load other (visual) embeddings
+        for vecs_name in vecs_names:
+            vecs, vocab = load_vecs(vecs_name, datadir)
+            self.vis_embeddings.append(vecs)
+            self.vis_vocabs.append(vocab)
 
 
 def load_fasttext(fname: str) -> Tuple[np.ndarray, np.ndarray]:
@@ -234,7 +244,7 @@ def tuple_list(arg):
 @argh.arg('-vns', '--vecs_names', nargs='+', type=str)
 @argh.arg('-plto', '--plot_orders', nargs='+', type=str)
 @argh.arg('-mmembs', '--mm_embs_of', type=tuple_list)
-def main(datadir, vecs_names=[], vecsdir: str = None, savepath = None, loadpath = None,
+def main(datadir: str = None, vecs_names=[], savepath = None, loadpath = None,
          actions=['plotcorr'], gt_normalizer = 10, plot_orders = ['ground_truth'], ling = False,
          pre_score_files: str = None, mm_embs_of: List[Tuple[str]] = None, mm_padding = False):
     """
@@ -256,33 +266,26 @@ def main(datadir, vecs_names=[], vecsdir: str = None, savepath = None, loadpath 
     scores = {}
     pairs = {}
     brain_scores = None
-    if not loadpath:
-        if not vecsdir:
-            vecsdir = datadir + '/mmdeed'
 
-        vis_embeddings = []
-        vis_vocabs = []
-        for vecs_name in vecs_names:
-            vecs, vocab = load_vecs(vecs_name, vecsdir)
-            vis_embeddings.append(vecs)
-            vis_vocabs.append(vocab)
+    datasets = DataSets(datadir)
 
-        data = DataSets(datadir, ling)
-
+    if loadpath:
+        for name, dataset in datasets.datasets.items():
+            scores[name] = np.load(f'{loadpath}_{name}.npy', allow_pickle=True)
+        with open(f'{loadpath}_brain.json', 'r') as f:
+            brain_scores = json.load(f)
     else:
-       scores = np.load(loadpath + '.npy', allow_pickle=True)
-       with open('_'.join(loadpath.split('_')[:-1]) + '_brain.json', 'r') as f:
-           brain_scores = json.load(f)
+        embeddings = Embeddings(datadir, vecs_names, ling)
 
     if 'compscores' in actions or 'compbrain' in actions:
         print(actions)
-        embs = vis_embeddings
-        vocabs = vis_vocabs
-        names = vecs_names
+        embs = embeddings.vis_embeddings
+        vocabs = embeddings.vis_vocabs
+        names = embeddings.vecs_names
 
         if ling:
-            embs += [data.w2v_vecs, data.fasttext_vecs]
-            vocabs += [data.w2v_vocab, data.fasttext_vocab]
+            embs += [embeddings.w2v_vecs, embeddings.fasttext_vecs]
+            vocabs += [embeddings.w2v_vocab, embeddings.fasttext_vocab]
             names += ['w2v', 'fasttext']
 
         if mm_embs_of:  # Create MM Embeddings based on the given embedding labels
@@ -295,22 +298,26 @@ def main(datadir, vecs_names=[], vecsdir: str = None, savepath = None, loadpath 
             names += mm_labels
 
         if 'compbrain' not in actions:
-            for name, dataset in data.datasets.items():
+            for name, dataset in datasets.datasets.items():
                 dscores, dpairs = eval_dataset(dataset, name, embs, vocabs, names)
                 scores[name] = dscores
                 pairs[name] = dpairs
 
+            # Brain scores
+            brain_scores = {}
+            for emb, vocab, name in zip(embs, vocabs, names):
+                fMRI_score, MEG_score, length = two_vs_two.run_test(embedding=emb, vocab=vocab)
+                brain_scores[name] = {'fMRI': fMRI_score, 'MEG': MEG_score, 'lenght': length}
+
             if pre_score_files:   # Load previously saved score files and add the new scores.
                 print(f'Load {pre_score_files} and join with new scores...')
-                for name, dataset in data.datasets.items():
+                for name, dataset in datasets.datasets.items():
                     pre_scores = np.load(f'{pre_score_files}_{name}.npy', allow_pickle=True)
                     scores[name] = utils.join_struct_arrays([pre_scores, scores[name]])
-
-        # Brain scores
-        brain_scores = {}
-        for emb, vocab, name in zip(embs, vocabs, names):
-            fMRI_score, MEG_score, length = two_vs_two.run_test(embedding=emb, vocab=vocab)
-            brain_scores[name] = {'fMRI': fMRI_score, 'MEG': MEG_score, 'lenght': length}
+                with open(f'{pre_score_files}_brain.json', 'r') as f:
+                    pre_brain_scores = json.load(f)
+                    for pname, pbscores in pre_brain_scores:
+                        scores[pname] = pbscores
 
     if 'plotscores' in actions:
         for plot_order in plot_orders:  # order similarity scores of these datasets or embeddings
@@ -318,7 +325,10 @@ def main(datadir, vecs_names=[], vecsdir: str = None, savepath = None, loadpath 
 
     if 'printcorr' in actions:
         if scores is not None:
-            print_correlations(scores)
+            for name, scrs in scores.items():
+                print(f'\n-------- {name} scores -------\n')
+                print_correlations(scrs)
+
         print('\n-------- Brain scores -------\n')
         for name in brain_scores.keys():
             print('\n' + name)
@@ -327,10 +337,10 @@ def main(datadir, vecs_names=[], vecsdir: str = None, savepath = None, loadpath 
             print("The MEG avg score is %f" % brain_scores[name]['MEG'])
 
     if 'coverage' in actions:
-        for vocab, name in zip([data.w2v_vocab, data.fasttext_vocab] + vis_vocabs,
+        for vocab, name in zip([embeddings.w2v_vocab, embeddings.fasttext_vocab] + embeddings.vis_vocabs,
                                ['w2v', 'fasttext'] + vecs_names):
             print('\n--------------' + name + '--------------\n')
-            coverage(vocab, data)
+            coverage(vocab, datasets)
 
     if savepath:
         print('Saving...')
