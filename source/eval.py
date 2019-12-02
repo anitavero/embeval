@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 import copy
 import io
 from itertools import combinations
+from tabulate import tabulate
 
 from process_embeddings import mid_fusion
 import utils
@@ -180,9 +181,8 @@ def compute_correlations(scores: (np.ndarray, list), name_pairs: List[Tuple[str,
 
 def print_correlations(scores: (np.ndarray, list), name_pairs: List[Tuple[str, str]] = None):
     correlations = compute_correlations(scores, name_pairs)
-    print('Spearman correlations:')
-    for np, corr in correlations.items():
-        print(f'{np}: {corr.correlation} (p={corr.pvalue})')
+    print(tabulate([(np, corr.correlation, corr.pvalue) for np, corr in correlations.items()],
+          headers=['Name pairs', 'Spearman', 'P-value']))
 
 
 def eval_dataset(dataset: List[Tuple[str, str, float]],
@@ -203,7 +203,7 @@ def eval_dataset(dataset: List[Tuple[str, str, float]],
                 scores[label][i] = cosine_similarity(get_vec(w1, emb, vocab), get_vec(w2, emb, vocab))[0][0]
             except IndexError:
                 scores[label][i] = -2
-            if (scores[label] == 2).all():
+            if (scores[label] == -2).all():
                 print('Warning: No word pairs were found!')
         pairs.append((w1, w2))
 
@@ -254,7 +254,7 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath =
     """
     :param datadir:
     :param vecs_names:
-    :param vecsdir:
+    :param embdir:
     :param savepath: Full path to the file to save scores without extension. None if there's no saving.
     :param loadpath: Full path to the files to load scores and brain results from without extension.
                      If None, they'll be computed.
@@ -269,7 +269,7 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath =
 
     scores = {}
     pairs = {}
-    brain_scores = None
+    brain_scores = {}
 
     datasets = DataSets(datadir)
 
@@ -303,26 +303,26 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath =
             vocabs += mm_vocabs
             names += mm_labels
 
-        if 'compbrain' not in actions:  # If compbrain, don't compute semsim scores
+        if 'compscores' in actions: # SemSim scores
             for name, dataset in datasets.datasets.items():
                 dscores, dpairs = eval_dataset(dataset, name, embs, vocabs, names)
                 scores[name] = dscores
                 pairs[name] = dpairs
 
-            # Brain scores
-            brain_scores = {}
+            if pre_score_files:   # Load previously saved score files and add the new scores.
+                print(f'Load {pre_score_files} and join with new scores...')
+                for name, dataset in datasets.datasets.items():
+                    pre_scores = np.load(f'{pre_score_files}_{name}.npy', allow_pickle=True)
+                    scores[name] = utils.join_struct_arrays([pre_scores, scores[name]])
+
+        if 'compbrain' in actions:  # Brain scores
             for emb, vocab, name in zip(embs, vocabs, names):
                 fMRI_score, MEG_score, length = two_vs_two.run_test(embedding=emb, vocab=vocab)
                 brain_scores[name] = {'fMRI': fMRI_score, 'MEG': MEG_score, 'lenght': length}
 
-            if pre_score_files:   # Load previously saved score files and add the new scores.
-                print(f'Load {pre_score_files} and join with new scores...')
-                if 'compbrain' not in actions:  # If compbrain, don't compute semsim scores
-                    for name, dataset in datasets.datasets.items():
-                        pre_scores = np.load(f'{pre_score_files}_{name}.npy', allow_pickle=True)
-                        scores[name] = utils.join_struct_arrays([pre_scores, scores[name]])
+            if pre_score_files:  # Load previously saved score files and add the new scores.
                 with open(f'{pre_score_files}_brain.json', 'r') as f:
-                    pre_brain_scores = json.load(f)
+                    pre_brain_scores = json.load(f)  # TODO
                     for pname, pbscores in pre_brain_scores.items():
                         brain_scores[name] = pbscores
 
@@ -334,7 +334,7 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath =
         if scores is not None:
             for name, scrs in scores.items():
                 print(f'\n-------- {name} scores -------\n')
-                print_correlations(scrs)
+                print_correlations(scrs, name_pairs=None)   # Name pairs could be specified
 
         print('\n-------- Brain scores -------\n')
         for name in brain_scores.keys():
@@ -351,13 +351,14 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath =
 
     if savepath:
         print('Saving...')
-        if scores is not None:
+        if scores != {}:
             for name, scs in scores.items():
                 np.save(savepath + f'_{name}.npy', scs)
             with open(savepath + '_pairs.json', 'w') as f:
                 json.dump(pairs, f)
-        with open(savepath + '_brain.json', 'w') as f:
-            json.dump(brain_scores, f)
+        if brain_scores != {}:
+            with open(savepath + '_brain.json', 'w') as f:
+                json.dump(brain_scores, f)
 
 
 if __name__ == '__main__':
