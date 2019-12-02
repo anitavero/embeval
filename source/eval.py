@@ -243,14 +243,16 @@ def tuple_list(arg):
         raise argparse.ArgumentTypeError("Tuple list must be whitespace separated str lists, " +
                                          "separated by |. eg. embs1 embs2 | embs2 embs3 embs4")
 
-
+# TODO: Nicer parameter handling, with exception messages
 @arg('-a', '--actions', nargs='+', choices=['printcorr', 'plotscores', 'coverage', 'compscores', 'compbrain'], default='printcorr')
 @argh.arg('-vns', '--vecs_names', nargs='+', type=str)
 @argh.arg('-plto', '--plot_orders', nargs='+', type=str)
 @argh.arg('-mmembs', '--mm_embs_of', type=tuple_list)
+@argh.arg('-pcorr', '--print_corr_for', choices=['gt', 'all'], default='all')
 def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath = None,
          actions=['plotcorr'], gt_normalizer = 10, plot_orders = ['ground_truth'], ling = False,
-         pre_score_files: str = None, mm_embs_of: List[Tuple[str]] = None, mm_padding = False):
+         pre_score_files: str = None, mm_embs_of: List[Tuple[str]] = None, mm_padding = False,
+         print_corr_for = None):
     """
     :param datadir:
     :param vecs_names:
@@ -265,6 +267,9 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath =
     :param pre_score_file: Previously saved score file path without extension, which the new scores will be merged with
     :param mm_embs_of: List of str tuples, where the tuples contain names of embeddings which are to
                        be concatenated into a multi-modal mid-fusion embedding.
+    :param mm_padding:
+    :param print_corr_for: 'gt' prints correlations scores for ground truth, 'all' prints scores between all
+                            pairs of scores.
     """
 
     scores = {}
@@ -332,9 +337,13 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath =
 
     if 'printcorr' in actions:
         if scores is not None:
+            if print_corr_for == 'gt':
+                name_pairs = [('ground_truth', nm) for nm in list(scores.values())[0].dtype.names]
+            elif print_corr_for == 'all':
+                name_pairs = None   # Will print score correlations for all combinations of 2
             for name, scrs in scores.items():
                 print(f'\n-------- {name} scores -------\n')
-                print_correlations(scrs, name_pairs=None)   # Name pairs could be specified
+                print_correlations(scrs, name_pairs=name_pairs)
 
         print('\n-------- Brain scores -------\n')
         for name in brain_scores.keys():
