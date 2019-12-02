@@ -174,7 +174,7 @@ def compute_correlations(scores: (np.ndarray, list), name_pairs: List[Tuple[str,
 
     correlations = {}
     for nm1, nm2 in name_pairs:
-        correlations['-'.join([nm1, nm2])] = spearmanr(scores[nm1], scores[nm2])
+        correlations[' | '.join([nm1, nm2])] = spearmanr(scores[nm1], scores[nm2])
 
     return correlations
 
