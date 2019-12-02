@@ -322,7 +322,7 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath =
 
             if pre_score_files:  # Load previously saved score files and add the new scores.
                 with open(f'{pre_score_files}_brain.json', 'r') as f:
-                    pre_brain_scores = json.load(f)  # TODO
+                    pre_brain_scores = json.load(f)
                     for pname, pbscores in pre_brain_scores.items():
                         brain_scores[name] = pbscores
 
