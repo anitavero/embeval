@@ -71,6 +71,8 @@ class Embeddings:
         # Load Linguistic Embeddings if they are given
         if ling_vecs_names != []:
             self.ling_vecs_names = ling_vecs_names
+            self.ling_embeddings = []
+            self.ling_vocabs = []
             if 'w2v13' in ling_vecs_names:
                 ling_vecs_names.remove('w2v13')
                 w2v = json.load(open(datadir + '/w2v_simverb.json'))
