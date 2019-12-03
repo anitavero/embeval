@@ -53,28 +53,40 @@ class DataSets:
 
 class Embeddings:
     """Data class for storing embeddings."""
-    # Linguistic Embeddings
-    w2v_vecs: np.ndarray
-    w2v_vocab: List[str]
-    fasttext_vecs: np.ndarray
-    fasttext_vocab: List[str]
+    # Embeddings
     vis_embeddings = List[np.ndarray]
     vis_vocabs = List[List[str]]
     vecs_names = List[str]
 
-    def __init__(self, datadir: str, vecs_names, ling: bool=True):
-        if ling:    # only load linguistic embeddings if ling==True
-            w2v = json.load(open(datadir + '/w2v_simverb.json'))
-            w2v_simrel = json.load(open(datadir + '/simrel-wikipedia.json'))
-            w2v.update(w2v_simrel)
-            self.w2v_vecs = np.array(list(w2v.values()))
-            self.w2v_vocab = np.array(list(w2v.keys()))
+    # Linguistic Embeddings
+    fasttext_vss = {'wikinews': 'wiki-news-300d-1M.vec.zip',
+                    'wikinews-sub': 'wiki-news-300d-1M-subword.vec.zip',
+                    'crawl': 'crawl-300d-2M.vec.zip',
+                    'crawl-sub': 'crawl-300d-2M-subword.zip'}
+    ling_vecs_names = List[str]
+    ling_embeddings = List[np.ndarray]
+    ling_vocabs = List[List[str]]
 
-            print('Loading FastText...')
-            self.fasttext_vecs, self.fasttext_vocab = load_fasttext(datadir + '/wiki-news-300d-1M.vec')
-            print('Done.')
+    def __init__(self, datadir: str, vecs_names, ling_vecs_names=[]):
+        # Load Linguistic Embeddings if they are given
+        if ling_vecs_names != []:
+            self.ling_vecs_names = ling_vecs_names
+            if 'w2v13' in ling_vecs_names:
+                ling_vecs_names.remove('w2v13')
+                w2v = json.load(open(datadir + '/w2v_simverb.json'))
+                w2v_simrel = json.load(open(datadir + '/simrel-wikipedia.json'))
+                w2v.update(w2v_simrel)
+                self.ling_embeddings.append(np.array(list(w2v.values())))
+                self.ling_vocabs.append(np.array(list(w2v.keys())))
 
-        #Load other (visual) embeddings
+            for lvn in ling_vecs_names:
+                print(f'Loading FastText - {lvn}...')
+                fasttext_vecs, fasttext_vocab = load_fasttext(datadir + self.fasttext_vss[lvn])
+                self.ling_embeddings.append(fasttext_vecs)
+                self.ling_vocabs.append(fasttext_vocab)
+                print('Done.')
+
+        # Load other (visual) embeddings
         self.vecs_names = vecs_names
         self.vis_embeddings = []
         self.vis_vocabs = []
@@ -245,12 +257,13 @@ def tuple_list(arg):
 
 # TODO: Nicer parameter handling, with exception messages
 @arg('-a', '--actions', nargs='+', choices=['printcorr', 'plotscores', 'coverage', 'compscores', 'compbrain'], default='printcorr')
-@argh.arg('-vns', '--vecs_names', nargs='+', type=str)
-@argh.arg('-plto', '--plot_orders', nargs='+', type=str)
-@argh.arg('-mmembs', '--mm_embs_of', type=tuple_list)
-@argh.arg('-pcorr', '--print_corr_for', choices=['gt', 'all'], default='all')
+@arg('-lvns', '--ling_vecs_names', nargs='+', choices=['wikinews', 'wikinews-sub', 'crawl', 'crawl-sub'], default=[])
+@arg('-vns', '--vecs_names', nargs='+', type=str)
+@arg('-plto', '--plot_orders', nargs='+', type=str)
+@arg('-mmembs', '--mm_embs_of', type=tuple_list)
+@arg('-pcorr', '--print_corr_for', choices=['gt', 'all'], default='all')
 def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath = None,
-         actions=['plotcorr'], gt_normalizer = 10, plot_orders = ['ground_truth'], ling = False,
+         actions=['plotcorr'], gt_normalizer = 10, plot_orders = ['ground_truth'], ling_vecs_names = [],
          pre_score_files: str = None, mm_embs_of: List[Tuple[str]] = None, mm_padding = False,
          print_corr_for = None):
     """
@@ -286,18 +299,13 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath =
     else:
         if not embdir:
             embdir = datadir
-        embeddings = Embeddings(embdir, vecs_names, ling)
+        embeddings = Embeddings(embdir, vecs_names, ling_vecs_names)
 
     if 'compscores' in actions or 'compbrain' in actions:
         print(actions)
         embs = embeddings.vis_embeddings
         vocabs = embeddings.vis_vocabs
         names = embeddings.vecs_names
-
-        if ling:
-            embs += [embeddings.w2v_vecs, embeddings.fasttext_vecs]
-            vocabs += [embeddings.w2v_vocab, embeddings.fasttext_vocab]
-            names += ['w2v', 'fasttext']
 
         if mm_embs_of:  # Create MM Embeddings based on the given embedding labels
             emb_tuples = [tuple(embs[names.index(l)] for l in t) for t in mm_embs_of]
