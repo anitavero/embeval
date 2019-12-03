@@ -54,8 +54,8 @@ class DataSets:
 class Embeddings:
     """Data class for storing embeddings."""
     # Embeddings
-    vis_embeddings = List[np.ndarray]
-    vis_vocabs = List[List[str]]
+    embeddings = List[np.ndarray]
+    vocabs = List[List[str]]
     vecs_names = List[str]
 
     # Linguistic Embeddings
@@ -63,39 +63,34 @@ class Embeddings:
                     'wikinews-sub': 'wiki-news-300d-1M-subword.vec',
                     'crawl': 'crawl-300d-2M.vec',
                     'crawl-sub': 'crawl-300d-2M-subword'}
-    ling_vecs_names = List[str]
-    ling_embeddings = List[np.ndarray]
-    ling_vocabs = List[List[str]]
 
     def __init__(self, datadir: str, vecs_names, ling_vecs_names=[]):
         # Load Linguistic Embeddings if they are given
+        self.embeddings = []
+        self.vocabs = []
         if ling_vecs_names != []:
-            self.ling_vecs_names = ling_vecs_names
-            self.ling_embeddings = []
-            self.ling_vocabs = []
+            self.vecs_names = ling_vecs_names
             if 'w2v13' in ling_vecs_names:
                 ling_vecs_names.remove('w2v13')
                 w2v = json.load(open(datadir + '/w2v_simverb.json'))
                 w2v_simrel = json.load(open(datadir + '/simrel-wikipedia.json'))
                 w2v.update(w2v_simrel)
-                self.ling_embeddings.append(np.array(list(w2v.values())))
-                self.ling_vocabs.append(np.array(list(w2v.keys())))
+                self.embeddings.append(np.array(list(w2v.values())))
+                self.vocabs.append(np.array(list(w2v.keys())))
 
             for lvn in ling_vecs_names:
                 print(f'Loading FastText - {lvn}...')
                 fasttext_vecs, fasttext_vocab = load_fasttext(datadir + self.fasttext_vss[lvn])
-                self.ling_embeddings.append(fasttext_vecs)
-                self.ling_vocabs.append(fasttext_vocab)
+                self.embeddings.append(fasttext_vecs)
+                self.vocabs.append(fasttext_vocab)
                 print('Done.')
 
         # Load other (visual) embeddings
-        self.vecs_names = vecs_names
-        self.vis_embeddings = []
-        self.vis_vocabs = []
+        self.vecs_names += vecs_names
         for vecs_name in vecs_names:
             vecs, vocab = load_vecs(vecs_name, datadir)
-            self.vis_embeddings.append(vecs)
-            self.vis_vocabs.append(vocab)
+            self.embeddings.append(vecs)
+            self.vocabs.append(vocab)
 
 
 def load_fasttext(fname: str) -> Tuple[np.ndarray, np.ndarray]:
@@ -305,8 +300,8 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath =
 
     if 'compscores' in actions or 'compbrain' in actions:
         print(actions)
-        embs = embeddings.vis_embeddings
-        vocabs = embeddings.vis_vocabs
+        embs = embeddings.embeddings
+        vocabs = embeddings.vocabs
         names = embeddings.vecs_names
 
         if mm_embs_of:  # Create MM Embeddings based on the given embedding labels
