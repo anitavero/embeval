@@ -59,10 +59,10 @@ class Embeddings:
     vecs_names = List[str]
 
     # Linguistic Embeddings
-    fasttext_vss = {'wikinews': 'wiki-news-300d-1M.vec.zip',
-                    'wikinews-sub': 'wiki-news-300d-1M-subword.vec.zip',
-                    'crawl': 'crawl-300d-2M.vec.zip',
-                    'crawl-sub': 'crawl-300d-2M-subword.zip'}
+    fasttext_vss = {'wikinews': 'wiki-news-300d-1M.vec',
+                    'wikinews-sub': 'wiki-news-300d-1M-subword.vec',
+                    'crawl': 'crawl-300d-2M.vec',
+                    'crawl-sub': 'crawl-300d-2M-subword'}
     ling_vecs_names = List[str]
     ling_embeddings = List[np.ndarray]
     ling_vocabs = List[List[str]]
