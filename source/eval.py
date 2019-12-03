@@ -257,7 +257,7 @@ def tuple_list(arg):
 
 # TODO: Nicer parameter handling, with exception messages
 @arg('-a', '--actions', nargs='+', choices=['printcorr', 'plotscores', 'coverage', 'compscores', 'compbrain'], default='printcorr')
-@arg('-lvns', '--ling_vecs_names', nargs='+', choices=['wikinews', 'wikinews-sub', 'crawl', 'crawl-sub'], default=[])
+@arg('-lvns', '--ling_vecs_names', nargs='+', choices=['w2v13', 'wikinews', 'wikinews-sub', 'crawl', 'crawl-sub'], default=[])
 @arg('-vns', '--vecs_names', nargs='+', type=str)
 @arg('-plto', '--plot_orders', nargs='+', type=str)
 @arg('-mmembs', '--mm_embs_of', type=tuple_list)
@@ -267,16 +267,16 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath =
          pre_score_files: str = None, mm_embs_of: List[Tuple[str]] = None, mm_padding = False,
          print_corr_for = None):
     """
-    :param datadir:
-    :param vecs_names:
-    :param embdir:
+    :param datadir: Path to directory which contains evaluation data (and embedding data if emdir is not given)
+    :param vecs_names: List[str] Names of embeddings
+    :param embdir: Path to directory which contains embedding files.
     :param savepath: Full path to the file to save scores without extension. None if there's no saving.
     :param loadpath: Full path to the files to load scores and brain results from without extension.
                      If None, they'll be computed.
     :param actions:
     :param gt_normalizer:
     :param plot_orders:
-    :param ling: True if we load linguistic embeddings.
+    :param ling_vecs_names: List[str] Names of linguistic embeddings.
     :param pre_score_file: Previously saved score file path without extension, which the new scores will be merged with
     :param mm_embs_of: List of str tuples, where the tuples contain names of embeddings which are to
                        be concatenated into a multi-modal mid-fusion embedding.
