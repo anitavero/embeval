@@ -62,7 +62,8 @@ class Embeddings:
     fasttext_vss = {'wikinews': 'wiki-news-300d-1M.vec',
                     'wikinews-sub': 'wiki-news-300d-1M-subword.vec',
                     'crawl': 'crawl-300d-2M.vec',
-                    'crawl-sub': 'crawl-300d-2M-subword'}
+                    'crawl-sub': 'crawl-300d-2M-subword',
+                    'w2v13': ''}
 
     def __init__(self, datadir: str, vecs_names, ling_vecs_names=[]):
         # Load Linguistic Embeddings if they are given
@@ -70,19 +71,19 @@ class Embeddings:
         self.vocabs = []
         if ling_vecs_names != []:
             self.vecs_names = ling_vecs_names
-            if 'w2v13' in ling_vecs_names:
-                ling_vecs_names.remove('w2v13')
-                w2v = json.load(open(datadir + '/w2v_simverb.json'))
-                w2v_simrel = json.load(open(datadir + '/simrel-wikipedia.json'))
-                w2v.update(w2v_simrel)
-                self.embeddings.append(np.array(list(w2v.values())))
-                self.vocabs.append(np.array(list(w2v.keys())))
-
             for lvn in ling_vecs_names:
-                print(f'Loading FastText - {lvn}...')
-                fasttext_vecs, fasttext_vocab = load_fasttext(datadir + self.fasttext_vss[lvn])
-                self.embeddings.append(fasttext_vecs)
-                self.vocabs.append(fasttext_vocab)
+                if lvn == 'w2v13':
+                    print(f'Loading W2V 2013...')
+                    w2v = json.load(open(datadir + '/w2v_simverb.json'))
+                    w2v_simrel = json.load(open(datadir + '/simrel-wikipedia.json'))
+                    w2v.update(w2v_simrel)
+                    self.embeddings.append(np.array(list(w2v.values())))
+                    self.vocabs.append(np.array(list(w2v.keys())))
+                else:
+                    print(f'Loading FastText - {lvn}...')
+                    fasttext_vecs, fasttext_vocab = load_fasttext(datadir + self.fasttext_vss[lvn])
+                    self.embeddings.append(fasttext_vecs)
+                    self.vocabs.append(fasttext_vocab)
                 print('Done.')
 
         # Load other (visual) embeddings
