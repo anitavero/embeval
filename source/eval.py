@@ -366,8 +366,7 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath =
             print("The MEG avg score is %f" % brain_scores[name]['MEG'])
 
     if 'coverage' in actions:
-        for vocab, name in zip([embeddings.w2v_vocab, embeddings.fasttext_vocab] + embeddings.vis_vocabs,
-                               ['w2v', 'fasttext'] + vecs_names):
+        for vocab, name in zip([embeddings.vocabs, embeddings.vecs_names]):
             print('\n--------------' + name + '--------------\n')
             coverage(vocab, datasets)
 
