@@ -14,7 +14,7 @@ from typing import List, Tuple
 import matplotlib.pyplot as plt
 import copy
 import io
-from itertools import combinations
+from itertools import combinations, product
 from tabulate import tabulate
 
 from process_embeddings import mid_fusion
@@ -265,7 +265,7 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath =
          pre_score_files: str = None, mm_embs_of: List[Tuple[str]] = None, mm_padding = False,
          print_corr_for = None):
     """
-    :param datadir: Path to directory which contains evaluation data (and embedding data if emdir is not given)
+    :param datadir: Path to directory which contains evaluation data (and embedding data if embdir is not given)
     :param vecs_names: List[str] Names of embeddings
     :param embdir: Path to directory which contains embedding files.
     :param savepath: Full path to the file to save scores without extension. None if there's no saving.
@@ -276,8 +276,10 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath =
     :param plot_orders:
     :param ling_vecs_names: List[str] Names of linguistic embeddings.
     :param pre_score_file: Previously saved score file path without extension, which the new scores will be merged with
-    :param mm_embs_of: List of str tuples, where the tuples contain names of embeddings which are to
-                       be concatenated into a multi-modal mid-fusion embedding.
+    :param mm_embs_of: Choices:
+                        1. List of str tuples, where the tuples contain names of embeddings which are to
+                           be concatenated into a multi-modal mid-fusion embedding.
+                        2. ling_vis: compines all given vecs_names and ling_vecs_names
     :param mm_padding:
     :param print_corr_for: 'gt' prints correlations scores for ground truth, 'all' prints scores between all
                             pairs of scores.
@@ -306,9 +308,15 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath =
         names = embeddings.vecs_names
 
         if mm_embs_of:  # Create MM Embeddings based on the given embedding labels
-            emb_tuples = [tuple(embs[names.index(l)] for l in t) for t in mm_embs_of]
-            vocab_tuples = [tuple(vocabs[names.index(l)] for l in t) for t in mm_embs_of]
-            mm_labels = [tuple(l for l in t) for t in mm_embs_of]
+            if mm_embs_of == 'ling_vis':    # TODO: test
+                mm_labels = list(product(ling_vecs_names, vecs_names))
+                emb_tuples = [(embs[names.index(ln)], embs[names.index(vn)]) for ln, vn in mm_labels]
+                vocab_tuples = [(vocabs[names.index(ln)], vocabs[names.index(vn)]) for ln, vn in mm_labels]
+            else:
+                emb_tuples = [tuple(embs[names.index(l)] for l in t) for t in mm_embs_of]
+                vocab_tuples = [tuple(vocabs[names.index(l)] for l in t) for t in mm_embs_of]
+                mm_labels = [tuple(l for l in t) for t in mm_embs_of]
+
             mm_embeddings, mm_vocabs, mm_labels = mid_fusion(emb_tuples, vocab_tuples, mm_labels, mm_padding)
             embs += mm_embeddings
             vocabs += mm_vocabs
