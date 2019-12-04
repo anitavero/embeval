@@ -70,7 +70,7 @@ class Embeddings:
         self.embeddings = []
         self.vocabs = []
         if ling_vecs_names != []:
-            self.vecs_names = ling_vecs_names
+            self.vecs_names = ling_vecs_names[:]
             for lvn in ling_vecs_names:
                 if lvn == 'w2v13':
                     print(f'Loading W2V 2013...')
