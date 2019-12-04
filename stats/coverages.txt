@@ -1,0 +1,90 @@
+--------------wikinews--------------
+
+Vocab size: 999994
+Vocab size with lemmas: 1000003
+MEN pair coverage: 3000 (100%)
+MEN pair coverage without lemmas: 3000 (100%)
+SimLex pair coverage: 999 (100%)
+SimLex pair coverage without lemmas: 999 (100%)
+SimVerb pair coverage: 3500 (100%)
+SimVerb pair coverage without lemmas: 3500 (100%)
+fMRI coverage: 60 (100%)
+fMRI coverage without lemmas: 60 (100%)
+
+--------------wikinews-sub--------------
+
+Vocab size: 999994
+Vocab size with lemmas: 1000003
+MEN pair coverage: 3000 (100%)
+MEN pair coverage without lemmas: 3000 (100%)
+SimLex pair coverage: 999 (100%)
+SimLex pair coverage without lemmas: 999 (100%)
+SimVerb pair coverage: 3500 (100%)
+SimVerb pair coverage without lemmas: 3500 (100%)
+fMRI coverage: 60 (100%)
+fMRI coverage without lemmas: 60 (100%)
+
+--------------crawl--------------
+
+Vocab size: 1999995
+Vocab size with lemmas: 2000004
+MEN pair coverage: 3000 (100%)
+MEN pair coverage without lemmas: 3000 (100%)
+SimLex pair coverage: 999 (100%)
+SimLex pair coverage without lemmas: 999 (100%)
+SimVerb pair coverage: 3500 (100%)
+SimVerb pair coverage without lemmas: 3500 (100%)
+fMRI coverage: 60 (100%)
+fMRI coverage without lemmas: 60 (100%)
+
+--------------w2v13--------------
+
+Vocab size: 2218
+Vocab size with lemmas: 2220
+MEN pair coverage: 3000 (100%)
+MEN pair coverage without lemmas: 3000 (100%)
+SimLex pair coverage: 999 (100%)
+SimLex pair coverage without lemmas: 999 (100%)
+SimVerb pair coverage: 3500 (100%)
+SimVerb pair coverage without lemmas: 3500 (100%)
+fMRI coverage: 45 (75%)
+fMRI coverage without lemmas: 45 (75%)
+
+--------------google_alexnetfc7--------------
+
+Vocab size: 1577
+Vocab size with lemmas: 1578
+MEN pair coverage: 3000 (100%)
+MEN pair coverage without lemmas: 3000 (100%)
+SimLex pair coverage: 999 (100%)
+SimLex pair coverage without lemmas: 999 (100%)
+SimVerb pair coverage: 493 (14%)
+SimVerb pair coverage without lemmas: 493 (14%)
+fMRI coverage: 42 (70%)
+fMRI coverage without lemmas: 42 (70%)
+
+--------------vecs3lem--------------
+
+Vocab size: 49127
+Vocab size with lemmas: 49130
+MEN pair coverage: 2172 (72%)
+MEN pair coverage without lemmas: 2172 (72%)
+SimLex pair coverage: 639 (64%)
+SimLex pair coverage without lemmas: 639 (64%)
+SimVerb pair coverage: 1750 (50%)
+SimVerb pair coverage without lemmas: 1750 (50%)
+fMRI coverage: 57 (95%)
+fMRI coverage without lemmas: 57 (95%)
+
+--------------google_vgg--------------
+
+Vocab size: 1577
+Vocab size with lemmas: 1578
+MEN pair coverage: 3000 (100%)
+MEN pair coverage without lemmas: 3000 (100%)
+SimLex pair coverage: 999 (100%)
+SimLex pair coverage without lemmas: 999 (100%)
+SimVerb pair coverage: 493 (14%)
+SimVerb pair coverage without lemmas: 493 (14%)
+fMRI coverage: 42 (70%)
+fMRI coverage without lemmas: 42 (70%)
