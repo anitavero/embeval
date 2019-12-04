@@ -12,7 +12,6 @@ from argh import arg
 import argparse
 from typing import List, Tuple
 import matplotlib.pyplot as plt
-import copy
 import io
 from itertools import combinations, product
 from tabulate import tabulate
@@ -35,6 +34,7 @@ class DataSets:
     simverb: List[Tuple[str, str, float]]
     fmri_vocab: List[str]
     datasets = {}
+    normalizers = {}
 
     def __init__(self, datadir: str):
         SIMVERB = datadir + '/simverb-3500-data'
@@ -50,6 +50,7 @@ class DataSets:
                           'table', 'telephone', 'tomato', 'train', 'truck', 'watch', 'window']
 
         self.datasets = {'MEN': self.men, 'SimLex': self.simlex, 'SimVerb': self.simverb}
+        self.normalizers = {'MEN': 50, 'SimLex': 10, 'SimVerb': 10}
 
 
 class Embeddings:
@@ -221,11 +222,13 @@ def eval_dataset(dataset: List[Tuple[str, str, float]],
     return scores, pairs
 
 
-def plot_scores(scores: np.ndarray, gt_divisor=10) -> None:
+def plot_scores(scores: np.ndarray, gt_divisor=10, vecs_names=None) -> None:
     """Scatter plot of a structured array."""
-    scs = copy.deepcopy(scores)
+    scs = deepcopy(scores)
     scs['ground_truth'] /= gt_divisor
-    for nm in scs.dtype.names:
+    if vecs_names is None:
+        vecs_names = scs.dtype.names
+    for nm in vecs_names:
         mask = scs[nm] > -2   # Leave out the pairs which aren't covered
         plt.scatter(np.arange(scs[nm].shape[0])[mask], scs[nm][mask], label=nm, alpha=0.5)
     plt.legend()
@@ -259,12 +262,13 @@ def tuple_list(arg):
 @arg('-lvns', '--ling_vecs_names', nargs='+', type=str, choices=['w2v13', 'wikinews', 'wikinews-sub', 'crawl', 'crawl-sub'], default='wikinews')
 @arg('-vns', '--vecs_names', nargs='+', type=str)
 @arg('-plto', '--plot_orders', nargs='+', type=str)
+@arg('-pltv', '--plot_vecs', nargs='+', type=str)
 @arg('-mmembs', '--mm_embs_of', type=tuple_list)
 @arg('-pcorr', '--print_corr_for', choices=['gt', 'all'], default='all')
 def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath = None,
-         actions=['plotcorr'], gt_normalizer = 10, plot_orders = ['ground_truth'], ling_vecs_names = [],
-         pre_score_files: str = None, mm_embs_of: List[Tuple[str]] = None, mm_lingvis = False, mm_padding = False,
-         print_corr_for = None):
+         actions=['plotcorr'], plot_orders = ['ground_truth'], plot_vecs = None,
+         ling_vecs_names = [], pre_score_files: str = None, mm_embs_of: List[Tuple[str]] = None,
+         mm_lingvis = False, mm_padding = False, print_corr_for = None):
     """
     :param datadir: Path to directory which contains evaluation data (and embedding data if embdir is not given)
     :param vecs_names: List[str] Names of embeddings
@@ -275,6 +279,7 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath =
     :param actions:
     :param gt_normalizer:
     :param plot_orders:
+    :param plot_vecs:
     :param ling_vecs_names: List[str] Names of linguistic embeddings.
     :param pre_score_file: Previously saved score file path without extension, which the new scores will be merged with
     :param mm_embs_of: Choices:
@@ -346,8 +351,11 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath =
                         brain_scores[name] = pbscores
 
     if 'plotscores' in actions:
-        for plot_order in plot_orders:  # order similarity scores of these datasets or embeddings
-            plot_scores(np.sort(scores, order=plot_order), gt_divisor=gt_normalizer)
+        for name in list(scores.keys()):
+            scrs = deepcopy(scores[name])
+            for plot_order in plot_orders:  # order similarity scores of these datasets or embeddings
+                plot_scores(np.sort(scrs, order=plot_order), gt_divisor=datasets.normalizers[name],
+                            vecs_names=plot_vecs + ['ground_truth'])
 
     if 'printcorr' in actions:
         if scores is not None:
