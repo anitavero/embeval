@@ -262,7 +262,7 @@ def tuple_list(arg):
 @arg('-pcorr', '--print_corr_for', choices=['gt', 'all'], default='all')
 def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath = None,
          actions=['plotcorr'], gt_normalizer = 10, plot_orders = ['ground_truth'], ling_vecs_names = [],
-         pre_score_files: str = None, mm_embs_of: List[Tuple[str]] = None, mm_padding = False,
+         pre_score_files: str = None, mm_embs_of: List[Tuple[str]] = None, mm_lingvis = False, mm_padding = False,
          print_corr_for = None):
     """
     :param datadir: Path to directory which contains evaluation data (and embedding data if embdir is not given)
@@ -307,20 +307,19 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath =
         vocabs = embeddings.vocabs
         names = embeddings.vecs_names
 
-        if mm_embs_of:  # Create MM Embeddings based on the given embedding labels
-            if mm_embs_of == 'ling_vis':    # TODO: test
-                mm_labels = list(product(ling_vecs_names, vecs_names))
-                emb_tuples = [(embs[names.index(ln)], embs[names.index(vn)]) for ln, vn in mm_labels]
-                vocab_tuples = [(vocabs[names.index(ln)], vocabs[names.index(vn)]) for ln, vn in mm_labels]
-            else:
-                emb_tuples = [tuple(embs[names.index(l)] for l in t) for t in mm_embs_of]
-                vocab_tuples = [tuple(vocabs[names.index(l)] for l in t) for t in mm_embs_of]
-                mm_labels = [tuple(l for l in t) for t in mm_embs_of]
+        if mm_lingvis:    # TODO: test
+            mm_labels = list(product(ling_vecs_names, vecs_names))
+            emb_tuples = [(embs[names.index(ln)], embs[names.index(vn)]) for ln, vn in mm_labels]
+            vocab_tuples = [(vocabs[names.index(ln)], vocabs[names.index(vn)]) for ln, vn in mm_labels]
+        elif mm_embs_of:    # Create MM Embeddings based on the given embedding labels
+            emb_tuples = [tuple(embs[names.index(l)] for l in t) for t in mm_embs_of]
+            vocab_tuples = [tuple(vocabs[names.index(l)] for l in t) for t in mm_embs_of]
+            mm_labels = [tuple(l for l in t) for t in mm_embs_of]
 
-            mm_embeddings, mm_vocabs, mm_labels = mid_fusion(emb_tuples, vocab_tuples, mm_labels, mm_padding)
-            embs += mm_embeddings
-            vocabs += mm_vocabs
-            names += mm_labels
+        mm_embeddings, mm_vocabs, mm_labels = mid_fusion(emb_tuples, vocab_tuples, mm_labels, mm_padding)
+        embs += mm_embeddings
+        vocabs += mm_vocabs
+        names += mm_labels
 
         if 'compscores' in actions: # SemSim scores
             for name, dataset in datasets.datasets.items():
