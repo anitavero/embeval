@@ -26,6 +26,9 @@ sys.path.append('../2v2_software_privatefork/')
 import two_vs_two
 
 
+MISSING = -2    # Signify word pairs which aren't covered by and embedding's vocabulary
+
+
 # We could use dataclass decorator in case of python 3.7
 class DataSets:
     """Class for storing evaluation datasets and linguistic embeddings."""
@@ -188,7 +191,7 @@ def compute_correlations(scores: (np.ndarray, list), name_pairs: List[Tuple[str,
     correlations = {}
     for nm1, nm2 in name_pairs:
         # Filter pairs which the scores, coming from any of the two embeddings, don't cover
-        scores1, scores2 = zip(*[(s1, s2) for s1, s2 in zip(scores[nm1], scores[nm2]) if s1 != -2 and s2 != -2])
+        scores1, scores2 = zip(*[(s1, s2) for s1, s2 in zip(scores[nm1], scores[nm2]) if s1 != MISSING and s2 != MISSING])
         assert len(scores1) == len(scores2)
         corr = spearmanr(scores1, scores2)
         correlations[' | '.join([nm1, nm2])] = (corr.correlation, corr.pvalue, len(scores1))
@@ -219,8 +222,8 @@ def eval_dataset(dataset: List[Tuple[str, str, float]],
             try:
                 scores[label][i] = cosine_similarity(get_vec(w1, emb, vocab), get_vec(w2, emb, vocab))[0][0]
             except IndexError:
-                scores[label][i] = -2
-            if (scores[label] == -2).all():
+                scores[label][i] = MISSING
+            if (scores[label] == MISSING).all():
                 print(f'Warning: No word pairs were found in {label} for {dataset_name}!')
         pairs.append((w1, w2))
 
@@ -234,7 +237,7 @@ def plot_scores(scores: np.ndarray, gt_divisor=10, vecs_names=None) -> None:
     if vecs_names is None:
         vecs_names = scs.dtype.names
     for nm in vecs_names:
-        mask = scs[nm] > -2   # Leave out the pairs which aren't covered
+        mask = scs[nm] > MISSING   # Leave out the pairs which aren't covered
         plt.scatter(np.arange(scs[nm].shape[0])[mask], scs[nm][mask], label=nm, alpha=0.5)
     plt.legend()
     plt.show()
