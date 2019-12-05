@@ -368,11 +368,8 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath =
                 print_correlations(scrs, name_pairs=name_pairs)
 
         print('\n-------- Brain scores -------\n')
-        for name in brain_scores.keys():
-            print('\n' + name)
-            print("There are %d words found from the input" % brain_scores[name]['lenght'])
-            print("The fMRI avg score is %f" % brain_scores[name]['fMRI'])
-            print("The MEG avg score is %f" % brain_scores[name]['MEG'])
+        print(tabulate([(name, v['fMRI'], v['MEG'], v['lenght']) for name, v in brain_scores.items()],
+                       headers=['Embedding', 'fMRI avg', 'MEG avg', '#Vocab of 60']))
 
     if 'coverage' in actions:
         for vocab, name in zip(embeddings.vocabs, embeddings.vecs_names):
