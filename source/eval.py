@@ -178,7 +178,8 @@ def coverage(vocabulary, data):
     print(f'fMRI coverage without lemmas:', coverage, f'({round(100 * coverage / len(data.fmri_vocab))}%)')
 
 
-def compute_correlations(scores: (np.ndarray, list), name_pairs: List[Tuple[str, str]] = None):
+def compute_correlations(scores: (np.ndarray, list), name_pairs: List[Tuple[str, str]] = None,
+                         common_subset: bool = False):
     """Computer correlation between score series.
         :param scores: Structured array of scores with embedding/ground_truth names.
         :param name_pairs: pairs of scores to correlate. If None, every pair will be computed.
@@ -186,11 +187,21 @@ def compute_correlations(scores: (np.ndarray, list), name_pairs: List[Tuple[str,
     if not name_pairs:
         name_pairs = list(combinations(scores.dtype.names, 2))
 
+    if common_subset:  # Filter rows where any of the scores are missing for a word pair
+        ids = set(range(scores.shape[0]))
+        for n in scores.dtype.names:
+            ids = ids.intersection(set(np.where(scores[n] != MISSING)[0]))
+        scs = np.array(np.empty(len(ids)), dtype=scores.dtype)
+        for n in scores.dtype.names:
+            scs[n] = scores[n][list(ids)]
+    else:
+        scs = scores
+
     correlations = {}
     for nm1, nm2 in name_pairs:
         # Filter pairs which the scores, coming from any of the two embeddings, don't cover
         scores1, scores2 = zip(*[(s1, s2) for s1, s2 in
-                                 zip(scores[nm1], scores[nm2]) if s1 != MISSING and s2 != MISSING])
+                                 zip(scs[nm1], scs[nm2]) if s1 != MISSING and s2 != MISSING])
         assert len(scores1) == len(scores2)
         corr = spearmanr(scores1, scores2)
         correlations[' | '.join([nm1, nm2])] = (corr.correlation, corr.pvalue, len(scores1))
@@ -198,8 +209,9 @@ def compute_correlations(scores: (np.ndarray, list), name_pairs: List[Tuple[str,
     return correlations
 
 
-def print_correlations(scores: (np.ndarray, list), name_pairs: List[Tuple[str, str]] = None):
-    correlations = compute_correlations(scores, name_pairs)
+def print_correlations(scores: (np.ndarray, list), name_pairs: List[Tuple[str, str]] = None,
+                       common_subset: bool = False):
+    correlations = compute_correlations(scores, name_pairs, common_subset=common_subset)
     print(tabulate([(nm, corr, pvalue, length) for nm, (corr, pvalue, length) in correlations.items()],
           headers=['Name pairs', 'Spearman', 'P-value', 'Coverage']))
 
@@ -242,14 +254,6 @@ def plot_scores(scores: np.ndarray, gt_divisor=10, vecs_names=None) -> None:
     plt.show()
 
 
-def qa(res, dataset='simlex'):
-    scores = np.array([res[dataset]['scores'], res[dataset]['pred_scores'], res[dataset]['w2v_scores']])
-    scores = scores.transpose()
-    scores[:, 0] /= 10
-    pairs = np.array(res[dataset]['pairs'])
-    return scores, pairs
-
-
 def tuple_list(arg):
     """List[Tuple[str]] argument type.
         format: whitespace separated str lists, separated by |. eg. 'embs1 embs2 | embs2 embs3 embs4'
@@ -275,7 +279,7 @@ def tuple_list(arg):
 def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath = None,
          actions=['plotcorr'], plot_orders = ['ground_truth'], plot_vecs = None,
          ling_vecs_names = [], pre_score_files: str = None, mm_embs_of: List[Tuple[str]] = None,
-         mm_lingvis = False, mm_padding = False, print_corr_for = None):
+         mm_lingvis = False, mm_padding = False, print_corr_for = None, common_subset = False):
     """
     :param datadir: Path to directory which contains evaluation data (and embedding data if embdir is not given)
     :param vecs_names: List[str] Names of embeddings
@@ -296,6 +300,8 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath =
     :param mm_padding:
     :param print_corr_for: 'gt' prints correlations scores for ground truth, 'all' prints scores between all
                             pairs of scores.
+    :param common_subset: Print results for subests of the eval datasets which are covered by all
+                          embeddings' vocabularies.
     """
 
     scores = {}
@@ -372,7 +378,7 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath =
                 name_pairs = None   # Will print score correlations for all combinations of 2
             for name, scrs in scores.items():
                 print(f'\n-------- {name} scores -------\n')
-                print_correlations(scrs, name_pairs=name_pairs)
+                print_correlations(scrs, name_pairs=name_pairs, common_subset=common_subset)
 
         print('\n-------- Brain scores -------\n')
         print(tabulate([(name, v['fMRI'], v['MEG'], v['lenght']) for name, v in brain_scores.items()],
