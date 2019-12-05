@@ -16,6 +16,7 @@ import io
 from itertools import combinations, product
 from tabulate import tabulate
 from copy import deepcopy
+from collections import defaultdict
 
 from process_embeddings import mid_fusion
 import utils
@@ -31,15 +32,15 @@ class DataSets:
     # Evaluation datasets
     men: List[Tuple[str, str, float]]
     simlex: List[Tuple[str, str, float]]
-    simverb: List[Tuple[str, str, float]]
+    # simverb: List[Tuple[str, str, float]]
     fmri_vocab: List[str]
     datasets = {}
     normalizers = {}
 
     def __init__(self, datadir: str):
-        SIMVERB = datadir + '/simverb-3500-data'
-        simverb_full = list(csv.reader(open(SIMVERB + '/SimVerb-3500.txt'), delimiter='\t'))
-        self.simverb = list(map(lambda x: [x[0], x[1], x[3]], simverb_full))
+        # SIMVERB = datadir + '/simverb-3500-data'
+        # simverb_full = list(csv.reader(open(SIMVERB + '/SimVerb-3500.txt'), delimiter='\t'))
+        # self.simverb = list(map(lambda x: [x[0], x[1], x[3]], simverb_full))
         self.men = json.load(open(datadir + '/men.json'))
         self.simlex = json.load(open(datadir + '/simlex.json'))
         self.fmri_vocab = ['airplane', 'ant', 'apartment', 'arch', 'arm', 'barn', 'bear', 'bed', 'bee', 'beetle', 'bell',
@@ -49,8 +50,8 @@ class DataSets:
                           'lettuce', 'pants', 'pliers', 'refrigerator', 'saw', 'screwdriver', 'shirt', 'skirt', 'spoon',
                           'table', 'telephone', 'tomato', 'train', 'truck', 'watch', 'window']
 
-        self.datasets = {'MEN': self.men, 'SimLex': self.simlex, 'SimVerb': self.simverb}
-        self.normalizers = {'MEN': 50, 'SimLex': 10, 'SimVerb': 10}
+        self.datasets = {'MEN': self.men, 'SimLex': self.simlex}    #, 'SimVerb': self.simverb}
+        self.normalizers = {'MEN': 50, 'SimLex': 10}                #, 'SimVerb': 10}
 
 
 class Embeddings:
@@ -186,15 +187,19 @@ def compute_correlations(scores: (np.ndarray, list), name_pairs: List[Tuple[str,
 
     correlations = {}
     for nm1, nm2 in name_pairs:
-        correlations[' | '.join([nm1, nm2])] = spearmanr(scores[nm1], scores[nm2])
+        # Filter pairs which the scores, coming from any of the two embeddings, don't cover
+        scores1, scores2 = zip(*[(s1, s2) for s1, s2 in zip(scores[nm1], scores[nm2]) if s1 != -2 and s2 != -2])
+        assert len(scores1) == len(scores2)
+        corr = spearmanr(scores1, scores2)
+        correlations[' | '.join([nm1, nm2])] = (corr.correlation, corr.pvalue, len(scores1))
 
     return correlations
 
 
 def print_correlations(scores: (np.ndarray, list), name_pairs: List[Tuple[str, str]] = None):
     correlations = compute_correlations(scores, name_pairs)
-    print(tabulate([(np, corr.correlation, corr.pvalue) for np, corr in correlations.items()],
-          headers=['Name pairs', 'Spearman', 'P-value']))
+    print(tabulate([(nm, corr, pvalue, length) for nm, (corr, pvalue, length) in correlations.items()],
+          headers=['Name pairs', 'Spearman', 'P-value', 'Coverage']))
 
 
 def eval_dataset(dataset: List[Tuple[str, str, float]],
@@ -342,7 +347,7 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath =
         if 'compbrain' in actions:  # Brain scores
             for emb, vocab, name in zip(embs, vocabs, names):
                 fMRI_score, MEG_score, length = two_vs_two.run_test(embedding=emb, vocab=vocab)
-                brain_scores[name] = {'fMRI': fMRI_score, 'MEG': MEG_score, 'lenght': length}
+                brain_scores[name] = {'fMRI': fMRI_score, 'MEG': MEG_score, 'length': length}
 
             if pre_score_files:  # Load previously saved score files and add the new scores.
                 with open(f'{pre_score_files}_brain.json', 'r') as f:
