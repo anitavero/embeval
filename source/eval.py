@@ -3,7 +3,6 @@ import sys
 import numpy as np
 from sklearn.metrics.pairwise import cosine_distances, cosine_similarity
 from scipy.stats import spearmanr
-import csv
 import spacy
 from tqdm import tqdm
 import json
@@ -16,7 +15,6 @@ import io
 from itertools import combinations, product
 from tabulate import tabulate
 from copy import deepcopy
-from collections import defaultdict
 
 from process_embeddings import mid_fusion
 import utils
@@ -87,7 +85,7 @@ class Embeddings:
                     self.vocabs.append(np.array(list(w2v.keys())))
                 else:
                     print(f'Loading FastText - {lvn}...')
-                    fasttext_vecs, fasttext_vocab = load_fasttext(datadir + self.fasttext_vss[lvn])
+                    fasttext_vecs, fasttext_vocab = self.load_fasttext(datadir + self.fasttext_vss[lvn])
                     self.embeddings.append(fasttext_vecs)
                     self.vocabs.append(fasttext_vocab)
                 print('Done.')
@@ -95,35 +93,35 @@ class Embeddings:
         # Load other (visual) embeddings
         self.vecs_names += vecs_names
         for vecs_name in vecs_names:
-            vecs, vocab = load_vecs(vecs_name, datadir)
+            vecs, vocab = self.load_vecs(vecs_name, datadir)
             self.embeddings.append(vecs)
             self.vocabs.append(vocab)
 
 
-def load_fasttext(fname: str) -> Tuple[np.ndarray, np.ndarray]:
-    fin = io.open(fname, 'r', encoding='utf-8', newline='\n', errors='ignore')
-    n, d = map(int, fin.readline().split())
-    fasttext_vocab = []
-    fasttext_vecs = []
-    for line in fin:
-        tokens = line.rstrip().split(' ')
-        fasttext_vocab.append(tokens[0])
-        fasttext_vecs.append(list(map(float, tokens[1:])))
-    return np.array(fasttext_vecs), np.array(fasttext_vocab)
+    def load_fasttext(self, fname: str) -> Tuple[np.ndarray, np.ndarray]:
+        fin = io.open(fname, 'r', encoding='utf-8', newline='\n', errors='ignore')
+        n, d = map(int, fin.readline().split())
+        fasttext_vocab = []
+        fasttext_vecs = []
+        for line in fin:
+            tokens = line.rstrip().split(' ')
+            fasttext_vocab.append(tokens[0])
+            fasttext_vecs.append(list(map(float, tokens[1:])))
+        return np.array(fasttext_vecs), np.array(fasttext_vocab)
+
+
+    def load_vecs(self, vecs_name: str, datadir: str, filter_vocab=[]):
+        vecs = np.load(datadir + f'/{vecs_name}.npy')
+        vvocab = open(datadir + f'/{vecs_name}.vocab').read().split()
+        vvocab = np.array(vvocab)
+        if filter_vocab:
+            vecs, vvocab = filter_by_vocab(vecs, vvocab, filter_vocab)
+        return vecs, vvocab
 
 
 def dataset_vocab(dataset: str) -> list:
     pairs = list(zip(*dataset))[:2]
     return list(set(pairs[0] + pairs[1]))
-
-
-def load_vecs(vecs_name: str, datadir: str, filter_vocab=[]):
-    vecs = np.load(datadir + f'/{vecs_name}.npy')
-    vvocab = open(datadir + f'/{vecs_name}.vocab').read().split()
-    vvocab = np.array(vvocab)
-    if filter_vocab:
-        vecs, vvocab = filter_by_vocab(vecs, vvocab, filter_vocab)
-    return vecs, vvocab
 
 
 def filter_by_vocab(vecs, vocab, filter_vocab):
@@ -191,7 +189,8 @@ def compute_correlations(scores: (np.ndarray, list), name_pairs: List[Tuple[str,
     correlations = {}
     for nm1, nm2 in name_pairs:
         # Filter pairs which the scores, coming from any of the two embeddings, don't cover
-        scores1, scores2 = zip(*[(s1, s2) for s1, s2 in zip(scores[nm1], scores[nm2]) if s1 != MISSING and s2 != MISSING])
+        scores1, scores2 = zip(*[(s1, s2) for s1, s2 in
+                                 zip(scores[nm1], scores[nm2]) if s1 != MISSING and s2 != MISSING])
         assert len(scores1) == len(scores2)
         corr = spearmanr(scores1, scores2)
         correlations[' | '.join([nm1, nm2])] = (corr.correlation, corr.pvalue, len(scores1))
