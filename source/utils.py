@@ -12,3 +12,20 @@ def join_struct_arrays(arrays):
 
 def get_vec(word, embeddings, vocab):
     return embeddings[np.where(vocab == word)[0][0]].reshape(1, -1)
+
+
+#### Terminal Font ####
+
+PrintFont = {'PURPLE': '\033[95m',
+             'CYAN': '\033[96m',
+             'DARKCYAN': '\033[36m',
+             'BLUE': '\033[94m',
+             'GREEN': '\033[92m',
+             'YELLOW': '\033[93m',
+             'RED': '\033[91m',
+             'BOLD': '\033[1m',
+             'UNDERLINE': '\033[4m',
+             'END': '\033[0m'}
+
+def pfont(font, value):
+    return PrintFont[font.upper()] + str(value) + PrintFont['END']

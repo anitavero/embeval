@@ -18,7 +18,7 @@ from copy import deepcopy
 
 from process_embeddings import mid_fusion
 import utils
-from utils import get_vec
+from utils import get_vec, pfont
 
 sys.path.append('../2v2_software_privatefork/')
 import two_vs_two
@@ -212,7 +212,9 @@ def compute_correlations(scores: (np.ndarray, list), name_pairs: List[Tuple[str,
 def print_correlations(scores: (np.ndarray, list), name_pairs: List[Tuple[str, str]] = None,
                        common_subset: bool = False):
     correlations = compute_correlations(scores, name_pairs, common_subset=common_subset)
-    print(tabulate([(nm, corr, pvalue, length) for nm, (corr, pvalue, length) in correlations.items()],
+    maxcorr = max(list(zip(*correlations.values()))[0])
+    print(tabulate([(nm, pfont('red', corr) if corr == maxcorr else corr, pvalue, length)
+                    for nm, (corr, pvalue, length) in correlations.items()],
           headers=['Name pairs', 'Spearman', 'P-value', 'Coverage']))
 
 
@@ -373,7 +375,8 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath =
     if 'printcorr' in actions:
         if scores is not None:
             if print_corr_for == 'gt':
-                name_pairs = [('ground_truth', nm) for nm in list(scores.values())[0].dtype.names]
+                name_pairs = [('ground_truth', nm) for nm in list(scores.values())[0].dtype.names
+                              if nm != 'ground_truth']
             elif print_corr_for == 'all':
                 name_pairs = None   # Will print score correlations for all combinations of 2
             for name, scrs in scores.items():
@@ -381,7 +384,14 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath =
                 print_correlations(scrs, name_pairs=name_pairs, common_subset=common_subset)
 
         print('\n-------- Brain scores -------\n')
-        print(tabulate([(name, v['fMRI'], v['MEG'], v['lenght']) for name, v in brain_scores.items()],
+        vals = list(zip(*[v.values() for v in brain_scores.values()]))
+        maxfMRI = max(vals[0])
+        maxMEG = max(vals[1])
+        print(tabulate([(name,
+                         pfont('red', v['fMRI']) if v['fMRI'] == maxfMRI else v['fMRI'],
+                         pfont('red', v['MEG']) if v['MEG'] == maxMEG else v['MEG'],
+                         v['lenght'])
+                        for name, v in brain_scores.items()],
                        headers=['Embedding', 'fMRI avg', 'MEG avg', '#Vocab of 60']))
 
     if 'coverage' in actions:
