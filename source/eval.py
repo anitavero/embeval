@@ -317,8 +317,10 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath =
     :param mm_padding:
     :param print_corr_for: 'gt' prints correlations scores for ground truth, 'all' prints scores between all
                             pairs of scores.
-    :param common_subset: Print results for subests of the eval datasets which are covered by all
+    :param common_subset: action printcorr: Print results for subests of the eval datasets which are covered by all
                           embeddings' vocabularies.
+                          action compbarin: Compute brain scores for interection of vocabularies.
+
     """
 
     scores = {}
