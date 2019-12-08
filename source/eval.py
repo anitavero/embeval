@@ -73,6 +73,7 @@ class Embeddings:
         # Load Linguistic Embeddings if they are given
         self.embeddings = []
         self.vocabs = []
+        self.vecs_names = []
         if ling_vecs_names != []:
             self.vecs_names = deepcopy(ling_vecs_names)
             for lvn in ling_vecs_names:
@@ -163,7 +164,7 @@ def coverage(vocabulary, data):
     print('Vocab size with lemmas:', len(vocab))
 
     # Semantic similarity/relatedness datasets
-    for name, dataset in {'MEN': data.men, 'SimLex': data.simlex, 'SimVerb': data.simverb}.items():
+    for name, dataset in {'MEN': data.men, 'SimLex': data.simlex}.items():
         coverage = len(covered(dataset, vocabulary))
         coverage_lemma = len(covered(dataset, vocab))
         print(f'{name} pair coverage:',
@@ -272,7 +273,7 @@ def tuple_list(arg):
 
 # TODO: Nicer parameter handling, with exception messages
 @arg('-a', '--actions', nargs='+', choices=['printcorr', 'plotscores', 'coverage', 'compscores', 'compbrain'], default='printcorr')
-@arg('-lvns', '--ling_vecs_names', nargs='+', type=str, choices=['w2v13', 'wikinews', 'wikinews-sub', 'crawl', 'crawl-sub'], default='wikinews')
+@arg('-lvns', '--ling_vecs_names', nargs='+', type=str, choices=['w2v13', 'wikinews', 'wikinews-sub', 'crawl', 'crawl-sub'], default=[])
 @arg('-vns', '--vecs_names', nargs='+', type=str)
 @arg('-plto', '--plot_orders', nargs='+', type=str)
 @arg('-pltv', '--plot_vecs', nargs='+', type=str)
