@@ -372,6 +372,8 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath =
                     scores[name] = utils.join_struct_arrays([pre_scores, scores[name]])
 
         if 'compbrain' in actions:  # Brain scores
+            if common_subset: # Intersection of all vocabs for two_vs_two and it filters out the common subset
+                vocabs = [list(set.intersection(*map(set, vocabs))) for v in vocabs]
             for emb, vocab, name in zip(embs, vocabs, names):
                 fMRI_score, MEG_score, length = two_vs_two.run_test(embedding=emb, vocab=vocab)
                 brain_scores[name] = {'fMRI': fMRI_score, 'MEG': MEG_score, 'length': length}
