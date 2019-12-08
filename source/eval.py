@@ -1,5 +1,5 @@
 # coding: utf-8
-import sys
+import sys, os
 import numpy as np
 from sklearn.metrics.pairwise import cosine_distances, cosine_similarity
 from scipy.stats import spearmanr
@@ -25,6 +25,7 @@ import two_vs_two
 
 
 MISSING = -2    # Signify word pairs which aren't covered by and embedding's vocabulary
+ROUND = 4       # Round scores in print
 
 
 # We could use dataclass decorator in case of python 3.7
@@ -210,13 +211,25 @@ def compute_correlations(scores: (np.ndarray, list), name_pairs: List[Tuple[str,
     return correlations
 
 
+def highlight(col, val, tablefmt):
+    '''Highlight value in a table column.
+    :param col: list on number, Table column
+    :param tablefmt: 'simple' is terminal, 'latex' is LaTeX
+    '''
+    if tablefmt == 'simple':
+        return pfont('red', round(col, ROUND)) if col == val else round(col, ROUND)
+    elif tablefmt == 'latex':   # needs to be amended by hand
+        return 'textbf' + str(round(col, ROUND)) if col == val else round(col, ROUND)
+
+
 def print_correlations(scores: (np.ndarray, list), name_pairs: List[Tuple[str, str]] = None,
-                       common_subset: bool = False):
+                       common_subset: bool = False, tablefmt: str = "simple"):
     correlations = compute_correlations(scores, name_pairs, common_subset=common_subset)
     maxcorr = max(list(zip(*correlations.values()))[0])
-    print(tabulate([(nm, pfont('red', corr) if corr == maxcorr else corr, pvalue, length)
+    print(tabulate([(nm, highlight(corr, maxcorr, tablefmt), pvalue, length)
                     for nm, (corr, pvalue, length) in correlations.items()],
-          headers=['Name pairs', 'Spearman', 'P-value', 'Coverage']))
+                   headers=['Name pairs', 'Spearman', 'P-value', 'Coverage'],
+                   tablefmt=tablefmt))
 
 
 def eval_dataset(dataset: List[Tuple[str, str, float]],
@@ -282,7 +295,8 @@ def tuple_list(arg):
 def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath = None,
          actions=['plotcorr'], plot_orders = ['ground_truth'], plot_vecs = None,
          ling_vecs_names = [], pre_score_files: str = None, mm_embs_of: List[Tuple[str]] = None,
-         mm_lingvis = False, mm_padding = False, print_corr_for = None, common_subset = False):
+         mm_lingvis = False, mm_padding = False, print_corr_for = None, common_subset = False,
+         tablefmt: str = "simple"):
     """
     :param datadir: Path to directory which contains evaluation data (and embedding data if embdir is not given)
     :param vecs_names: List[str] Names of embeddings
@@ -315,7 +329,9 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath =
 
     if loadpath:
         for name, dataset in datasets.datasets.items():
-            scores[name] = np.load(f'{loadpath}_{name}.npy', allow_pickle=True)
+            score_file = f'{loadpath}_{name}.npy'
+            if os.path.exists(score_file):
+                scores[name] = np.load(f'{loadpath}_{name}.npy', allow_pickle=True)
         with open(f'{loadpath}_brain.json', 'r') as f:
             brain_scores = json.load(f)
     else:
@@ -374,7 +390,7 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath =
                             vecs_names=plot_vecs + ['ground_truth'])
 
     if 'printcorr' in actions:
-        if scores is not None:
+        if scores != {}:
             if print_corr_for == 'gt':
                 name_pairs = [('ground_truth', nm) for nm in list(scores.values())[0].dtype.names
                               if nm != 'ground_truth']
@@ -382,18 +398,20 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath =
                 name_pairs = None   # Will print score correlations for all combinations of 2
             for name, scrs in scores.items():
                 print(f'\n-------- {name} scores -------\n')
-                print_correlations(scrs, name_pairs=name_pairs, common_subset=common_subset)
+                print_correlations(scrs, name_pairs=name_pairs, common_subset=common_subset,
+                                   tablefmt=tablefmt)
 
         print('\n-------- Brain scores -------\n')
         vals = list(zip(*[v.values() for v in brain_scores.values()]))
         maxfMRI = max(vals[0])
         maxMEG = max(vals[1])
         print(tabulate([(name,
-                         pfont('red', v['fMRI']) if v['fMRI'] == maxfMRI else v['fMRI'],
-                         pfont('red', v['MEG']) if v['MEG'] == maxMEG else v['MEG'],
-                         v['lenght'])
+                         highlight(v['fMRI'], maxfMRI, tablefmt),
+                         highlight(v['MEG'], maxMEG, tablefmt),
+                         v['length'])
                         for name, v in brain_scores.items()],
-                       headers=['Embedding', 'fMRI avg', 'MEG avg', '#Vocab of 60']))
+                       headers=['Embedding', 'fMRI avg', 'MEG avg', '#Vocab of 60'],
+                       tablefmt=tablefmt))
 
     if 'coverage' in actions:
         for vocab, name in zip(embeddings.vocabs, embeddings.vecs_names):
