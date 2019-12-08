@@ -88,3 +88,47 @@ SimVerb pair coverage: 493 (14%)
 SimVerb pair coverage without lemmas: 493 (14%)
 fMRI coverage: 42 (70%)
 fMRI coverage without lemmas: 42 (70%)
+
+--------------fmri_google_resnet-18--------------
+
+Vocab size: 52
+Vocab size with lemmas: 53
+MEN pair coverage: 6 (0%)
+MEN pair coverage without lemmas: 6 (0%)
+SimLex pair coverage: 11 (1%)
+SimLex pair coverage without lemmas: 11 (1%)
+fMRI coverage: 52 (87%)
+fMRI coverage without lemmas: 52 (87%)
+
+--------------fmri_google_alexnet--------------
+
+Vocab size: 52
+Vocab size with lemmas: 53
+MEN pair coverage: 6 (0%)
+MEN pair coverage without lemmas: 6 (0%)
+SimLex pair coverage: 11 (1%)
+SimLex pair coverage without lemmas: 11 (1%)
+fMRI coverage: 52 (87%)
+fMRI coverage without lemmas: 52 (87%)
+
+--------------fmri-internal_m5_mm_descriptors--------------
+
+Vocab size: 57
+Vocab size with lemmas: 58
+MEN pair coverage: 6 (0%)
+MEN pair coverage without lemmas: 6 (0%)
+SimLex pair coverage: 12 (1%)
+SimLex pair coverage without lemmas: 12 (1%)
+fMRI coverage: 57 (95%)
+fMRI coverage without lemmas: 57 (95%)
+
+--------------frcnn_internal_mm_descriptors--------------
+
+Vocab size: 52
+Vocab size with lemmas: 53
+MEN pair coverage: 6 (0%)
+MEN pair coverage without lemmas: 6 (0%)
+SimLex pair coverage: 11 (1%)
+SimLex pair coverage without lemmas: 11 (1%)
+fMRI coverage: 52 (87%)
+fMRI coverage without lemmas: 52 (87%)
