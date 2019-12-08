@@ -1,0 +1,64 @@
+
+--------------fmri_google_resnet-18--------------
+
+
+[93m    Warning: no model found for 'en'[0m
+
+    Only loading the 'en' tokenizer.
+
+Vocab size: 52
+Vocab size with lemmas: 53
+MEN pair coverage: 6 (0%)
+MEN pair coverage without lemmas: 6 (0%)
+SimLex pair coverage: 11 (1%)
+SimLex pair coverage without lemmas: 11 (1%)
+fMRI coverage: 52 (87%)
+fMRI coverage without lemmas: 52 (87%)
+
+--------------fmri_google_alexnet--------------
+
+
+[93m    Warning: no model found for 'en'[0m
+
+    Only loading the 'en' tokenizer.
+
+Vocab size: 52
+Vocab size with lemmas: 53
+MEN pair coverage: 6 (0%)
+MEN pair coverage without lemmas: 6 (0%)
+SimLex pair coverage: 11 (1%)
+SimLex pair coverage without lemmas: 11 (1%)
+fMRI coverage: 52 (87%)
+fMRI coverage without lemmas: 52 (87%)
+
+--------------fmri-internal_m5_mm_descriptors--------------
+
+
+[93m    Warning: no model found for 'en'[0m
+
+    Only loading the 'en' tokenizer.
+
+Vocab size: 57
+Vocab size with lemmas: 58
+MEN pair coverage: 6 (0%)
+MEN pair coverage without lemmas: 6 (0%)
+SimLex pair coverage: 12 (1%)
+SimLex pair coverage without lemmas: 12 (1%)
+fMRI coverage: 57 (95%)
+fMRI coverage without lemmas: 57 (95%)
+
+--------------frcnn_internal_mm_descriptors--------------
+
+
+[93m    Warning: no model found for 'en'[0m
+
+    Only loading the 'en' tokenizer.
+
+Vocab size: 52
+Vocab size with lemmas: 53
+MEN pair coverage: 6 (0%)
+MEN pair coverage without lemmas: 6 (0%)
+SimLex pair coverage: 11 (1%)
+SimLex pair coverage without lemmas: 11 (1%)
+fMRI coverage: 52 (87%)
+fMRI coverage without lemmas: 52 (87%)
