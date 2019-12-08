@@ -212,10 +212,10 @@ def compute_correlations(scores: (np.ndarray, list), name_pairs: List[Tuple[str,
 
 
 def highlight(col, val, tablefmt):
-    '''Highlight value in a table column.
+    """Highlight value in a table column.
     :param col: list on number, Table column
     :param tablefmt: 'simple' is terminal, 'latex' is LaTeX
-    '''
+    """
     if tablefmt == 'simple':
         return pfont('red', round(col, ROUND)) if col == val else round(col, ROUND)
     elif tablefmt == 'latex':   # needs to be amended by hand
