@@ -65,9 +65,9 @@ class Embeddings:
 
     # Linguistic Embeddings
     fasttext_vss = {'wikinews': 'wiki-news-300d-1M.vec',
-                    'wikinews-sub': 'wiki-news-300d-1M-subword.vec',
+                    'wikinews_sub': 'wiki-news-300d-1M-subword.vec',
                     'crawl': 'crawl-300d-2M.vec',
-                    'crawl-sub': 'crawl-300d-2M-subword',
+                    'crawl_sub': 'crawl-300d-2M-subword',
                     'w2v13': ''}
 
     def __init__(self, datadir: str, vecs_names, ling_vecs_names=[]):
@@ -211,25 +211,46 @@ def compute_correlations(scores: (np.ndarray, list), name_pairs: List[Tuple[str,
     return correlations
 
 
-def highlight(col, val, tablefmt):
+def highlight(col, conditions: dict, tablefmt):
     """Highlight value in a table column.
     :param col: list on number, Table column
+    :param conditions: dict of {colour: condition}
     :param tablefmt: 'simple' is terminal, 'latex' is LaTeX
     """
-    if tablefmt == 'simple':
-        return pfont('red', round(col, ROUND)) if col == val else round(col, ROUND)
-    elif tablefmt == 'latex':   # needs to be amended by hand
-        return 'textbf' + str(round(col, ROUND)) if col == val else round(col, ROUND)
+    col = round(col, ROUND)
+    for color, cond in conditions.items():
+        if tablefmt == 'simple':
+            if cond:
+                return pfont(color, round(col, ROUND))
+        elif tablefmt == 'latex':   # needs to be amended by hand
+            if cond:
+                return 'textbf' + str(round(col, ROUND))
+    return col
 
 
 def print_correlations(scores: (np.ndarray, list), name_pairs: List[Tuple[str, str]] = None,
                        common_subset: bool = False, tablefmt: str = "simple"):
     correlations = compute_correlations(scores, name_pairs, common_subset=common_subset)
     maxcorr = max(list(zip(*correlations.values()))[0])
-    print(tabulate([(nm, highlight(corr, maxcorr, tablefmt), pvalue, length)
+
+    def mm_over_uni(name):
+        import re
+        nam = deepcopy(name)
+        nam = re.sub('-sub', '_sub', nam)   # TODO: delete this after regenerating results
+        prefix, vname = nam.split(' | ')
+        if '-' in vname:
+            nm1, nm2 = vname.split('-')
+            nm1 = re.sub('_sub', '-sub', nm1)
+            nm2 = re.sub('_sub', '-sub', nm2)
+            return correlations[name][0] > correlations[prefix + ' | ' + nm1][0] and \
+                   correlations[name][0] > correlations[prefix + ' | ' + nm2][0]
+        return False
+
+    print(tabulate([(nm, highlight(corr, {'red': corr == maxcorr, 'blue': mm_over_uni(nm)}, tablefmt), pvalue, length)
                     for nm, (corr, pvalue, length) in correlations.items()],
                    headers=['Name pairs', 'Spearman', 'P-value', 'Coverage'],
                    tablefmt=tablefmt))
+
 
 def print_brain_scores(brain_scores, tablefmt: str = "simple"):
     print('\n-------- Brain scores -------\n')
@@ -263,6 +284,7 @@ def print_brain_scores(brain_scores, tablefmt: str = "simple"):
                            [f'P{i + 1}' for i in range(part_num)] +
                            ['MEG avg', '#Vocab / 60'],
                    tablefmt=tablefmt))
+
 
 def eval_dataset(dataset: List[Tuple[str, str, float]],
                  dataset_name: str,
