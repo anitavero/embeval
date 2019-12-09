@@ -29,3 +29,15 @@ PrintFont = {'PURPLE': '\033[95m',
 
 def pfont(font, value):
     return PrintFont[font.upper()] + str(value) + PrintFont['END']
+
+#### LaTeX Font ####
+
+LaTeXFont = {'BLUE': '\color{blue}{',
+             'RED': '\color{red}{',
+             'BOLD': '\textbf{',
+             'ITALIC': '\textit{',
+             'END': '}'}
+
+def pfont(font, value, format):
+    return format[font.upper()] + str(value) + format['END']
+

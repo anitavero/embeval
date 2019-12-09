@@ -18,7 +18,7 @@ from copy import deepcopy
 
 from process_embeddings import mid_fusion
 import utils
-from utils import get_vec, pfont
+from utils import get_vec, pfont, PrintFont, LaTeXFont
 
 sys.path.append('../2v2_software_privatefork/')
 import two_vs_two
@@ -221,11 +221,38 @@ def highlight(col, conditions: dict, tablefmt):
     for color, cond in conditions.items():
         if tablefmt == 'simple':
             if cond:
-                return pfont(color, round(col, ROUND))
-        elif tablefmt == 'latex':   # needs to be amended by hand
+                return pfont(color, round(col, ROUND), PrintFont)
+        elif tablefmt in ['latex', 'latex_raw']:   # needs to be amended by hand
             if cond:
-                return 'textbf' + str(round(col, ROUND))
+                return pfont(color, str(round(col, ROUND)), LaTeXFont)
     return col
+
+
+def mm_over_uni(name, score_dict):
+    import re
+    nam = deepcopy(name)
+    nam = re.sub('-sub', '_sub', nam)   # TODO: delete this after regenerating results
+    nam = re.sub('-18', '_18', nam)   # TODO: delete this after regenerating results
+    nam = re.sub('fmri-in', 'fmri_in', nam)   # TODO: delete this after regenerating results
+    delim = ' | '
+    if delim in nam:    # SemSim scores
+        prefix, vname = nam.split(delim)
+        prefix = prefix + delim
+    else:   # Brain scores
+        vname = nam
+        prefix = ''
+    if '-' in vname:
+        nm1, nm2 = vname.split('-')
+        nm1 = re.sub('_sub', '-sub', nm1)
+        nm2 = re.sub('_sub', '-sub', nm2)
+        nm1 = re.sub('_18', '-18', nm1)
+        nm2 = re.sub('_18', '-18', nm2)
+        nm1 = re.sub('fmri_in', 'fmri-in', nm2)
+        nm2 = re.sub('fmri_in', 'fmri-in', nm2)
+        get_score = lambda x: x if isinstance(x, float) else x[0]
+        return get_score(score_dict[name]) > get_score(score_dict[prefix + nm1]) and \
+               get_score(score_dict[name]) > get_score(score_dict[prefix + nm2])
+    return False
 
 
 def print_correlations(scores: (np.ndarray, list), name_pairs: List[Tuple[str, str]] = None,
@@ -233,20 +260,10 @@ def print_correlations(scores: (np.ndarray, list), name_pairs: List[Tuple[str, s
     correlations = compute_correlations(scores, name_pairs, common_subset=common_subset)
     maxcorr = max(list(zip(*correlations.values()))[0])
 
-    def mm_over_uni(name):
-        import re
-        nam = deepcopy(name)
-        nam = re.sub('-sub', '_sub', nam)   # TODO: delete this after regenerating results
-        prefix, vname = nam.split(' | ')
-        if '-' in vname:
-            nm1, nm2 = vname.split('-')
-            nm1 = re.sub('_sub', '-sub', nm1)
-            nm2 = re.sub('_sub', '-sub', nm2)
-            return correlations[name][0] > correlations[prefix + ' | ' + nm1][0] and \
-                   correlations[name][0] > correlations[prefix + ' | ' + nm2][0]
-        return False
+    def mm_o_uni(name):
+        return mm_over_uni(name, correlations)
 
-    print(tabulate([(nm, highlight(corr, {'red': corr == maxcorr, 'blue': mm_over_uni(nm)}, tablefmt), pvalue, length)
+    print(tabulate([(nm, highlight(corr, {'red': corr == maxcorr, 'blue': mm_o_uni(nm)}, tablefmt), pvalue, length)
                     for nm, (corr, pvalue, length) in correlations.items()],
                    headers=['Name pairs', 'Spearman', 'P-value', 'Coverage'],
                    tablefmt=tablefmt))
@@ -259,13 +276,18 @@ def print_brain_scores(brain_scores, tablefmt: str = "simple"):
     maxMEG_avg = max(vals[3])
     maxfMRIs = [max(x) for x in zip(*vals[0])]
     maxMEGs = [max(x) for x in zip(*vals[1])]
+    fMRI_dict = dict((k, v['fMRI']) for k, v in brain_scores.items())
+    MEG_dict = dict((k, v['MEG']) for k, v in brain_scores.items())
+    fMRI_avg_dict = dict((k, v['fMRI Avg']) for k, v in brain_scores.items())
+    MEG_avg_dict = dict((k, v['MEG Avg']) for k, v in brain_scores.items())
 
     # Print for individual participants and average scores
     print('\n-------- fMRI --------')
     part_num = len(list(brain_scores.values())[0]['fMRI'])
     print(tabulate([[name] +
-                    [highlight(c, mfMRI, tablefmt) for c, mfMRI in zip(v['fMRI'], maxfMRIs)] +
-                    [highlight(v['fMRI Avg'], maxfMRI_avg, tablefmt)] +
+                    [highlight(c, {'red': c == mfMRI, 'blue': mm_over_uni(name, fMRI_dict)}, tablefmt)
+                        for c, mfMRI in zip(v['fMRI'], maxfMRIs)] +
+                    [highlight(v['fMRI Avg'], {'red': v['fMRI Avg'] == maxfMRI_avg, 'blue': mm_over_uni(name, fMRI_avg_dict)}, tablefmt)] +
                     [v['length']]
                     for name, v in brain_scores.items()],
                    headers=['Embedding'] +
@@ -276,8 +298,9 @@ def print_brain_scores(brain_scores, tablefmt: str = "simple"):
     print('\n-------- MEG --------')
     part_num = len(list(brain_scores.values())[0]['MEG'])
     print(tabulate([[name] +
-                    [highlight(c, mMEG, tablefmt) for c, mMEG in zip(v['MEG'], maxMEGs)] +
-                    [highlight(v['MEG Avg'], maxMEG_avg, tablefmt)] +
+                    [highlight(c, {'red': c == mMEG, 'blue': mm_over_uni(name, MEG_dict)}, tablefmt)
+                        for c, mMEG in zip(v['MEG'], maxMEGs)] +
+                    [highlight(v['MEG Avg'], {'red': v['MEG Avg'] == maxMEG_avg, 'blue': mm_over_uni(name, MEG_avg_dict)}, tablefmt)] +
                     [v['length']]
                     for name, v in brain_scores.items()],
                    headers=['Embedding'] +
