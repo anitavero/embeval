@@ -377,8 +377,11 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath =
             if common_subset: # Intersection of all vocabs for two_vs_two and it filters out the common subset
                 vocabs = [list(set.intersection(*map(set, vocabs))) for v in vocabs]
             for emb, vocab, name in zip(embs, vocabs, names):
-                fMRI_score, MEG_score, length = two_vs_two.run_test(embedding=emb, vocab=vocab)
-                brain_scores[name] = {'fMRI': fMRI_score, 'MEG': MEG_score, 'length': length}
+                fMRI_scores, MEG_scores, length, fMRI_scores_avg, MEG_scores_avg \
+                    = two_vs_two.run_test(embedding=emb, vocab=vocab)
+                brain_scores[name] = {'fMRI': fMRI_scores, 'MEG': MEG_scores,
+                                      'fMRI Avg': fMRI_scores_avg, 'MEG Avg': MEG_scores_avg,
+                                      'length': length}
 
             if pre_score_files:  # Load previously saved score files and add the new scores.
                 with open(f'{pre_score_files}_brain.json', 'r') as f:
@@ -407,15 +410,36 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath =
 
         print('\n-------- Brain scores -------\n')
         vals = list(zip(*[v.values() for v in brain_scores.values()]))
-        maxfMRI = max(vals[0])
-        maxMEG = max(vals[1])
-        print(tabulate([(name,
-                         highlight(v['fMRI'], maxfMRI, tablefmt),
-                         highlight(v['MEG'], maxMEG, tablefmt),
-                         v['length'])
+        maxfMRI_avg = max(vals[2])
+        maxMEG_avg = max(vals[3])
+        maxfMRIs = [max(x) for x in zip(*vals[0])]
+        maxMEGs = [max(x) for x in zip(*vals[1])]
+
+        # Print for individual participants and average scores
+        print('\n-------- fMRI --------')
+        part_num = len(list(brain_scores.values())[0]['fMRI'])
+        print(tabulate([[name] +
+                        [highlight(c, mfMRI, tablefmt) for c, mfMRI in zip(v['fMRI'], maxfMRIs)] +
+                        [highlight(v['fMRI Avg'], maxfMRI_avg, tablefmt)] +
+                        [v['length']]
                         for name, v in brain_scores.items()],
-                       headers=['Embedding', 'fMRI avg', 'MEG avg', '#Vocab of 60'],
+                       headers=['Embedding'] +
+                               [f'P{i+1}' for i in range(part_num)] +
+                               ['fMRI avg', '#Vocab / 60'],
                        tablefmt=tablefmt))
+
+        print('\n-------- MEG --------')
+        part_num = len(list(brain_scores.values())[0]['MEG'])
+        print(tabulate([[name] +
+                        [highlight(c, mMEG, tablefmt) for c, mMEG in zip(v['MEG'], maxMEGs)] +
+                        [highlight(v['MEG Avg'], maxMEG_avg, tablefmt)] +
+                        [v['length']]
+                        for name, v in brain_scores.items()],
+                       headers=['Embedding'] +
+                               [f'P{i+1}' for i in range(part_num)] +
+                               ['MEG avg', '#Vocab / 60'],
+                       tablefmt=tablefmt))
+
 
     if 'coverage' in actions:
         for vocab, name in zip(embeddings.vocabs, embeddings.vecs_names):
