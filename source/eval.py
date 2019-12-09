@@ -231,6 +231,38 @@ def print_correlations(scores: (np.ndarray, list), name_pairs: List[Tuple[str, s
                    headers=['Name pairs', 'Spearman', 'P-value', 'Coverage'],
                    tablefmt=tablefmt))
 
+def print_brain_scores(brain_scores, tablefmt: str = "simple"):
+    print('\n-------- Brain scores -------\n')
+    vals = list(zip(*[v.values() for v in brain_scores.values()]))
+    maxfMRI_avg = max(vals[2])
+    maxMEG_avg = max(vals[3])
+    maxfMRIs = [max(x) for x in zip(*vals[0])]
+    maxMEGs = [max(x) for x in zip(*vals[1])]
+
+    # Print for individual participants and average scores
+    print('\n-------- fMRI --------')
+    part_num = len(list(brain_scores.values())[0]['fMRI'])
+    print(tabulate([[name] +
+                    [highlight(c, mfMRI, tablefmt) for c, mfMRI in zip(v['fMRI'], maxfMRIs)] +
+                    [highlight(v['fMRI Avg'], maxfMRI_avg, tablefmt)] +
+                    [v['length']]
+                    for name, v in brain_scores.items()],
+                   headers=['Embedding'] +
+                           [f'P{i + 1}' for i in range(part_num)] +
+                           ['fMRI avg', '#Vocab / 60'],
+                   tablefmt=tablefmt))
+
+    print('\n-------- MEG --------')
+    part_num = len(list(brain_scores.values())[0]['MEG'])
+    print(tabulate([[name] +
+                    [highlight(c, mMEG, tablefmt) for c, mMEG in zip(v['MEG'], maxMEGs)] +
+                    [highlight(v['MEG Avg'], maxMEG_avg, tablefmt)] +
+                    [v['length']]
+                    for name, v in brain_scores.items()],
+                   headers=['Embedding'] +
+                           [f'P{i + 1}' for i in range(part_num)] +
+                           ['MEG avg', '#Vocab / 60'],
+                   tablefmt=tablefmt))
 
 def eval_dataset(dataset: List[Tuple[str, str, float]],
                  dataset_name: str,
@@ -408,38 +440,7 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath =
                 print_correlations(scrs, name_pairs=name_pairs, common_subset=common_subset,
                                    tablefmt=tablefmt)
 
-        print('\n-------- Brain scores -------\n')
-        vals = list(zip(*[v.values() for v in brain_scores.values()]))
-        maxfMRI_avg = max(vals[2])
-        maxMEG_avg = max(vals[3])
-        maxfMRIs = [max(x) for x in zip(*vals[0])]
-        maxMEGs = [max(x) for x in zip(*vals[1])]
-
-        # Print for individual participants and average scores
-        print('\n-------- fMRI --------')
-        part_num = len(list(brain_scores.values())[0]['fMRI'])
-        print(tabulate([[name] +
-                        [highlight(c, mfMRI, tablefmt) for c, mfMRI in zip(v['fMRI'], maxfMRIs)] +
-                        [highlight(v['fMRI Avg'], maxfMRI_avg, tablefmt)] +
-                        [v['length']]
-                        for name, v in brain_scores.items()],
-                       headers=['Embedding'] +
-                               [f'P{i+1}' for i in range(part_num)] +
-                               ['fMRI avg', '#Vocab / 60'],
-                       tablefmt=tablefmt))
-
-        print('\n-------- MEG --------')
-        part_num = len(list(brain_scores.values())[0]['MEG'])
-        print(tabulate([[name] +
-                        [highlight(c, mMEG, tablefmt) for c, mMEG in zip(v['MEG'], maxMEGs)] +
-                        [highlight(v['MEG Avg'], maxMEG_avg, tablefmt)] +
-                        [v['length']]
-                        for name, v in brain_scores.items()],
-                       headers=['Embedding'] +
-                               [f'P{i+1}' for i in range(part_num)] +
-                               ['MEG avg', '#Vocab / 60'],
-                       tablefmt=tablefmt))
-
+        print_brain_scores(brain_scores, tablefmt=tablefmt)
 
     if 'coverage' in actions:
         for vocab, name in zip(embeddings.vocabs, embeddings.vecs_names):
