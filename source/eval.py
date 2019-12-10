@@ -408,7 +408,7 @@ def tuple_list(arg):
 
 # TODO: Nicer parameter handling, with exception messages
 @arg('-a', '--actions', nargs='+', choices=['printcorr', 'plotscores', 'concreteness', 'coverage', 'compscores', 'compbrain'], default='printcorr')
-@arg('-lvns', '--ling_vecs_names', nargs='+', type=str, choices=['w2v13', 'wikinews', 'wikinews-sub', 'crawl', 'crawl-sub'], default=[])
+@arg('-lvns', '--ling_vecs_names', nargs='+', type=str, choices=['w2v13', 'wikinews', 'wikinews_sub', 'crawl', 'crawl_sub'], default=[])
 @arg('-vns', '--vecs_names', nargs='+', type=str)
 @arg('-plto', '--plot_orders', nargs='+', type=str)
 @arg('-pltv', '--plot_vecs', nargs='+', type=str)
