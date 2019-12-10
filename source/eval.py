@@ -248,7 +248,7 @@ def mm_over_uni(name, score_dict):
         nm2 = re.sub('_sub', '-sub', nm2)
         nm1 = re.sub('_18', '-18', nm1)
         nm2 = re.sub('_18', '-18', nm2)
-        nm1 = re.sub('fmri_in', 'fmri-in', nm2)
+        nm1 = re.sub('fmri_in', 'fmri-in', nm1)
         nm2 = re.sub('fmri_in', 'fmri-in', nm2)
         get_score = lambda x: x if isinstance(x, float) else x[0]
         return get_score(score_dict[name]) > get_score(score_dict[prefix + nm1]) and \
@@ -256,8 +256,14 @@ def mm_over_uni(name, score_dict):
     return False
 
 
-def print_correlations(scores: (np.ndarray, list), name_pairs: List[Tuple[str, str]] = None,
+def print_correlations(scores: np.ndarray, print_corr_for = 'gt',
                        common_subset: bool = False, tablefmt: str = "simple"):
+    if print_corr_for == 'gt':
+        name_pairs = [('ground_truth', nm) for nm in scores[0].dtype.names
+                      if nm != 'ground_truth']
+    elif print_corr_for == 'all':
+        name_pairs = None  # Will print score correlations for all combinations of 2
+
     correlations = compute_correlations(scores, name_pairs, common_subset=common_subset)
     maxcorr = max(list(zip(*correlations.values()))[0])
 
@@ -360,19 +366,27 @@ def wn_concreteness(word, similarity_fn=wn.path_similarity):
 def eval_concreteness(scores: np.ndarray, word_pairs, gt_divisor=10, vecs_names=None):
     """Eval dataset instances based on WordNet synsets."""
     # Sort scores by first and second word's concreteness scores
-    median = 0
-    most_conc = 1
-
     def plot_by_concreteness(conscore, title):
         concrete_scores = [(i, wn_concreteness(w1)[conscore], wn_concreteness(w2)[conscore])
                            for i, (w1, w2) in enumerate(word_pairs)]
         # Sort for each words in word pairs
-        ids1 = np.array([i for i, s1, s2 in sorted(concrete_scores, key=lambda x: x[1])])
-        ids2 = np.array([i for i, s1, s2 in sorted(concrete_scores, key=lambda x: x[2])])
-        plot_scores(scores[ids1], gt_divisor, vecs_names, title=title)
-        plot_scores(scores[ids2], gt_divisor, vecs_names, title=title)
+        # ids1 = np.array([i for i, s1, s2 in sorted(concrete_scores, key=lambda x: x[1])])
+        # ids2 = np.array([i for i, s1, s2 in sorted(concrete_scores, key=lambda x: x[2])])
+        ids12 = np.array([i for i, s1, s2 in sorted(concrete_scores, key=lambda x: (x[1] + x[2]) / 2)])
+        # plot_scores(scores[ids1], gt_divisor, vecs_names, title=title)
+        # plot_scores(scores[ids2], gt_divisor, vecs_names, title=title)
 
-    # plots both for median conreteness of synsets and for the most concrete synset of words
+        # plot_scores(scores[ids12][:100], gt_divisor, vecs_names, title=title + ' - 100 least concrete')
+        # plot_scores(scores[ids12][-100:], gt_divisor, vecs_names, title=title + ' - 100 most concrete')
+
+        print(f'\n-------- 100 least concrete - {title} -------\n')
+        print_correlations(scores[ids12][:100], print_corr_for='gt', common_subset=False, tablefmt=None)
+        print(f'\n-------- 100 most concrete - {title} -------\n')
+        print_correlations(scores[ids12][-100:], print_corr_for='gt', common_subset=False, tablefmt=None)
+
+    # plots both for median concreteness of synsets and for the most concrete synset of words
+    median = 0
+    most_conc = 1
     plot_by_concreteness(median, 'Median synset concreteness')
     plot_by_concreteness(most_conc, 'Most concrete synsets')
 
@@ -400,7 +414,7 @@ def tuple_list(arg):
 @arg('-mmembs', '--mm_embs_of', type=tuple_list)
 @arg('-pcorr', '--print_corr_for', choices=['gt', 'all'], default='all')
 def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath = None,
-         actions=['plotcorr'], plot_orders = ['ground_truth'], plot_vecs = None,
+         actions=['plotcorr'], plot_orders = ['ground_truth'], plot_vecs = [],
          ling_vecs_names = [], pre_score_files: str = None, mm_embs_of: List[Tuple[str]] = None,
          mm_lingvis = False, mm_padding = False, print_corr_for = None, common_subset = False,
          tablefmt: str = "simple"):
@@ -506,21 +520,16 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath =
     if 'concreteness' in actions:
         with open(loadpath + '_pairs.json', 'r') as f:
             word_pairs = json.load(f)
-        for name in list(scores.keys()):
-            scrs = deepcopy(scores[name])
+        for name, scrs in scores.items():
+            print(f'\n-------- {name} scores -------\n')
             eval_concreteness(scrs, word_pairs[name], gt_divisor=datasets.normalizers[name],
                               vecs_names=plot_vecs + ['ground_truth'])
 
     if 'printcorr' in actions:
         if scores != {}:
-            if print_corr_for == 'gt':
-                name_pairs = [('ground_truth', nm) for nm in list(scores.values())[0].dtype.names
-                              if nm != 'ground_truth']
-            elif print_corr_for == 'all':
-                name_pairs = None   # Will print score correlations for all combinations of 2
             for name, scrs in scores.items():
                 print(f'\n-------- {name} scores -------\n')
-                print_correlations(scrs, name_pairs=name_pairs, common_subset=common_subset,
+                print_correlations(scrs, print_corr_for=print_corr_for, common_subset=common_subset,
                                    tablefmt=tablefmt)
 
         print_brain_scores(brain_scores, tablefmt=tablefmt)
