@@ -3,6 +3,7 @@ import sys, os
 import numpy as np
 from sklearn.metrics.pairwise import cosine_distances, cosine_similarity
 from scipy.stats import spearmanr
+from nltk.corpus import wordnet as wn
 import spacy
 from tqdm import tqdm
 import json
@@ -334,7 +335,7 @@ def eval_dataset(dataset: List[Tuple[str, str, float]],
     return scores, pairs
 
 
-def plot_scores(scores: np.ndarray, gt_divisor=10, vecs_names=None) -> None:
+def plot_scores(scores: np.ndarray, gt_divisor=10, vecs_names=None, title=None) -> None:
     """Scatter plot of a structured array."""
     scs = deepcopy(scores)
     scs['ground_truth'] /= gt_divisor
@@ -344,7 +345,36 @@ def plot_scores(scores: np.ndarray, gt_divisor=10, vecs_names=None) -> None:
         mask = scs[nm] > MISSING   # Leave out the pairs which aren't covered
         plt.scatter(np.arange(scs[nm].shape[0])[mask], scs[nm][mask], label=nm, alpha=0.5)
     plt.legend()
+    if title:
+        plt.title(title)
     plt.show()
+
+
+def wn_concreteness(word, similarity_fn=wn.path_similarity):
+    """WordNet distance of a word from its root hypernym."""
+    syns = wn.synsets(word)
+    dists = [1 - similarity_fn(s, s.root_hypernyms()[0]) for s in syns]
+    return np.median(dists), max(dists)
+
+
+def eval_concreteness(scores: np.ndarray, word_pairs, gt_divisor=10, vecs_names=None):
+    """Eval dataset instances based on WordNet synsets."""
+    # Sort scores by first and second word's concreteness scores
+    median = 0
+    most_conc = 1
+
+    def plot_by_concreteness(conscore, title):
+        concrete_scores = [(i, wn_concreteness(w1)[conscore], wn_concreteness(w2)[conscore])
+                           for i, (w1, w2) in enumerate(word_pairs)]
+        # Sort for each words in word pairs
+        ids1 = np.array([i for i, s1, s2 in sorted(concrete_scores, key=lambda x: x[1])])
+        ids2 = np.array([i for i, s1, s2 in sorted(concrete_scores, key=lambda x: x[2])])
+        plot_scores(scores[ids1], gt_divisor, vecs_names, title=title)
+        plot_scores(scores[ids2], gt_divisor, vecs_names, title=title)
+
+    # plots both for median conreteness of synsets and for the most concrete synset of words
+    plot_by_concreteness(median, 'Median synset concreteness')
+    plot_by_concreteness(most_conc, 'Most concrete synsets')
 
 
 def tuple_list(arg):
@@ -362,7 +392,7 @@ def tuple_list(arg):
                                          "separated by |. eg. embs1 embs2 | embs2 embs3 embs4")
 
 # TODO: Nicer parameter handling, with exception messages
-@arg('-a', '--actions', nargs='+', choices=['printcorr', 'plotscores', 'coverage', 'compscores', 'compbrain'], default='printcorr')
+@arg('-a', '--actions', nargs='+', choices=['printcorr', 'plotscores', 'concreteness', 'coverage', 'compscores', 'compbrain'], default='printcorr')
 @arg('-lvns', '--ling_vecs_names', nargs='+', type=str, choices=['w2v13', 'wikinews', 'wikinews-sub', 'crawl', 'crawl-sub'], default=[])
 @arg('-vns', '--vecs_names', nargs='+', type=str)
 @arg('-plto', '--plot_orders', nargs='+', type=str)
@@ -472,6 +502,14 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath =
             for plot_order in plot_orders:  # order similarity scores of these datasets or embeddings
                 plot_scores(np.sort(scrs, order=plot_order), gt_divisor=datasets.normalizers[name],
                             vecs_names=plot_vecs + ['ground_truth'])
+
+    if 'concreteness' in actions:
+        with open(loadpath + '_pairs.json', 'r') as f:
+            word_pairs = json.load(f)
+        for name in list(scores.keys()):
+            scrs = deepcopy(scores[name])
+            eval_concreteness(scrs, word_pairs[name], gt_divisor=datasets.normalizers[name],
+                              vecs_names=plot_vecs + ['ground_truth'])
 
     if 'printcorr' in actions:
         if scores != {}:
