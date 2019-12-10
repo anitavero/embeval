@@ -283,17 +283,18 @@ def print_brain_scores(brain_scores, tablefmt: str = "simple"):
     maxMEG_avg = max(vals[3])
     maxfMRIs = [max(x) for x in zip(*vals[0])]
     maxMEGs = [max(x) for x in zip(*vals[1])]
-    fMRI_dict = dict((k, v['fMRI']) for k, v in brain_scores.items())
-    MEG_dict = dict((k, v['MEG']) for k, v in brain_scores.items())
+    part_num = len(list(brain_scores.values())[0]['fMRI'])
+
+    fMRI_dicts = [dict((k, v['fMRI'][p]) for k, v in brain_scores.items()) for p in range(part_num)]
+    MEG_dicts = [dict((k, v['MEG'][p]) for k, v in brain_scores.items()) for p in range(part_num)]
     fMRI_avg_dict = dict((k, v['fMRI Avg']) for k, v in brain_scores.items())
     MEG_avg_dict = dict((k, v['MEG Avg']) for k, v in brain_scores.items())
 
     # Print for individual participants and average scores
     print('\n-------- fMRI --------')
-    part_num = len(list(brain_scores.values())[0]['fMRI'])
     print(tabulate([[name] +
                     [highlight(c, {'red': c == mfMRI, 'blue': mm_over_uni(name, fMRI_dict)}, tablefmt)
-                        for c, mfMRI in zip(v['fMRI'], maxfMRIs)] +
+                        for c, mfMRI, fMRI_dict in zip(v['fMRI'], maxfMRIs, fMRI_dicts)] +
                     [highlight(v['fMRI Avg'], {'red': v['fMRI Avg'] == maxfMRI_avg, 'blue': mm_over_uni(name, fMRI_avg_dict)}, tablefmt)] +
                     [v['length']]
                     for name, v in brain_scores.items()],
@@ -306,7 +307,7 @@ def print_brain_scores(brain_scores, tablefmt: str = "simple"):
     part_num = len(list(brain_scores.values())[0]['MEG'])
     print(tabulate([[name] +
                     [highlight(c, {'red': c == mMEG, 'blue': mm_over_uni(name, MEG_dict)}, tablefmt)
-                        for c, mMEG in zip(v['MEG'], maxMEGs)] +
+                        for c, mMEG, MEG_dict in zip(v['MEG'], maxMEGs, MEG_dicts)] +
                     [highlight(v['MEG Avg'], {'red': v['MEG Avg'] == maxMEG_avg, 'blue': mm_over_uni(name, MEG_avg_dict)}, tablefmt)] +
                     [v['length']]
                     for name, v in brain_scores.items()],
@@ -363,7 +364,7 @@ def wn_concreteness(word, similarity_fn=wn.path_similarity):
     return np.median(dists), max(dists)
 
 
-def eval_concreteness(scores: np.ndarray, word_pairs, gt_divisor=10, vecs_names=None):
+def eval_concreteness(scores: np.ndarray, word_pairs, num=100, gt_divisor=10, vecs_names=None, tablefmt='simple'):
     """Eval dataset instances based on WordNet synsets."""
     # Sort scores by first and second word's concreteness scores
     def plot_by_concreteness(conscore, title):
@@ -379,10 +380,10 @@ def eval_concreteness(scores: np.ndarray, word_pairs, gt_divisor=10, vecs_names=
         # plot_scores(scores[ids12][:100], gt_divisor, vecs_names, title=title + ' - 100 least concrete')
         # plot_scores(scores[ids12][-100:], gt_divisor, vecs_names, title=title + ' - 100 most concrete')
 
-        print(f'\n-------- 100 least concrete - {title} -------\n')
-        print_correlations(scores[ids12][:100], print_corr_for='gt', common_subset=False, tablefmt=None)
-        print(f'\n-------- 100 most concrete - {title} -------\n')
-        print_correlations(scores[ids12][-100:], print_corr_for='gt', common_subset=False, tablefmt=None)
+        print(f'\n-------- {num} least concrete - {title} -------\n')
+        print_correlations(scores[ids12][:num], print_corr_for='gt', common_subset=False, tablefmt=tablefmt)
+        print(f'\n-------- {num} most concrete - {title} -------\n')
+        print_correlations(scores[ids12][-num:], print_corr_for='gt', common_subset=False, tablefmt=tablefmt)
 
     # plots both for median concreteness of synsets and for the most concrete synset of words
     median = 0
@@ -417,7 +418,7 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath =
          actions=['plotcorr'], plot_orders = ['ground_truth'], plot_vecs = [],
          ling_vecs_names = [], pre_score_files: str = None, mm_embs_of: List[Tuple[str]] = None,
          mm_lingvis = False, mm_padding = False, print_corr_for = None, common_subset = False,
-         tablefmt: str = "simple"):
+         tablefmt: str = "simple", concrete_num=100):
     """
     :param datadir: Path to directory which contains evaluation data (and embedding data if embdir is not given)
     :param vecs_names: List[str] Names of embeddings
@@ -522,8 +523,9 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath =
             word_pairs = json.load(f)
         for name, scrs in scores.items():
             print(f'\n-------- {name} scores -------\n')
-            eval_concreteness(scrs, word_pairs[name], gt_divisor=datasets.normalizers[name],
-                              vecs_names=plot_vecs + ['ground_truth'])
+            eval_concreteness(scrs, word_pairs[name], num=concrete_num,
+                              gt_divisor=datasets.normalizers[name], vecs_names=plot_vecs + ['ground_truth'],
+                              tablefmt=tablefmt)
 
     if 'printcorr' in actions:
         if scores != {}:
