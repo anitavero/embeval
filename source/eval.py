@@ -472,10 +472,8 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath =
     :param plot_vecs:
     :param ling_vecs_names: List[str] Names of linguistic embeddings.
     :param pre_score_file: Previously saved score file path without extension, which the new scores will be merged with
-    :param mm_embs_of: Choices:
-                        1. List of str tuples, where the tuples contain names of embeddings which are to
-                           be concatenated into a multi-modal mid-fusion embedding.
-                        2. ling_vis: compines all given vecs_names and ling_vecs_names
+    :param mm_embs_of: List of str tuples, where the tuples contain names of embeddings which are to
+                       be concatenated into a multi-modal mid-fusion embedding.
     :param mm_padding:
     :param print_corr_for: 'gt' prints correlations scores for ground truth, 'all' prints scores between all
                             pairs of scores.
