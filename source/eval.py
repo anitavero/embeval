@@ -186,8 +186,14 @@ def compute_correlations(scores: (np.ndarray, list), name_pairs: List[Tuple[str,
     """Computer correlation between score series.
         :param scores: Structured array of scores with embedding/ground_truth names.
         :param name_pairs: pairs of scores to correlate. If None, every pair will be computed.
+                          if 'gt', everything will be plot against the ground_truth.
     """
-    if not name_pairs:
+    if name_pairs == 'gt':
+        name_pairs = [('ground_truth', nm) for nm in scores[0].dtype.names
+                      if nm != 'ground_truth']
+    elif name_pairs == 'all':
+        name_pairs = None
+    if not name_pairs:  #  Correlations for all combinations of 2
         name_pairs = list(combinations(scores.dtype.names, 2))
 
     if common_subset:  # Filter rows where any of the scores are missing for a word pair
@@ -203,11 +209,18 @@ def compute_correlations(scores: (np.ndarray, list), name_pairs: List[Tuple[str,
     correlations = {}
     for nm1, nm2 in name_pairs:
         # Filter pairs which the scores, coming from any of the two embeddings, don't cover
-        scores1, scores2 = zip(*[(s1, s2) for s1, s2 in
-                                 zip(scs[nm1], scs[nm2]) if s1 != MISSING and s2 != MISSING])
-        assert len(scores1) == len(scores2)
-        corr = spearmanr(scores1, scores2)
-        correlations[' | '.join([nm1, nm2])] = (corr.correlation, corr.pvalue, len(scores1))
+        if (scs[nm1] == MISSING).all():
+            print(f'WARNING: {nm1} has 0 coverage.')
+            correlations[' | '.join([nm1, nm2])] = (0, 0, 0)
+        elif (scs[nm2] == MISSING).all():
+            print(f'WARNING: {nm2} has 0 coverage.')
+            correlations[' | '.join([nm1, nm2])] = (0, 0, 0)
+        else:
+            scores1, scores2 = zip(*[(s1, s2) for s1, s2 in
+                                     zip(scs[nm1], scs[nm2]) if s1 != MISSING and s2 != MISSING])
+            assert len(scores1) == len(scores2)
+            corr = spearmanr(scores1, scores2)
+            correlations[' | '.join([nm1, nm2])] = (corr.correlation, corr.pvalue, len(scores1))
 
     return correlations
 
@@ -232,9 +245,8 @@ def highlight(col, conditions: dict, tablefmt):
 def mm_over_uni(name, score_dict):
     import re
     nam = deepcopy(name)
-    nam = re.sub('-sub', '_sub', nam)   # TODO: delete this after regenerating results
-    nam = re.sub('-18', '_18', nam)   # TODO: delete this after regenerating results
-    nam = re.sub('fmri-in', 'fmri_in', nam)   # TODO: delete this after regenerating results
+    nam = re.sub('-18', '_18', nam)   # TODO: delete these after rewriting symbol for MM and rerun experiments.
+    nam = re.sub('fmri-in', 'fmri_in', nam)
     delim = ' | '
     if delim in nam:    # SemSim scores
         prefix, vname = nam.split(delim)
@@ -244,8 +256,6 @@ def mm_over_uni(name, score_dict):
         prefix = ''
     if '-' in vname:
         nm1, nm2 = vname.split('-')
-        nm1 = re.sub('_sub', '-sub', nm1)
-        nm2 = re.sub('_sub', '-sub', nm2)
         nm1 = re.sub('_18', '-18', nm1)
         nm2 = re.sub('_18', '-18', nm2)
         nm1 = re.sub('fmri_in', 'fmri-in', nm1)
@@ -256,14 +266,8 @@ def mm_over_uni(name, score_dict):
     return False
 
 
-def print_correlations(scores: np.ndarray, print_corr_for = 'gt',
+def print_correlations(scores: np.ndarray, name_pairs = 'gt',
                        common_subset: bool = False, tablefmt: str = "simple"):
-    if print_corr_for == 'gt':
-        name_pairs = [('ground_truth', nm) for nm in scores[0].dtype.names
-                      if nm != 'ground_truth']
-    elif print_corr_for == 'all':
-        name_pairs = None  # Will print score correlations for all combinations of 2
-
     correlations = compute_correlations(scores, name_pairs, common_subset=common_subset)
     maxcorr = max(list(zip(*correlations.values()))[0])
 
@@ -364,32 +368,44 @@ def wn_concreteness(word, similarity_fn=wn.path_similarity):
     return np.median(dists), max(dists)
 
 
+def wn_concreteness_for_pairs(word_pairs, synset_agg: str, similarity_fn=wn.path_similarity) -> List[int]:
+    """Sort scores by first and second word's concreteness scores.
+    :return ids: sorted score indices.
+    """
+    synset_agg = {'median': 0, 'most_conc': 1}[synset_agg]
+    concrete_scores = [(i, wn_concreteness(w1, similarity_fn)[synset_agg],
+                           wn_concreteness(w2, similarity_fn)[synset_agg])
+                       for i, (w1, w2) in enumerate(word_pairs)]
+    # Sort for each words in word pairs
+    # ids1 = np.array([i for i, s1, s2 in sorted(concrete_scores, key=lambda x: x[1])])
+    # ids2 = np.array([i for i, s1, s2 in sorted(concrete_scores, key=lambda x: x[2])])
+    ids12 = np.array([i for i, s1, s2 in sorted(concrete_scores, key=lambda x: (x[1] + x[2]) / 2)])
+    return ids12
+
+
+def plot_by_concreteness(scores: np.ndarray, word_pairs, num=100, gt_divisor=10, vecs_names=None):
+    """Plot scores for data splits with increasing concreteness."""
+    for synset_agg in ['median', 'most_conc']:
+        ids12 = wn_concreteness_for_pairs(word_pairs, synset_agg)
+
+
 def eval_concreteness(scores: np.ndarray, word_pairs, num=100, gt_divisor=10, vecs_names=None, tablefmt='simple'):
     """Eval dataset instances based on WordNet synsets."""
     # Sort scores by first and second word's concreteness scores
-    def plot_by_concreteness(conscore, title):
-        concrete_scores = [(i, wn_concreteness(w1)[conscore], wn_concreteness(w2)[conscore])
-                           for i, (w1, w2) in enumerate(word_pairs)]
-        # Sort for each words in word pairs
-        # ids1 = np.array([i for i, s1, s2 in sorted(concrete_scores, key=lambda x: x[1])])
-        # ids2 = np.array([i for i, s1, s2 in sorted(concrete_scores, key=lambda x: x[2])])
-        ids12 = np.array([i for i, s1, s2 in sorted(concrete_scores, key=lambda x: (x[1] + x[2]) / 2)])
+    def plot_by_concreteness(synset_agg, title):
+        ids12 = wn_concreteness_for_pairs(word_pairs, synset_agg)
         # plot_scores(scores[ids1], gt_divisor, vecs_names, title=title)
         # plot_scores(scores[ids2], gt_divisor, vecs_names, title=title)
-
         # plot_scores(scores[ids12][:100], gt_divisor, vecs_names, title=title + ' - 100 least concrete')
         # plot_scores(scores[ids12][-100:], gt_divisor, vecs_names, title=title + ' - 100 most concrete')
-
         print(f'\n-------- {num} least concrete - {title} -------\n')
-        print_correlations(scores[ids12][:num], print_corr_for='gt', common_subset=False, tablefmt=tablefmt)
+        print_correlations(scores[ids12][:num], name_pairs='gt', common_subset=False, tablefmt=tablefmt)
         print(f'\n-------- {num} most concrete - {title} -------\n')
-        print_correlations(scores[ids12][-num:], print_corr_for='gt', common_subset=False, tablefmt=tablefmt)
+        print_correlations(scores[ids12][-num:], name_pairs='gt', common_subset=False, tablefmt=tablefmt)
 
     # plots both for median concreteness of synsets and for the most concrete synset of words
-    median = 0
-    most_conc = 1
-    plot_by_concreteness(median, 'Median synset concreteness')
-    plot_by_concreteness(most_conc, 'Most concrete synsets')
+    plot_by_concreteness('median', 'Median synset concreteness')
+    plot_by_concreteness('most_conc', 'Most concrete synsets')
 
 
 def tuple_list(arg):
@@ -531,7 +547,7 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath =
         if scores != {}:
             for name, scrs in scores.items():
                 print(f'\n-------- {name} scores -------\n')
-                print_correlations(scrs, print_corr_for=print_corr_for, common_subset=common_subset,
+                print_correlations(scrs, name_pairs=print_corr_for, common_subset=common_subset,
                                    tablefmt=tablefmt)
 
         print_brain_scores(brain_scores, tablefmt=tablefmt)
