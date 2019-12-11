@@ -19,7 +19,7 @@ from copy import deepcopy
 from collections import defaultdict
 import warnings
 
-from process_embeddings import mid_fusion
+from process_embeddings import mid_fusion, MM_TOKEN
 import utils
 from utils import get_vec, pfont, PrintFont, LaTeXFont
 
@@ -247,8 +247,8 @@ def highlight(col, conditions: dict, tablefmt):
 def mm_over_uni(name, score_dict):
     import re
     nam = deepcopy(name)
-    nam = re.sub('-18', '_18', nam)   # TODO: delete these after rewriting symbol for MM and rerun experiments.
-    nam = re.sub('fmri-in', 'fmri_in', nam)
+    # nam = re.sub('-18', '_18', nam)   # TODO: delete these after rewriting symbol for MM and rerun experiments.
+    # nam = re.sub('fmri-in', 'fmri_in', nam)
     delim = ' | '
     if delim in nam:    # SemSim scores
         prefix, vname = nam.split(delim)
@@ -256,12 +256,12 @@ def mm_over_uni(name, score_dict):
     else:   # Brain scores
         vname = nam
         prefix = ''
-    if '-' in vname:
-        nm1, nm2 = vname.split('-')
-        nm1 = re.sub('_18', '-18', nm1)
-        nm2 = re.sub('_18', '-18', nm2)
-        nm1 = re.sub('fmri_in', 'fmri-in', nm1)
-        nm2 = re.sub('fmri_in', 'fmri-in', nm2)
+    if MM_TOKEN in vname:
+        nm1, nm2 = vname.split(MM_TOKEN)
+        # nm1 = re.sub('_18', '-18', nm1)
+        # nm2 = re.sub('_18', '-18', nm2)
+        # nm1 = re.sub('fmri_in', 'fmri-in', nm1)
+        # nm2 = re.sub('fmri_in', 'fmri-in', nm2)
         get_score = lambda x: x if isinstance(x, float) else x[0]
         return get_score(score_dict[name]) > get_score(score_dict[prefix + nm1]) and \
                get_score(score_dict[name]) > get_score(score_dict[prefix + nm2])

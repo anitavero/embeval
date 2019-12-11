@@ -59,6 +59,8 @@ def agg_img_embeddings(values: dict, maxnum: int = 10) -> np.ndarray:
     return embeddings
 
 
+MM_TOKEN = '+'  # Connects embedding names for labelling, e.g. 'linguistic+visual'
+
 def mid_fusion(embeddings, vocabs, labels,
                padding: bool, combnum: int = 2) -> (List[np.ndarray], List[np.ndarray], List[str]):
     """Concatenate embeddings pairwise for words in the intersection or union (with padding) of their vocabulary.
@@ -90,7 +92,7 @@ def mid_fusion(embeddings, vocabs, labels,
     for (emb1, emb2), (vocab1, vocab2), (label1, label2) in zip(emb_pairs, vocab_pairs, label_pairs):
         shape1 = emb1.shape[1]
         shape2 = emb2.shape[1]
-        label = '-'.join([label1, label2])
+        label = MM_TOKEN.join([label1, label2])
         if padding:
             print(f'MM {label} with padding:')
             mm_vocab = list(set(vocab1).union(set(vocab2)))
