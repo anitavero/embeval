@@ -216,16 +216,16 @@ def highlight(col, conditions: dict, tablefmt):
     """Highlight value in a table column.
     :param col: list on number, Table column
     :param conditions: dict of {colour: condition}
-    :param tablefmt: 'simple' is terminal, 'latex' is LaTeX
+    :param tablefmt: 'simple' is terminal, 'latex-raw' is LaTeX
     """
     col = round(col, ROUND)
     for color, cond in conditions.items():
         if tablefmt == 'simple':
             if cond:
-                return pfont(color, round(col, ROUND), PrintFont)
+                return pfont([color, 'BOLD'], round(col, ROUND), PrintFont)
         elif tablefmt in ['latex', 'latex_raw']:   # needs to be amended by hand
             if cond:
-                return pfont(color, str(round(col, ROUND)), LaTeXFont)
+                return pfont([color, 'BOLD'], str(round(col, ROUND)), LaTeXFont)
     return col
 
 

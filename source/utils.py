@@ -1,4 +1,5 @@
 import numpy as np
+from typing import List
 
 
 def join_struct_arrays(arrays):
@@ -38,6 +39,12 @@ LaTeXFont = {'BLUE': '\color{blue}{',
              'ITALIC': '\textit{',
              'END': '}'}
 
-def pfont(font, value, format):
-    return format[font.upper()] + str(value) + format['END']
+def pfont(fonts: List[str], value: str, format):
+    """Wrap string in font code.
+    :param fonts: list of font names, eg. ['red', 'bold']
+    :param value: string to wrap in font
+    """
+    for font in fonts:
+          value = format[font.upper()] + str(value) + format['END']
+    return value
 
