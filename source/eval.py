@@ -16,6 +16,8 @@ import io
 from itertools import combinations, product
 from tabulate import tabulate
 from copy import deepcopy
+from collections import defaultdict
+import warnings
 
 from process_embeddings import mid_fusion
 import utils
@@ -210,10 +212,10 @@ def compute_correlations(scores: (np.ndarray, list), name_pairs: List[Tuple[str,
     for nm1, nm2 in name_pairs:
         # Filter pairs which the scores, coming from any of the two embeddings, don't cover
         if (scs[nm1] == MISSING).all():
-            print(f'WARNING: {nm1} has 0 coverage.')
+            warnings.warn(f'{nm1} has 0 coverage.')
             correlations[' | '.join([nm1, nm2])] = (0, 0, 0)
         elif (scs[nm2] == MISSING).all():
-            print(f'WARNING: {nm2} has 0 coverage.')
+            warnings.warn(f'{nm2} has 0 coverage.')
             correlations[' | '.join([nm1, nm2])] = (0, 0, 0)
         else:
             scores1, scores2 = zip(*[(s1, s2) for s1, s2 in
@@ -346,16 +348,20 @@ def eval_dataset(dataset: List[Tuple[str, str, float]],
     return scores, pairs
 
 
-def plot_scores(scores: np.ndarray, gt_divisor=10, vecs_names=None, title=None) -> None:
+def plot_scores(scores: np.ndarray, gt_divisor=10, vecs_names=None, title=None, type='plot') -> None:
     """Scatter plot of a structured array."""
     scs = deepcopy(scores)
-    scs['ground_truth'] /= gt_divisor
+    if 'ground_truth' in scores.dtype.names:
+        scs['ground_truth'] /= gt_divisor
     if vecs_names is None:
         vecs_names = scs.dtype.names
     for nm in vecs_names:
         mask = scs[nm] > MISSING   # Leave out the pairs which aren't covered
-        plt.scatter(np.arange(scs[nm].shape[0])[mask], scs[nm][mask], label=nm, alpha=0.5)
-    plt.legend()
+        if type == 'scatter':
+            plt.scatter(np.arange(scs[nm].shape[0])[mask], scs[nm][mask], label=nm, alpha=0.5)
+        elif type == 'plot':
+            plt.plot(np.arange(scs[nm].shape[0])[mask], scs[nm][mask], label=nm, alpha=0.5)
+    plt.legend(fontsize='small', loc='center left', bbox_to_anchor=(1, 0.5), borderaxespad=0.)
     if title:
         plt.title(title)
     plt.show()
@@ -383,10 +389,28 @@ def wn_concreteness_for_pairs(word_pairs, synset_agg: str, similarity_fn=wn.path
     return ids12
 
 
-def plot_by_concreteness(scores: np.ndarray, word_pairs, num=100, gt_divisor=10, vecs_names=None):
+def plot_by_concreteness(scores: np.ndarray, word_pairs, common_subset=False, vecs_names=None,
+                         concrete_num=100):
     """Plot scores for data splits with increasing concreteness."""
     for synset_agg in ['median', 'most_conc']:
+        corrs_by_conc = defaultdict(list)
         ids12 = wn_concreteness_for_pairs(word_pairs, synset_agg)
+        scs = scores[ids12]
+        for i in range(0, len(ids12), concrete_num):
+            corrs = compute_correlations(scs[i:i+concrete_num], 'gt', common_subset=common_subset)
+            for k, v in corrs.items():
+                corrs_by_conc[k].append(v[0])   # Append correlations score for each embedding
+
+        # Convert dict to structured array
+        dtype = [(k, np.ndarray) for k in corrs_by_conc.keys()]
+        dim = len(list(corrs_by_conc.values())[0])
+        corrs_by_conc_a = np.array(np.empty(dim), dtype=dtype)
+        for name, v in corrs_by_conc.items():
+            corrs_by_conc_a[name] = np.array(v)
+
+        plot_scores(corrs_by_conc_a,
+                    vecs_names=[n for n in corrs_by_conc_a.dtype.names if
+                                'fmri' not in n and 'frcnn' not in n])
 
 
 def eval_concreteness(scores: np.ndarray, word_pairs, num=100, gt_divisor=10, vecs_names=None, tablefmt='simple'):
@@ -539,9 +563,12 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath =
             word_pairs = json.load(f)
         for name, scrs in scores.items():
             print(f'\n-------- {name} scores -------\n')
-            eval_concreteness(scrs, word_pairs[name], num=concrete_num,
-                              gt_divisor=datasets.normalizers[name], vecs_names=plot_vecs + ['ground_truth'],
-                              tablefmt=tablefmt)
+            # eval_concreteness(scrs, word_pairs[name], num=concrete_num,
+            #                   gt_divisor=datasets.normalizers[name], vecs_names=plot_vecs + ['ground_truth'],
+            #                   tablefmt=tablefmt)
+            plot_by_concreteness(scrs, word_pairs[name], common_subset=common_subset,
+                                 vecs_names=plot_vecs + ['ground_truth'],
+                                 concrete_num=concrete_num)
 
     if 'printcorr' in actions:
         if scores != {}:
