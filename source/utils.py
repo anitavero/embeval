@@ -35,8 +35,8 @@ def pfont(font, value):
 
 LaTeXFont = {'BLUE': '\color{blue}{',
              'RED': '\color{red}{',
-             'BOLD': '\textbf{',
-             'ITALIC': '\textit{',
+             'BOLD': '\\textbf{',
+             'ITALIC': '\\textit{',
              'END': '}'}
 
 def pfont(fonts: List[str], value: str, format):

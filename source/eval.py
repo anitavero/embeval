@@ -276,10 +276,14 @@ def print_correlations(scores: np.ndarray, name_pairs = 'gt',
     def mm_o_uni(name):
         return mm_over_uni(name, correlations)
 
+    if tablefmt == 'latex_raw':
+        print('\\resizebox{\\textwidth}{!}{')
     print(tabulate([(nm, highlight(corr, {'red': corr == maxcorr, 'blue': mm_o_uni(nm)}, tablefmt), pvalue, length)
                     for nm, (corr, pvalue, length) in correlations.items()],
                    headers=['Name pairs', 'Spearman', 'P-value', 'Coverage'],
                    tablefmt=tablefmt))
+    if tablefmt == 'latex_raw':
+        print('}')
 
 
 def print_brain_scores(brain_scores, tablefmt: str = "simple"):
@@ -297,7 +301,9 @@ def print_brain_scores(brain_scores, tablefmt: str = "simple"):
     MEG_avg_dict = dict((k, v['MEG Avg']) for k, v in brain_scores.items())
 
     # Print for individual participants and average scores
-    print('\n-------- fMRI --------')
+    print('\n-------- fMRI --------\n')
+    if tablefmt == 'latex_raw':
+        print('\\resizebox{\\textwidth}{!}{')
     print(tabulate([[name] +
                     [highlight(c, {'red': c == mfMRI, 'blue': mm_over_uni(name, fMRI_dict)}, tablefmt)
                         for c, mfMRI, fMRI_dict in zip(v['fMRI'], maxfMRIs, fMRI_dicts)] +
@@ -308,9 +314,13 @@ def print_brain_scores(brain_scores, tablefmt: str = "simple"):
                            [f'P{i + 1}' for i in range(part_num)] +
                            ['fMRI avg', '#Vocab / 60'],
                    tablefmt=tablefmt))
+    if tablefmt == 'latex_raw':
+        print('}')
 
-    print('\n-------- MEG --------')
+    print('\n-------- MEG --------\n')
     part_num = len(list(brain_scores.values())[0]['MEG'])
+    if tablefmt == 'latex_raw':
+        print('\\resizebox{\\textwidth}{!}{')
     print(tabulate([[name] +
                     [highlight(c, {'red': c == mMEG, 'blue': mm_over_uni(name, MEG_dict)}, tablefmt)
                         for c, mMEG, MEG_dict in zip(v['MEG'], maxMEGs, MEG_dicts)] +
@@ -321,6 +331,8 @@ def print_brain_scores(brain_scores, tablefmt: str = "simple"):
                            [f'P{i + 1}' for i in range(part_num)] +
                            ['MEG avg', '#Vocab / 60'],
                    tablefmt=tablefmt))
+    if tablefmt == 'latex_raw':
+        print('}')
 
 
 def eval_dataset(dataset: List[Tuple[str, str, float]],
@@ -571,6 +583,8 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath =
     if 'printcorr' in actions:
         if scores != {}:
             for name, scrs in scores.items():
+                # if tablefmt == 'latex_raw':
+                #     print('')
                 print(f'\n-------- {name} scores -------\n')
                 print_correlations(scrs, name_pairs=print_corr_for, common_subset=common_subset,
                                    tablefmt=tablefmt)
