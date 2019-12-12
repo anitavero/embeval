@@ -29,6 +29,7 @@ import two_vs_two
 
 MISSING = -2    # Signify word pairs which aren't covered by and embedding's vocabulary
 ROUND = 4       # Round scores in print
+NAME_DELIM = ' | '
 
 
 # We could use dataclass decorator in case of python 3.7
@@ -249,10 +250,9 @@ def mm_over_uni(name, score_dict):
     nam = deepcopy(name)
     # nam = re.sub('-18', '_18', nam)   # TODO: delete these after rewriting symbol for MM and rerun experiments.
     # nam = re.sub('fmri-in', 'fmri_in', nam)
-    delim = ' | '
-    if delim in nam:    # SemSim scores
-        prefix, vname = nam.split(delim)
-        prefix = prefix + delim
+    if NAME_DELIM in nam:    # SemSim scores
+        prefix, vname = nam.split(NAME_DELIM)
+        prefix = prefix + NAME_DELIM
     else:   # Brain scores
         vname = nam
         prefix = ''
@@ -377,7 +377,7 @@ def eval_dataset(dataset: List[Tuple[str, str, float]],
     return scores, pairs
 
 
-def plot_scores(scores: np.ndarray, gt_divisor=10, vecs_names=None, title=None, type='plot',
+def plot_scores(scores: np.ndarray, gt_divisor=10, vecs_names=None, labels=None, colours=None, title=None, type='plot',
                 alpha=0.5) -> None:
     """Scatter plot of a structured array."""
     scs = deepcopy(scores)
@@ -385,12 +385,12 @@ def plot_scores(scores: np.ndarray, gt_divisor=10, vecs_names=None, title=None, 
         scs['ground_truth'] /= gt_divisor
     if vecs_names is None:
         vecs_names = scs.dtype.names
-    for nm in vecs_names:
+    for nm, c, l in zip(vecs_names, colours, labels):
         mask = scs[nm] > MISSING   # Leave out the pairs which aren't covered
         if type == 'scatter':
-            plt.scatter(np.arange(scs[nm].shape[0])[mask], scs[nm][mask], label=nm, alpha=0.5)
+            plt.scatter(np.arange(scs[nm].shape[0])[mask], scs[nm][mask], label=l, alpha=0.5, color=c)
         elif type == 'plot':
-            plt.plot(np.arange(scs[nm].shape[0])[mask], scs[nm][mask], label=nm, alpha=alpha)
+            plt.plot(np.arange(scs[nm].shape[0])[mask], scs[nm][mask], label=l, alpha=alpha, color=c)
     plt.legend(fontsize='small', loc='center left', bbox_to_anchor=(1, 0.5), borderaxespad=0.)
     if title:
         plt.title(title)
@@ -438,9 +438,22 @@ def plot_by_concreteness(scores: np.ndarray, word_pairs, common_subset=False, ve
         for name, v in corrs_by_conc.items():
             corrs_by_conc_a[name] = np.array(v)
 
+        vnames = [n for n in corrs_by_conc_a.dtype.names if 'fmri' not in n and 'frcnn' not in n]
+        labels = [n.split(NAME_DELIM)[1] for n in vnames]
+        colours = []
+        for l in labels:
+            if '+' in l:
+                colours.append('purple')
+            elif l in ['wikinews', 'wikinews_sub', 'crawl', 'crawl_sub', 'w2v13']:
+                colours.append('blue')
+            elif 'vecs3lem1' == l:
+                colours.append('green')
+            else:
+                colours.append('red')   # TODO: Where are the reds?
         plot_scores(corrs_by_conc_a,
-                    vecs_names=[n for n in corrs_by_conc_a.dtype.names if
-                                'fmri' not in n and 'frcnn' not in n],
+                    vecs_names=vnames,
+                    labels=labels,
+                    colours=colours,
                     title=f'{title_prefix} {synset_agg.capitalize()} {concrete_num} splits',
                     alpha=1)
 
