@@ -14,7 +14,7 @@ from typing import List, Tuple
 import matplotlib.pyplot as plt
 import io
 from itertools import combinations, product
-from tabulate import tabulate
+from tabulate import tabulate, LATEX_ESCAPE_RULES
 from copy import deepcopy
 from collections import defaultdict
 import warnings
@@ -268,6 +268,10 @@ def mm_over_uni(name, score_dict):
     return False
 
 
+def latex_escape(string):
+    return ''.join([LATEX_ESCAPE_RULES.get(c, c) for c in string])
+
+
 def print_correlations(scores: np.ndarray, name_pairs = 'gt',
                        common_subset: bool = False, tablefmt: str = "simple"):
     correlations = compute_correlations(scores, name_pairs, common_subset=common_subset)
@@ -278,7 +282,12 @@ def print_correlations(scores: np.ndarray, name_pairs = 'gt',
 
     if tablefmt == 'latex_raw':
         print('\\resizebox{\\textwidth}{!}{')
-    print(tabulate([(nm, highlight(corr, {'red': corr == maxcorr, 'blue': mm_o_uni(nm)}, tablefmt), pvalue, length)
+        escape = latex_escape
+        font = LaTeXFont
+    else:
+        escape = lambda x: x
+        font = PrintFont
+    print(tabulate([(pfont(['ITALIC'], escape(nm), font), highlight(corr, {'red': corr == maxcorr, 'blue': mm_o_uni(nm)}, tablefmt), pvalue, length)
                     for nm, (corr, pvalue, length) in correlations.items()],
                    headers=['Name pairs', 'Spearman', 'P-value', 'Coverage'],
                    tablefmt=tablefmt))
@@ -304,7 +313,12 @@ def print_brain_scores(brain_scores, tablefmt: str = "simple"):
     print('\n-------- fMRI --------\n')
     if tablefmt == 'latex_raw':
         print('\\resizebox{\\textwidth}{!}{')
-    print(tabulate([[name] +
+        escape = latex_escape
+        font = LaTeXFont
+    else:
+        escape = lambda x: x
+        font = PrintFont
+    print(tabulate([[pfont(['ITALIC'], escape(name), font)] +
                     [highlight(c, {'red': c == mfMRI, 'blue': mm_over_uni(name, fMRI_dict)}, tablefmt)
                         for c, mfMRI, fMRI_dict in zip(v['fMRI'], maxfMRIs, fMRI_dicts)] +
                     [highlight(v['fMRI Avg'], {'red': v['fMRI Avg'] == maxfMRI_avg, 'blue': mm_over_uni(name, fMRI_avg_dict)}, tablefmt)] +
@@ -321,7 +335,7 @@ def print_brain_scores(brain_scores, tablefmt: str = "simple"):
     part_num = len(list(brain_scores.values())[0]['MEG'])
     if tablefmt == 'latex_raw':
         print('\\resizebox{\\textwidth}{!}{')
-    print(tabulate([[name] +
+    print(tabulate([[pfont(['ITALIC'], escape(name), font)] +
                     [highlight(c, {'red': c == mMEG, 'blue': mm_over_uni(name, MEG_dict)}, tablefmt)
                         for c, mMEG, MEG_dict in zip(v['MEG'], maxMEGs, MEG_dicts)] +
                     [highlight(v['MEG Avg'], {'red': v['MEG Avg'] == maxMEG_avg, 'blue': mm_over_uni(name, MEG_avg_dict)}, tablefmt)] +
