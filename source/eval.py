@@ -287,7 +287,10 @@ def print_correlations(scores: np.ndarray, name_pairs = 'gt',
     else:
         escape = lambda x: x
         font = PrintFont
-    print(tabulate([(pfont(['ITALIC'], escape(nm), font), highlight(corr, {'red': corr == maxcorr, 'blue': mm_o_uni(nm)}, tablefmt), pvalue, length)
+    print(tabulate([(pfont(['ITALIC'], escape(nm), font),
+                     highlight(corr, {'red': corr == maxcorr, 'blue': mm_o_uni(nm)}, tablefmt),
+                     round(pvalue, ROUND),
+                     length)
                     for nm, (corr, pvalue, length) in correlations.items()],
                    headers=['Name pairs', 'Spearman', 'P-value', 'Coverage'],
                    tablefmt=tablefmt))
@@ -322,11 +325,11 @@ def print_brain_scores(brain_scores, tablefmt: str = "simple"):
                     [highlight(c, {'red': c == mfMRI, 'blue': mm_over_uni(name, fMRI_dict)}, tablefmt)
                         for c, mfMRI, fMRI_dict in zip(v['fMRI'], maxfMRIs, fMRI_dicts)] +
                     [highlight(v['fMRI Avg'], {'red': v['fMRI Avg'] == maxfMRI_avg, 'blue': mm_over_uni(name, fMRI_avg_dict)}, tablefmt)] +
-                    [v['length']]
+                    [round(np.std(v['fMRI']), ROUND), v['length']]
                     for name, v in brain_scores.items()],
                    headers=['Embedding'] +
                            [f'P{i + 1}' for i in range(part_num)] +
-                           ['fMRI avg', '#Vocab / 60'],
+                           ['Avg', 'STD', '\#Vocab / 60'],
                    tablefmt=tablefmt))
     if tablefmt == 'latex_raw':
         print('}')
@@ -339,11 +342,11 @@ def print_brain_scores(brain_scores, tablefmt: str = "simple"):
                     [highlight(c, {'red': c == mMEG, 'blue': mm_over_uni(name, MEG_dict)}, tablefmt)
                         for c, mMEG, MEG_dict in zip(v['MEG'], maxMEGs, MEG_dicts)] +
                     [highlight(v['MEG Avg'], {'red': v['MEG Avg'] == maxMEG_avg, 'blue': mm_over_uni(name, MEG_avg_dict)}, tablefmt)] +
-                    [v['length']]
+                    [round(np.std(v['MEG']), ROUND), v['length']]
                     for name, v in brain_scores.items()],
                    headers=['Embedding'] +
                            [f'P{i + 1}' for i in range(part_num)] +
-                           ['MEG avg', '#Vocab / 60'],
+                           ['Avg', 'SDT', '\#Vocab / 60'],
                    tablefmt=tablefmt))
     if tablefmt == 'latex_raw':
         print('}')
@@ -374,7 +377,8 @@ def eval_dataset(dataset: List[Tuple[str, str, float]],
     return scores, pairs
 
 
-def plot_scores(scores: np.ndarray, gt_divisor=10, vecs_names=None, title=None, type='plot') -> None:
+def plot_scores(scores: np.ndarray, gt_divisor=10, vecs_names=None, title=None, type='plot',
+                alpha=0.5) -> None:
     """Scatter plot of a structured array."""
     scs = deepcopy(scores)
     if 'ground_truth' in scores.dtype.names:
@@ -386,7 +390,7 @@ def plot_scores(scores: np.ndarray, gt_divisor=10, vecs_names=None, title=None, 
         if type == 'scatter':
             plt.scatter(np.arange(scs[nm].shape[0])[mask], scs[nm][mask], label=nm, alpha=0.5)
         elif type == 'plot':
-            plt.plot(np.arange(scs[nm].shape[0])[mask], scs[nm][mask], label=nm, alpha=0.5)
+            plt.plot(np.arange(scs[nm].shape[0])[mask], scs[nm][mask], label=nm, alpha=alpha)
     plt.legend(fontsize='small', loc='center left', bbox_to_anchor=(1, 0.5), borderaxespad=0.)
     if title:
         plt.title(title)
@@ -416,7 +420,7 @@ def wn_concreteness_for_pairs(word_pairs, synset_agg: str, similarity_fn=wn.path
 
 
 def plot_by_concreteness(scores: np.ndarray, word_pairs, common_subset=False, vecs_names=None,
-                         concrete_num=100):
+                         concrete_num=100, title_prefix=''):
     """Plot scores for data splits with increasing concreteness."""
     for synset_agg in ['median', 'most_conc']:
         corrs_by_conc = defaultdict(list)
@@ -436,7 +440,9 @@ def plot_by_concreteness(scores: np.ndarray, word_pairs, common_subset=False, ve
 
         plot_scores(corrs_by_conc_a,
                     vecs_names=[n for n in corrs_by_conc_a.dtype.names if
-                                'fmri' not in n and 'frcnn' not in n])
+                                'fmri' not in n and 'frcnn' not in n],
+                    title=f'{title_prefix} {synset_agg.capitalize()} {concrete_num} splits',
+                    alpha=1)
 
 
 def eval_concreteness(scores: np.ndarray, word_pairs, num=100, gt_divisor=10, vecs_names=None, tablefmt='simple'):
@@ -592,7 +598,8 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath =
             #                   tablefmt=tablefmt)
             plot_by_concreteness(scrs, word_pairs[name], common_subset=common_subset,
                                  vecs_names=plot_vecs + ['ground_truth'],
-                                 concrete_num=concrete_num)
+                                 concrete_num=concrete_num,
+                                 title_prefix=name)
 
     if 'printcorr' in actions:
         if scores != {}:

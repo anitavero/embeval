@@ -25,6 +25,7 @@ PrintFont = {'PURPLE': '\033[95m',
              'YELLOW': '\033[93m',
              'RED': '\033[91m',
              'BOLD': '\033[1m',
+             'ITALIC': '\33[3m',
              'UNDERLINE': '\033[4m',
              'END': '\033[0m'}
 
