@@ -418,20 +418,20 @@ def eval_dataset(dataset: List[Tuple[str, str, float]],
     return scores, pairs
 
 
-def plot_scores(scores: np.ndarray, gt_divisor=10, vecs_names=None, labels=None, colours=None, title=None, type='plot',
-                alpha=0.5) -> None:
+def plot_scores(scores: np.ndarray, gt_divisor=10, vecs_names=None, labels=None, colours=None, linestyles=None,
+                title=None, type='plot', alpha=0.5) -> None:
     """Scatter plot of a structured array."""
     scs = deepcopy(scores)
     if 'ground_truth' in scores.dtype.names:
         scs['ground_truth'] /= gt_divisor
     if vecs_names is None:
         vecs_names = scs.dtype.names
-    for nm, c, l in zip(vecs_names, colours, labels):
+    for nm, c, l, ls in zip(vecs_names, colours, labels, linestyles):
         mask = scs[nm] > MISSING   # Leave out the pairs which aren't covered
         if type == 'scatter':
             plt.scatter(np.arange(scs[nm].shape[0])[mask], scs[nm][mask], label=l, alpha=0.5, color=c)
         elif type == 'plot':
-            plt.plot(np.arange(scs[nm].shape[0])[mask], scs[nm][mask], label=l, alpha=alpha, color=c)
+            plt.plot(np.arange(scs[nm].shape[0])[mask], scs[nm][mask], label=l, alpha=alpha, color=c, linestyle=ls)
     plt.legend(fontsize='small', loc='center left', bbox_to_anchor=(1, 0.5), borderaxespad=0.)
     if title:
         plt.title(title)
@@ -480,23 +480,30 @@ def plot_by_concreteness(scores: np.ndarray, word_pairs, common_subset=False, ve
             corrs_by_conc_a[name] = np.array(v)
 
         vnames = [n for n in corrs_by_conc_a.dtype.names if 'fmri' not in n and 'frcnn' not in n]
-        labels = [n.split(NAME_DELIM)[1] for n in vnames]
+        labels = [Embeddings.get_label(n.split(NAME_DELIM)[1]) for n in vnames]
         colours = []
+        linestyles = []
         for l in labels:
-            if '+' in l:
-                colours.append('purple')
+            lst = '-'
+            if MM_TOKEN in l or 'MM' in l:
+                colours.append('yellow')
+                lst = '--'
             elif l in ['wikinews', 'wikinews_sub', 'crawl', 'crawl_sub', 'w2v13']:
                 colours.append('blue')
-            elif 'vecs3lem1' == l:
+            elif 'VG-'in l:
+                colours.append('purple')
+            elif 'VG SceneGraph' == l:
                 colours.append('green')
             else:
-                colours.append('red')   # TODO: Where are the reds?
+                colours.append('red')
+            linestyles.append(lst)
         plot_scores(corrs_by_conc_a,
                     vecs_names=vnames,
                     labels=labels,
                     colours=colours,
+                    linestyles=linestyles,
                     title=f'{title_prefix} {synset_agg.capitalize()} {concrete_num} splits',
-                    alpha=1)
+                    alpha=0.7)
 
 
 def eval_concreteness(scores: np.ndarray, word_pairs, num=100, gt_divisor=10, vecs_names=None, tablefmt='simple'):
