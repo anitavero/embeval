@@ -18,6 +18,7 @@ from tabulate import tabulate, LATEX_ESCAPE_RULES
 from copy import deepcopy
 from collections import defaultdict
 import warnings
+import re
 
 from process_embeddings import mid_fusion, MM_TOKEN
 import utils
@@ -102,6 +103,46 @@ class Embeddings:
             vecs, vocab = self.load_vecs(vecs_name, datadir)
             self.embeddings.append(vecs)
             self.vocabs.append(vocab)
+
+
+    @staticmethod
+    def get_label(name):
+        """Return a printable label for embedding names."""
+        name = re.sub('ground_truth [-|\|] ', '', name)   # Remove ground_truth prefix
+
+        def label(name):
+            cnn_format = {'vgg': 'VGG', 'alexnetfc7': 'AlexNet', 'alexnet': 'AlexNet',
+                          'resnet-18': 'ResNet'}
+            mod_format = {'vs': 'VIS', 'mm': 'MM'}
+            if 'frcnn' in name:
+                _, context, modality, _ = name.split('_')
+                return f'{mod_format[modality]} Google-{context}'
+            elif 'fmri' in name:
+                if 'combined' in name:
+                    _, context, modality, _ = name.split('_')
+                    return f'VG-{mod_format[modality]} {context}'
+                elif 'descriptors' in name:
+                    context, _, modality, _ = name.split('-')[1].split('_')
+                    return f'VG-{mod_format[modality]} {context}'
+                else:
+                    _, data, cnn = name.split('_')
+                    return f'{data.capitalize()} {cnn_format[cnn]}'
+            elif 'men' in name:
+                _, context = name.split('-')
+                return f'VG-{context}'
+            elif 'vecs' in name:
+                return 'VG SceneGraph'
+            elif name not in Embeddings.fasttext_vss.keys():
+                data, cnn = name.split('_')
+                return f'{data.capitalize()} {cnn_format[cnn]}'
+            else:
+                return name
+
+        if MM_TOKEN in name:
+            name1, name2 = name.split(MM_TOKEN)
+            return label(name1) + MM_TOKEN + label(name2)
+        else:
+            return label(name)
 
 
     def load_fasttext(self, fname: str) -> Tuple[np.ndarray, np.ndarray]:
@@ -287,7 +328,7 @@ def print_correlations(scores: np.ndarray, name_pairs = 'gt',
     else:
         escape = lambda x: x
         font = PrintFont
-    print(tabulate([(pfont(['ITALIC'], escape(nm), font),
+    print(tabulate([(pfont(['ITALIC'], escape(Embeddings.get_label(nm)), font),
                      highlight(corr, {'red': corr == maxcorr, 'blue': mm_o_uni(nm)}, tablefmt),
                      round(pvalue, ROUND),
                      length)
@@ -321,7 +362,7 @@ def print_brain_scores(brain_scores, tablefmt: str = "simple"):
     else:
         escape = lambda x: x
         font = PrintFont
-    print(tabulate([[pfont(['ITALIC'], escape(name), font)] +
+    print(tabulate([[pfont(['ITALIC'], escape(Embeddings.get_label(name)), font)] +
                     [highlight(c, {'red': c == mfMRI, 'blue': mm_over_uni(name, fMRI_dict)}, tablefmt)
                         for c, mfMRI, fMRI_dict in zip(v['fMRI'], maxfMRIs, fMRI_dicts)] +
                     [highlight(v['fMRI Avg'], {'red': v['fMRI Avg'] == maxfMRI_avg, 'blue': mm_over_uni(name, fMRI_avg_dict)}, tablefmt)] +
@@ -338,7 +379,7 @@ def print_brain_scores(brain_scores, tablefmt: str = "simple"):
     part_num = len(list(brain_scores.values())[0]['MEG'])
     if tablefmt == 'latex_raw':
         print('\\resizebox{\\textwidth}{!}{')
-    print(tabulate([[pfont(['ITALIC'], escape(name), font)] +
+    print(tabulate([[pfont(['ITALIC'], escape(Embeddings.get_label(name)), font)] +
                     [highlight(c, {'red': c == mMEG, 'blue': mm_over_uni(name, MEG_dict)}, tablefmt)
                         for c, mMEG, MEG_dict in zip(v['MEG'], maxMEGs, MEG_dicts)] +
                     [highlight(v['MEG Avg'], {'red': v['MEG Avg'] == maxMEG_avg, 'blue': mm_over_uni(name, MEG_avg_dict)}, tablefmt)] +
