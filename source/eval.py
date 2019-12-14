@@ -22,7 +22,7 @@ import re
 
 from process_embeddings import mid_fusion, MM_TOKEN
 import utils
-from utils import get_vec, pfont, PrintFont, LaTeXFont
+from utils import get_vec, pfont, PrintFont, LaTeXFont, latex_table_post_process
 
 sys.path.append('../2v2_software_privatefork/')
 import two_vs_two
@@ -321,22 +321,24 @@ def print_correlations(scores: np.ndarray, name_pairs = 'gt',
     def mm_o_uni(name):
         return mm_over_uni(name, correlations)
 
-    if tablefmt == 'latex_raw':
-        print('\\resizebox{\\textwidth}{!}{')
+    if 'latex' in tablefmt:
         escape = latex_escape
         font = LaTeXFont
     else:
         escape = lambda x: x
         font = PrintFont
-    print(tabulate([(pfont(['ITALIC'], escape(Embeddings.get_label(nm)), font),
-                     highlight(corr, {'red': corr == maxcorr, 'blue': mm_o_uni(nm)}, tablefmt),
-                     round(pvalue, ROUND),
-                     length)
-                    for nm, (corr, pvalue, length) in correlations.items()],
-                   headers=['Name pairs', 'Spearman', 'P-value', 'Coverage'],
-                   tablefmt=tablefmt))
-    if tablefmt == 'latex_raw':
-        print('}')
+    table = tabulate([(pfont(['ITALIC'], escape(Embeddings.get_label(nm)), font),
+                       highlight(corr, {'red': corr == maxcorr, 'blue': mm_o_uni(nm)}, tablefmt),
+                       round(pvalue, ROUND),
+                       length)
+                      for nm, (corr, pvalue, length) in correlations.items()],
+                     headers=[pfont(['BOLD'], x, font) for x in
+                              ['Name pairs', 'Spearman', 'P-value', 'Coverage']],
+                     tablefmt=tablefmt)
+    if 'latex' in tablefmt:
+        table = latex_table_post_process(table, [3, 8])
+
+    print(table)
 
 
 def print_brain_scores(brain_scores, tablefmt: str = "simple"):
@@ -355,42 +357,43 @@ def print_brain_scores(brain_scores, tablefmt: str = "simple"):
 
     # Print for individual participants and average scores
     print('\n-------- fMRI --------\n')
-    if tablefmt == 'latex_raw':
-        print('\\resizebox{\\textwidth}{!}{')
+    if 'latex' in tablefmt:
         escape = latex_escape
         font = LaTeXFont
     else:
         escape = lambda x: x
         font = PrintFont
-    print(tabulate([[pfont(['ITALIC'], escape(Embeddings.get_label(name)), font)] +
-                    [highlight(c, {'red': c == mfMRI, 'blue': mm_over_uni(name, fMRI_dict)}, tablefmt)
-                        for c, mfMRI, fMRI_dict in zip(v['fMRI'], maxfMRIs, fMRI_dicts)] +
-                    [highlight(v['fMRI Avg'], {'red': v['fMRI Avg'] == maxfMRI_avg, 'blue': mm_over_uni(name, fMRI_avg_dict)}, tablefmt)] +
-                    [round(np.std(v['fMRI']), ROUND), v['length']]
-                    for name, v in brain_scores.items()],
-                   headers=['Embedding'] +
-                           [f'P{i + 1}' for i in range(part_num)] +
-                           ['Avg', 'STD', '\#Vocab / 60'],
-                   tablefmt=tablefmt))
-    if tablefmt == 'latex_raw':
-        print('}')
+    table = tabulate([[pfont(['ITALIC'], escape(Embeddings.get_label(name)), font)] +
+                      [highlight(c, {'red': c == mfMRI, 'blue': mm_over_uni(name, fMRI_dict)}, tablefmt)
+                          for c, mfMRI, fMRI_dict in zip(v['fMRI'], maxfMRIs, fMRI_dicts)] +
+                      [highlight(v['fMRI Avg'], {'red': v['fMRI Avg'] == maxfMRI_avg, 'blue': mm_over_uni(name, fMRI_avg_dict)}, tablefmt)] +
+                      [round(np.std(v['fMRI']), ROUND), v['length']]
+                      for name, v in brain_scores.items()],
+                     headers=[pfont(['BOLD'], x, font) for x in
+                              ['Embedding'] +
+                              [f'P{i + 1}' for i in range(part_num)] +
+                              ['Avg', 'STD', 'Coverage']],
+                     tablefmt=tablefmt)
+    if 'latex' in tablefmt:
+        table = latex_table_post_process(table, [3, 8])     # TODO: Vis vecs grouped together
+    print(table)
 
     print('\n-------- MEG --------\n')
     part_num = len(list(brain_scores.values())[0]['MEG'])
-    if tablefmt == 'latex_raw':
-        print('\\resizebox{\\textwidth}{!}{')
-    print(tabulate([[pfont(['ITALIC'], escape(Embeddings.get_label(name)), font)] +
-                    [highlight(c, {'red': c == mMEG, 'blue': mm_over_uni(name, MEG_dict)}, tablefmt)
-                        for c, mMEG, MEG_dict in zip(v['MEG'], maxMEGs, MEG_dicts)] +
-                    [highlight(v['MEG Avg'], {'red': v['MEG Avg'] == maxMEG_avg, 'blue': mm_over_uni(name, MEG_avg_dict)}, tablefmt)] +
-                    [round(np.std(v['MEG']), ROUND), v['length']]
-                    for name, v in brain_scores.items()],
-                   headers=['Embedding'] +
-                           [f'P{i + 1}' for i in range(part_num)] +
-                           ['Avg', 'SDT', '\#Vocab / 60'],
-                   tablefmt=tablefmt))
-    if tablefmt == 'latex_raw':
-        print('}')
+    table = tabulate([[pfont(['ITALIC'], escape(Embeddings.get_label(name)), font)] +
+                      [highlight(c, {'red': c == mMEG, 'blue': mm_over_uni(name, MEG_dict)}, tablefmt)
+                          for c, mMEG, MEG_dict in zip(v['MEG'], maxMEGs, MEG_dicts)] +
+                      [highlight(v['MEG Avg'], {'red': v['MEG Avg'] == maxMEG_avg, 'blue': mm_over_uni(name, MEG_avg_dict)}, tablefmt)] +
+                      [round(np.std(v['MEG']), ROUND), v['length']]
+                      for name, v in brain_scores.items()],
+                     headers=[pfont(['BOLD'], x, font) for x in
+                              ['Embedding'] +
+                              [f'P{i + 1}' for i in range(part_num)] +
+                              ['Avg', 'SDT', 'Coverage']],
+                     tablefmt=tablefmt)
+    if 'latex' in tablefmt:
+        table = latex_table_post_process(table, [3, 8])
+    print(table)
 
 
 def eval_dataset(dataset: List[Tuple[str, str, float]],
@@ -665,7 +668,7 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath =
     if 'printcorr' in actions:
         if scores != {}:
             for name, scrs in scores.items():
-                # if tablefmt == 'latex_raw':
+                # if 'latex' in tablefmt:
                 #     print('')
                 print(f'\n-------- {name} scores -------\n')
                 print_correlations(scrs, name_pairs=print_corr_for, common_subset=common_subset,

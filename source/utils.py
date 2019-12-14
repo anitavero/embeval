@@ -1,5 +1,6 @@
 import numpy as np
 from typing import List
+import re
 
 
 def join_struct_arrays(arrays):
@@ -48,4 +49,27 @@ def pfont(fonts: List[str], value: str, format):
     for font in fonts:
           value = format[font.upper()] + str(value) + format['END']
     return value
+
+
+def latex_table_wrapper(table):
+    prefix = '\\resizebox{\\textwidth}{!}{'
+    suffix = '\n}'
+    return prefix + table + suffix
+
+
+def latex_table_post_process(table, bottomrule_row_ids=[]):
+    table = latex_table_wrapper(table)
+
+    # Insert lines between rows belonging to different modalities (Ling, Vis, MM)
+    if bottomrule_row_ids:
+        newline = '\\\\'
+        rows = table.split(newline)
+        rows[0] = re.sub('\\\\hline', '\\\\toprule', rows[0])
+        rows[1] = re.sub('\\\\hline', '\\\\midrule', rows[1])
+        for r in bottomrule_row_ids:
+            r += 1  # Omit header
+            rows[r+1] = '\n\\bottomrule' + rows[r+1]
+        table = newline.join(rows)
+
+    return table
 
