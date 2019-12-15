@@ -116,7 +116,7 @@ class Embeddings:
             mod_format = {'vs': 'VIS', 'mm': 'MM'}
             if 'frcnn' in name:
                 _, context, modality, _ = name.split('_')
-                return f'{mod_format[modality]} Google-{context}'
+                return f'Google-{mod_format[modality]} {context}'
             elif 'fmri' in name:
                 if 'combined' in name:
                     _, context, modality, _ = name.split('_')
@@ -287,10 +287,7 @@ def highlight(col, conditions: dict, tablefmt):
 
 
 def mm_over_uni(name, score_dict):
-    import re
     nam = deepcopy(name)
-    # nam = re.sub('-18', '_18', nam)   # TODO: delete these after rewriting symbol for MM and rerun experiments.
-    # nam = re.sub('fmri-in', 'fmri_in', nam)
     if NAME_DELIM in nam:    # SemSim scores
         prefix, vname = nam.split(NAME_DELIM)
         prefix = prefix + NAME_DELIM
@@ -299,10 +296,6 @@ def mm_over_uni(name, score_dict):
         prefix = ''
     if MM_TOKEN in vname:
         nm1, nm2 = vname.split(MM_TOKEN)
-        # nm1 = re.sub('_18', '-18', nm1)
-        # nm2 = re.sub('_18', '-18', nm2)
-        # nm1 = re.sub('fmri_in', 'fmri-in', nm1)
-        # nm2 = re.sub('fmri_in', 'fmri-in', nm2)
         get_score = lambda x: x if isinstance(x, float) else x[0]
         return get_score(score_dict[name]) > get_score(score_dict[prefix + nm1]) and \
                get_score(score_dict[name]) > get_score(score_dict[prefix + nm2])
@@ -343,6 +336,21 @@ def print_correlations(scores: np.ndarray, name_pairs = 'gt',
 
 def print_brain_scores(brain_scores, tablefmt: str = "simple"):
     print('\n-------- Brain scores -------\n')
+
+
+    # Map for printable labels
+    labels = dict((Embeddings.get_label(name), name) for name in brain_scores.keys())
+    lingvnames = list(set(list(Embeddings.fasttext_vss.keys())).intersection(set(labels.keys())))
+    mmvnames = [n for n in labels.keys() if 'MM' in n or MM_TOKEN in n]
+    visvnames = set(labels.keys()).difference(set(lingvnames + mmvnames))
+    brain_scores_ordered = []
+    for n in lingvnames:    # TODO: Vis vecs grouped together
+        brain_scores_ordered.append((n, brain_scores[labels[n]]))
+    for n in visvnames:
+        brain_scores_ordered.append((n, brain_scores[labels[n]]))
+    for n in mmvnames:
+        brain_scores_ordered.append((n, brain_scores[labels[n]]))
+
     vals = list(zip(*[v.values() for v in brain_scores.values()]))
     maxfMRI_avg = max(vals[2])
     maxMEG_avg = max(vals[3])
@@ -350,10 +358,10 @@ def print_brain_scores(brain_scores, tablefmt: str = "simple"):
     maxMEGs = [max(x) for x in zip(*vals[1])]
     part_num = len(list(brain_scores.values())[0]['fMRI'])
 
-    fMRI_dicts = [dict((k, v['fMRI'][p]) for k, v in brain_scores.items()) for p in range(part_num)]
-    MEG_dicts = [dict((k, v['MEG'][p]) for k, v in brain_scores.items()) for p in range(part_num)]
-    fMRI_avg_dict = dict((k, v['fMRI Avg']) for k, v in brain_scores.items())
-    MEG_avg_dict = dict((k, v['MEG Avg']) for k, v in brain_scores.items())
+    fMRI_dicts = [dict((k, v['fMRI'][p]) for k, v in brain_scores_ordered) for p in range(part_num)]
+    MEG_dicts = [dict((k, v['MEG'][p]) for k, v in brain_scores_ordered) for p in range(part_num)]
+    fMRI_avg_dict = dict((k, v['fMRI Avg']) for k, v in brain_scores_ordered)
+    MEG_avg_dict = dict((k, v['MEG Avg']) for k, v in brain_scores_ordered)
 
     # Print for individual participants and average scores
     print('\n-------- fMRI --------\n')
@@ -363,29 +371,29 @@ def print_brain_scores(brain_scores, tablefmt: str = "simple"):
     else:
         escape = lambda x: x
         font = PrintFont
-    table = tabulate([[pfont(['ITALIC'], escape(Embeddings.get_label(name)), font)] +
+    table = tabulate([[pfont(['ITALIC'], escape(name), font)] +
                       [highlight(c, {'red': c == mfMRI, 'blue': mm_over_uni(name, fMRI_dict)}, tablefmt)
                           for c, mfMRI, fMRI_dict in zip(v['fMRI'], maxfMRIs, fMRI_dicts)] +
                       [highlight(v['fMRI Avg'], {'red': v['fMRI Avg'] == maxfMRI_avg, 'blue': mm_over_uni(name, fMRI_avg_dict)}, tablefmt)] +
                       [round(np.std(v['fMRI']), ROUND), v['length']]
-                      for name, v in brain_scores.items()],
+                      for name, v in brain_scores_ordered],
                      headers=[pfont(['BOLD'], x, font) for x in
                               ['Embedding'] +
                               [f'P{i + 1}' for i in range(part_num)] +
                               ['Avg', 'STD', 'Coverage']],
                      tablefmt=tablefmt)
     if 'latex' in tablefmt:
-        table = latex_table_post_process(table, [3, 8])     # TODO: Vis vecs grouped together
+        table = latex_table_post_process(table, [3, 8])
     print(table)
 
     print('\n-------- MEG --------\n')
     part_num = len(list(brain_scores.values())[0]['MEG'])
-    table = tabulate([[pfont(['ITALIC'], escape(Embeddings.get_label(name)), font)] +
+    table = tabulate([[pfont(['ITALIC'], escape(name), font)] +
                       [highlight(c, {'red': c == mMEG, 'blue': mm_over_uni(name, MEG_dict)}, tablefmt)
                           for c, mMEG, MEG_dict in zip(v['MEG'], maxMEGs, MEG_dicts)] +
                       [highlight(v['MEG Avg'], {'red': v['MEG Avg'] == maxMEG_avg, 'blue': mm_over_uni(name, MEG_avg_dict)}, tablefmt)] +
                       [round(np.std(v['MEG']), ROUND), v['length']]
-                      for name, v in brain_scores.items()],
+                      for name, v in brain_scores_ordered],
                      headers=[pfont(['BOLD'], x, font) for x in
                               ['Embedding'] +
                               [f'P{i + 1}' for i in range(part_num)] +

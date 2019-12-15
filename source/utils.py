@@ -57,7 +57,10 @@ def latex_table_wrapper(table):
     return prefix + table + suffix
 
 
-def latex_table_post_process(table, bottomrule_row_ids=[]):
+def latex_table_post_process(table, bottomrule_row_ids: List[int] = []):
+    """Add separator lines and align width to page.
+    :param bottomrule_row_ids: Row indices (without header) below which we put a separator line.
+    """
     table = latex_table_wrapper(table)
 
     # Insert lines between rows belonging to different modalities (Ling, Vis, MM)
