@@ -435,7 +435,7 @@ def eval_dataset(dataset: List[Tuple[str, str, float]],
 
 
 def plot_scores(scores: np.ndarray, gt_divisor=10, vecs_names=None, labels=None, colours=None, linestyles=None,
-                title=None, type='plot', alpha=0.5) -> None:
+                title=None, type='plot', alpha=0.5, xtick_labels=None, ax=None) -> None:
     """Scatter plot of a structured array."""
     scs = deepcopy(scores)
     if 'ground_truth' in scores.dtype.names:
@@ -445,12 +445,15 @@ def plot_scores(scores: np.ndarray, gt_divisor=10, vecs_names=None, labels=None,
     for nm, c, l, ls in zip(vecs_names, colours, labels, linestyles):
         mask = scs[nm] > MISSING  # Leave out the pairs which aren't covered
         if type == 'scatter':
-            plt.scatter(np.arange(scs[nm].shape[0])[mask], scs[nm][mask], label=l, alpha=0.5, color=c)
+            ax.scatter(np.arange(scs[nm].shape[0])[mask], scs[nm][mask], label=l, alpha=0.5, color=c)
         elif type == 'plot':
-            plt.plot(np.arange(scs[nm].shape[0])[mask], scs[nm][mask], label=l, alpha=alpha, color=c, linestyle=ls)
-    plt.legend(fontsize='small', loc='center left', bbox_to_anchor=(1, 0.5), borderaxespad=0.)
+            ax.plot(np.arange(scs[nm].shape[0])[mask], scs[nm][mask], label=l, alpha=alpha, color=c, linestyle=ls)
+    ax.legend(fontsize='small', loc='center left', bbox_to_anchor=(1, 0.5), borderaxespad=0.)
     if title:
-        plt.title(title)
+        ax.set_title(title)
+    # if xtick_labels is not None:
+    #     ids = range(0, len(xtick_labels))
+    #     ax.xticks(ids, xtick_labels)
     plt.show()
 
 
@@ -461,29 +464,32 @@ def wn_concreteness(word, similarity_fn=wn.path_similarity):
     return np.median(dists), max(dists)
 
 
-def wn_concreteness_for_pairs(word_pairs, synset_agg: str, similarity_fn=wn.path_similarity) -> (
-np.ndarray, np.ndarray):
+def wn_concreteness_for_pairs(word_pairs, synset_agg: str, similarity_fn=wn.path_similarity,
+                              pair_score_agg='sum') -> (np.ndarray, np.ndarray):
     """Sort scores by first and second word's concreteness scores.
-    :return ids: sorted score indices.
+    :param pair_score_agg: 'sum' adds scores for the two words, 'diff' computes their absolute difference.
+    :return (ids, scores): sorted score indices and concreteness scores.
     """
     synset_agg = {'median': 0, 'most_conc': 1}[synset_agg]
     concrete_scores = [(i, wn_concreteness(w1, similarity_fn)[synset_agg],
                         wn_concreteness(w2, similarity_fn)[synset_agg])
                        for i, (w1, w2) in enumerate(word_pairs)]
-    # Sort for each words in word pairs
-    # ids1 = np.array([i for i, s1, s2 in sorted(concrete_scores, key=lambda x: x[1])])
-    # ids2 = np.array([i for i, s1, s2 in sorted(concrete_scores, key=lambda x: x[2])])
-    ids12 = [(i, s1 + s2) for i, s1, s2 in sorted(concrete_scores, key=lambda x: (x[1] + x[2]))]
+    # Sort for word pairs
+    if pair_score_agg == 'sum':
+        agg = lambda x: x[1] + x[2]
+    elif pair_score_agg == 'diff':
+        agg = lambda x: np.abs(x[1] - x[2])
+    ids12 = [(i, agg([i, s1, s2])) for i, s1, s2 in sorted(concrete_scores, key=agg)]
     ids, scores = list(zip(*ids12))
     return np.array(ids), np.array(scores)
 
 
 def plot_by_concreteness(scores: np.ndarray, word_pairs, common_subset=False, vecs_names=None,
-                         concrete_num=100, title_prefix=''):
+                         concrete_num=100, title_prefix='', pair_score_agg='sum'):
     """Plot scores for data splits with increasing concreteness."""
     for synset_agg in ['median', 'most_conc']:
         corrs_by_conc = defaultdict(list)
-        ids12, concs = wn_concreteness_for_pairs(word_pairs, synset_agg)
+        ids12, concs = wn_concreteness_for_pairs(word_pairs, synset_agg, pair_score_agg=pair_score_agg)
         scs = scores[ids12]
         for i in range(0, len(ids12), concrete_num):
             corrs = compute_correlations(scs[i:i + concrete_num], 'gt', common_subset=common_subset)
@@ -504,7 +510,7 @@ def plot_by_concreteness(scores: np.ndarray, word_pairs, common_subset=False, ve
         for l in labels:
             lst = '-'
             if MM_TOKEN in l or 'MM' in l:
-                colours.append('yellow')
+                colours.append('#e6b830')
                 lst = '--'
             elif l in ['wikinews', 'wikinews_sub', 'crawl', 'crawl_sub', 'w2v13']:
                 colours.append('blue')
@@ -515,13 +521,19 @@ def plot_by_concreteness(scores: np.ndarray, word_pairs, common_subset=False, ve
             else:
                 colours.append('red')
             linestyles.append(lst)
+
+        fig, ax1 = plt.subplots()
+        ax1.plot(concs, color='cyan')     # Concreteness scores on different axis bit the same plot
+        ax2 = ax1.twinx().twiny()
         plot_scores(corrs_by_conc_a,
                     vecs_names=vnames,
                     labels=labels,
                     colours=colours,
                     linestyles=linestyles,
                     title=f'{title_prefix} {synset_agg.capitalize()} {concrete_num} splits',
-                    alpha=0.7)
+                    alpha=0.7,
+                    xtick_labels=None,
+                    ax=ax2)
 
 
 def eval_concreteness(scores: np.ndarray, word_pairs, num=100, gt_divisor=10, vecs_names=None, tablefmt='simple'):
@@ -573,8 +585,9 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
          actions=['plotcorr'], plot_orders=['ground_truth'], plot_vecs=[],
          ling_vecs_names=[], pre_score_files: str = None, mm_embs_of: List[Tuple[str]] = None,
          mm_lingvis=False, mm_padding=False, print_corr_for=None, common_subset=False,
-         tablefmt: str = "simple", concrete_num=100):
+         tablefmt: str = "simple", concrete_num=100, pair_score_agg='sum'):
     """
+    :param pair_score_agg:
     :param mm_lingvis:
     :param tablefmt:
     :param concrete_num:
@@ -586,11 +599,10 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
     :param loadpath: Full path to the files to load scores and brain results from without extension.
                      If None, they'll be computed.
     :param actions:
-    :param gt_normalizer:
     :param plot_orders:
     :param plot_vecs:
     :param ling_vecs_names: List[str] Names of linguistic embeddings.
-    :param pre_score_file: Previously saved score file path without extension, which the new scores will be merged with
+    :param pre_score_files: Previously saved score file path without extension, which the new scores will be merged with
     :param mm_embs_of: List of str tuples, where the tuples contain names of embeddings which are to
                        be concatenated into a multi-modal mid-fusion embedding.
     :param mm_padding:
@@ -686,7 +698,8 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
             plot_by_concreteness(scrs, word_pairs[name], common_subset=common_subset,
                                  vecs_names=plot_vecs + ['ground_truth'],
                                  concrete_num=concrete_num,
-                                 title_prefix=name)
+                                 title_prefix=name,
+                                 pair_score_agg=pair_score_agg)
 
     if 'printcorr' in actions:
         if scores != {}:
