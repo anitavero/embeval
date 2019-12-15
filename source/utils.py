@@ -63,12 +63,13 @@ def latex_table_post_process(table, bottomrule_row_ids: List[int] = []):
     """
     table = latex_table_wrapper(table)
 
+    newline = '\\\\'
+    rows = table.split(newline)
+    rows[0] = re.sub('\\\\hline', '\\\\toprule', rows[0])
+    rows[1] = re.sub('\\\\hline', '\\\\midrule', rows[1])
+
     # Insert lines between rows belonging to different modalities (Ling, Vis, MM)
     if bottomrule_row_ids:
-        newline = '\\\\'
-        rows = table.split(newline)
-        rows[0] = re.sub('\\\\hline', '\\\\toprule', rows[0])
-        rows[1] = re.sub('\\\\hline', '\\\\midrule', rows[1])
         for r in bottomrule_row_ids:
             r += 1  # Omit header
             rows[r+1] = '\n\\bottomrule' + rows[r+1]
