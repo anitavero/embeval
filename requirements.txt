@@ -1,3 +1,8 @@
+matplotlib
+numpy
+scikit-learn
+nltk
+scipy
 pytorch torchvision
 gluoncv
 argh

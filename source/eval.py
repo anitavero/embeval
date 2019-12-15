@@ -27,9 +27,8 @@ from utils import get_vec, pfont, PrintFont, LaTeXFont, latex_table_post_process
 sys.path.append('../2v2_software_privatefork/')
 import two_vs_two
 
-
-MISSING = -2    # Signify word pairs which aren't covered by and embedding's vocabulary
-ROUND = 4       # Round scores in print
+MISSING = -2  # Signify word pairs which aren't covered by and embedding's vocabulary
+ROUND = 4  # Round scores in print
 NAME_DELIM = ' | '
 
 
@@ -50,15 +49,19 @@ class DataSets:
         # self.simverb = list(map(lambda x: [x[0], x[1], x[3]], simverb_full))
         self.men = json.load(open(datadir + '/men.json'))
         self.simlex = json.load(open(datadir + '/simlex.json'))
-        self.fmri_vocab = ['airplane', 'ant', 'apartment', 'arch', 'arm', 'barn', 'bear', 'bed', 'bee', 'beetle', 'bell',
-                          'bicycle', 'bottle', 'butterfly', 'car', 'carrot', 'cat', 'celery', 'chair', 'chimney', 'chisel',
-                          'church', 'closet', 'coat', 'corn', 'cow', 'cup', 'desk', 'dog', 'door', 'dress', 'dresser',
-                          'eye', 'fly', 'foot', 'glass', 'hammer', 'hand', 'horse', 'house', 'igloo', 'key', 'knife', 'leg',
-                          'lettuce', 'pants', 'pliers', 'refrigerator', 'saw', 'screwdriver', 'shirt', 'skirt', 'spoon',
-                          'table', 'telephone', 'tomato', 'train', 'truck', 'watch', 'window']
+        self.fmri_vocab = ['airplane', 'ant', 'apartment', 'arch', 'arm', 'barn', 'bear', 'bed', 'bee', 'beetle',
+                           'bell',
+                           'bicycle', 'bottle', 'butterfly', 'car', 'carrot', 'cat', 'celery', 'chair', 'chimney',
+                           'chisel',
+                           'church', 'closet', 'coat', 'corn', 'cow', 'cup', 'desk', 'dog', 'door', 'dress', 'dresser',
+                           'eye', 'fly', 'foot', 'glass', 'hammer', 'hand', 'horse', 'house', 'igloo', 'key', 'knife',
+                           'leg',
+                           'lettuce', 'pants', 'pliers', 'refrigerator', 'saw', 'screwdriver', 'shirt', 'skirt',
+                           'spoon',
+                           'table', 'telephone', 'tomato', 'train', 'truck', 'watch', 'window']
 
-        self.datasets = {'MEN': self.men, 'SimLex': self.simlex}    #, 'SimVerb': self.simverb}
-        self.normalizers = {'MEN': 50, 'SimLex': 10}                #, 'SimVerb': 10}
+        self.datasets = {'MEN': self.men, 'SimLex': self.simlex}  # , 'SimVerb': self.simverb}
+        self.normalizers = {'MEN': 50, 'SimLex': 10}  # , 'SimVerb': 10}
 
 
 class Embeddings:
@@ -75,12 +78,14 @@ class Embeddings:
                     'crawl_sub': 'crawl-300d-2M-subword',
                     'w2v13': ''}
 
-    def __init__(self, datadir: str, vecs_names, ling_vecs_names=[]):
+    def __init__(self, datadir: str, vecs_names, ling_vecs_names=None):
         # Load Linguistic Embeddings if they are given
+        if ling_vecs_names is None:
+            ling_vecs_names = []
         self.embeddings = []
         self.vocabs = []
         self.vecs_names = []
-        if ling_vecs_names != []:
+        if ling_vecs_names:
             self.vecs_names = deepcopy(ling_vecs_names)
             for lvn in ling_vecs_names:
                 if lvn == 'w2v13':
@@ -104,46 +109,44 @@ class Embeddings:
             self.embeddings.append(vecs)
             self.vocabs.append(vocab)
 
-
     @staticmethod
     def get_label(name):
         """Return a printable label for embedding names."""
-        name = re.sub('ground_truth [-|\|] ', '', name)   # Remove ground_truth prefix
+        name = re.sub('ground_truth [-|\|] ', '', name)  # Remove ground_truth prefix
 
-        def label(name):
+        def label(nm):
             cnn_format = {'vgg': 'VGG', 'alexnetfc7': 'AlexNet', 'alexnet': 'AlexNet',
                           'resnet-18': 'ResNet'}
             mod_format = {'vs': 'VIS', 'mm': 'MM'}
-            if 'frcnn' in name:
-                _, context, modality, _ = name.split('_')
+            if 'frcnn' in nm:
+                _, context, modality, _ = nm.split('_')
                 return f'Google-{mod_format[modality]} {context}'
-            elif 'fmri' in name:
-                if 'combined' in name:
-                    _, context, modality, _ = name.split('_')
+            elif 'fmri' in nm:
+                if 'combined' in nm:
+                    _, context, modality, _ = nm.split('_')
                     return f'VG-{mod_format[modality]} {context}'
-                elif 'descriptors' in name:
-                    context, _, modality, _ = name.split('-')[1].split('_')
+                elif 'descriptors' in nm:
+                    context, _, modality, _ = nm.split('-')[1].split('_')
                     return f'VG-{mod_format[modality]} {context}'
                 else:
-                    _, data, cnn = name.split('_')
+                    _, data, cnn = nm.split('_')
                     return f'{data.capitalize()} {cnn_format[cnn]}'
-            elif 'men' in name:
-                _, context = name.split('-')
+            elif 'men' in nm:
+                _, context = nm.split('-')
                 return f'VG-{context}'
-            elif 'vecs' in name:
+            elif 'vecs' in nm:
                 return 'VG SceneGraph'
-            elif name not in Embeddings.fasttext_vss.keys():
-                data, cnn = name.split('_')
+            elif nm not in Embeddings.fasttext_vss.keys():
+                data, cnn = nm.split('_')
                 return f'{data.capitalize()} {cnn_format[cnn]}'
             else:
-                return name
+                return nm
 
         if MM_TOKEN in name:
             name1, name2 = name.split(MM_TOKEN)
             return label(name1) + MM_TOKEN + label(name2)
         else:
             return label(name)
-
 
     def load_fasttext(self, fname: str) -> Tuple[np.ndarray, np.ndarray]:
         fin = io.open(fname, 'r', encoding='utf-8', newline='\n', errors='ignore')
@@ -155,7 +158,6 @@ class Embeddings:
             fasttext_vocab.append(tokens[0])
             fasttext_vecs.append(list(map(float, tokens[1:])))
         return np.array(fasttext_vecs), np.array(fasttext_vocab)
-
 
     def load_vecs(self, vecs_name: str, datadir: str, filter_vocab=[]):
         vecs = np.load(datadir + f'/{vecs_name}.npy')
@@ -182,7 +184,6 @@ def filter_by_vocab(vecs, vocab, filter_vocab):
 
 
 def compute_dists(vecs):
-    global dists
     dists = cosine_distances(vecs, vecs)
     return dists
 
@@ -237,7 +238,7 @@ def compute_correlations(scores: (np.ndarray, list), name_pairs: List[Tuple[str,
                       if nm != 'ground_truth']
     elif name_pairs == 'all':
         name_pairs = None
-    if not name_pairs:  #  Correlations for all combinations of 2
+    if not name_pairs:  # Correlations for all combinations of 2
         name_pairs = list(combinations(scores.dtype.names, 2))
 
     if common_subset:  # Filter rows where any of the scores are missing for a word pair
@@ -280,7 +281,7 @@ def highlight(val, conditions: dict, tablefmt):
         if tablefmt == 'simple':
             if cond:
                 return pfont([color, 'BOLD'], round(val, ROUND), PrintFont)
-        elif tablefmt in ['latex', 'latex_raw']:   # needs to be amended by hand
+        elif tablefmt in ['latex', 'latex_raw']:  # needs to be amended by hand
             if cond:
                 return pfont([color, 'BOLD'], str(round(val, ROUND)), LaTeXFont)
     return val
@@ -288,10 +289,10 @@ def highlight(val, conditions: dict, tablefmt):
 
 def mm_over_uni(name, score_dict):
     nam = deepcopy(name)
-    if NAME_DELIM in nam:    # SemSim scores
+    if NAME_DELIM in nam:  # SemSim scores
         prefix, vname = nam.split(NAME_DELIM)
         prefix = prefix + NAME_DELIM
-    else:   # Brain scores
+    else:  # Brain scores
         vname = nam
         prefix = ''
     if MM_TOKEN in vname:
@@ -306,7 +307,7 @@ def latex_escape(string):
     return ''.join([LATEX_ESCAPE_RULES.get(c, c) for c in string])
 
 
-def print_correlations(scores: np.ndarray, name_pairs = 'gt',
+def print_correlations(scores: np.ndarray, name_pairs='gt',
                        common_subset: bool = False, tablefmt: str = "simple"):
     correlations = compute_correlations(scores, name_pairs, common_subset=common_subset)
     maxcorr = max(list(zip(*correlations.values()))[0])
@@ -373,8 +374,10 @@ def print_brain_scores(brain_scores, tablefmt: str = "simple"):
 
         table = tabulate([[pfont(['ITALIC'], escape(name), font)] +
                           [highlight(c, {'red': c == max_scr, 'blue': mm_over_uni(name, scr_dict)}, tablefmt)
-                              for c, max_scr, scr_dict in zip(v[data], maxes, score_dicts)] +
-                          [highlight(v[f'{data} Avg'], {'red': v[f'{data} Avg'] == max_avg, 'blue': mm_over_uni(name, avg_dict)}, tablefmt)] +
+                           for c, max_scr, scr_dict in zip(v[data], maxes, score_dicts)] +
+                          [highlight(v[f'{data} Avg'],
+                                     {'red': v[f'{data} Avg'] == max_avg, 'blue': mm_over_uni(name, avg_dict)},
+                                     tablefmt)] +
                           [round(np.std(v[data]), ROUND), v['length']]
                           for name, v in brain_scores_ordered],
                          headers=[pfont(['BOLD'], x, font) for x in
@@ -399,7 +402,7 @@ def print_brain_scores(brain_scores, tablefmt: str = "simple"):
                            tablefmt=tablefmt)
         if 'latex' in tablefmt:
             table = latex_table_post_process(table, [3, 8])
-            table_P = latex_table_post_process(table_P, []) #latex_table_wrapper(table_P)
+            table_P = latex_table_post_process(table_P, [])  # latex_table_wrapper(table_P)
         print(table, '\n')
         print(table_P)
 
@@ -412,10 +415,9 @@ def eval_dataset(dataset: List[Tuple[str, str, float]],
                  embeddings: List[np.ndarray],
                  vocabs: List[List[str]],
                  labels: List[str]) -> (np.ndarray, list):
-
     scores = np.array(np.empty(len(dataset)),
-                        dtype=[('ground_truth', np.ndarray)] +
-                              [(label, np.ndarray) for label in labels])
+                      dtype=[('ground_truth', np.ndarray)] +
+                            [(label, np.ndarray) for label in labels])
     pairs = []
     print(f'Evaluate on {dataset_name}')
     for i, (w1, w2, score) in enumerate(tqdm(dataset)):
@@ -441,7 +443,7 @@ def plot_scores(scores: np.ndarray, gt_divisor=10, vecs_names=None, labels=None,
     if vecs_names is None:
         vecs_names = scs.dtype.names
     for nm, c, l, ls in zip(vecs_names, colours, labels, linestyles):
-        mask = scs[nm] > MISSING   # Leave out the pairs which aren't covered
+        mask = scs[nm] > MISSING  # Leave out the pairs which aren't covered
         if type == 'scatter':
             plt.scatter(np.arange(scs[nm].shape[0])[mask], scs[nm][mask], label=l, alpha=0.5, color=c)
         elif type == 'plot':
@@ -459,19 +461,21 @@ def wn_concreteness(word, similarity_fn=wn.path_similarity):
     return np.median(dists), max(dists)
 
 
-def wn_concreteness_for_pairs(word_pairs, synset_agg: str, similarity_fn=wn.path_similarity) -> List[int]:
+def wn_concreteness_for_pairs(word_pairs, synset_agg: str, similarity_fn=wn.path_similarity) -> (
+np.ndarray, np.ndarray):
     """Sort scores by first and second word's concreteness scores.
     :return ids: sorted score indices.
     """
     synset_agg = {'median': 0, 'most_conc': 1}[synset_agg]
     concrete_scores = [(i, wn_concreteness(w1, similarity_fn)[synset_agg],
-                           wn_concreteness(w2, similarity_fn)[synset_agg])
+                        wn_concreteness(w2, similarity_fn)[synset_agg])
                        for i, (w1, w2) in enumerate(word_pairs)]
     # Sort for each words in word pairs
     # ids1 = np.array([i for i, s1, s2 in sorted(concrete_scores, key=lambda x: x[1])])
     # ids2 = np.array([i for i, s1, s2 in sorted(concrete_scores, key=lambda x: x[2])])
-    ids12 = np.array([i for i, s1, s2 in sorted(concrete_scores, key=lambda x: (x[1] + x[2]) / 2)])
-    return ids12
+    ids12 = [(i, s1 + s2) for i, s1, s2 in sorted(concrete_scores, key=lambda x: (x[1] + x[2]))]
+    ids, scores = list(zip(*ids12))
+    return np.array(ids), np.array(scores)
 
 
 def plot_by_concreteness(scores: np.ndarray, word_pairs, common_subset=False, vecs_names=None,
@@ -479,12 +483,12 @@ def plot_by_concreteness(scores: np.ndarray, word_pairs, common_subset=False, ve
     """Plot scores for data splits with increasing concreteness."""
     for synset_agg in ['median', 'most_conc']:
         corrs_by_conc = defaultdict(list)
-        ids12 = wn_concreteness_for_pairs(word_pairs, synset_agg)
+        ids12, concs = wn_concreteness_for_pairs(word_pairs, synset_agg)
         scs = scores[ids12]
         for i in range(0, len(ids12), concrete_num):
-            corrs = compute_correlations(scs[i:i+concrete_num], 'gt', common_subset=common_subset)
+            corrs = compute_correlations(scs[i:i + concrete_num], 'gt', common_subset=common_subset)
             for k, v in corrs.items():
-                corrs_by_conc[k].append(v[0])   # Append correlations score for each embedding
+                corrs_by_conc[k].append(v[0])  # Append correlations score for each embedding
 
         # Convert dict to structured array
         dtype = [(k, np.ndarray) for k in corrs_by_conc.keys()]
@@ -504,7 +508,7 @@ def plot_by_concreteness(scores: np.ndarray, word_pairs, common_subset=False, ve
                 lst = '--'
             elif l in ['wikinews', 'wikinews_sub', 'crawl', 'crawl_sub', 'w2v13']:
                 colours.append('blue')
-            elif 'VG-'in l:
+            elif 'VG-' in l:
                 colours.append('purple')
             elif 'VG SceneGraph' == l:
                 colours.append('green')
@@ -522,8 +526,9 @@ def plot_by_concreteness(scores: np.ndarray, word_pairs, common_subset=False, ve
 
 def eval_concreteness(scores: np.ndarray, word_pairs, num=100, gt_divisor=10, vecs_names=None, tablefmt='simple'):
     """Eval dataset instances based on WordNet synsets."""
+
     # Sort scores by first and second word's concreteness scores
-    def plot_by_concreteness(synset_agg, title):
+    def print_conc(synset_agg, title):
         ids12 = wn_concreteness_for_pairs(word_pairs, synset_agg)
         # plot_scores(scores[ids1], gt_divisor, vecs_names, title=title)
         # plot_scores(scores[ids2], gt_divisor, vecs_names, title=title)
@@ -535,8 +540,8 @@ def eval_concreteness(scores: np.ndarray, word_pairs, num=100, gt_divisor=10, ve
         print_correlations(scores[ids12][-num:], name_pairs='gt', common_subset=False, tablefmt=tablefmt)
 
     # plots both for median concreteness of synsets and for the most concrete synset of words
-    plot_by_concreteness('median', 'Median synset concreteness')
-    plot_by_concreteness('most_conc', 'Most concrete synsets')
+    print_conc('median', 'Median synset concreteness')
+    print_conc('most_conc', 'Most concrete synsets')
 
 
 def tuple_list(arg):
@@ -553,20 +558,27 @@ def tuple_list(arg):
         raise argparse.ArgumentTypeError("Tuple list must be whitespace separated str lists, " +
                                          "separated by |. eg. embs1 embs2 | embs2 embs3 embs4")
 
+
 # TODO: Nicer parameter handling, with exception messages
-@arg('-a', '--actions', nargs='+', choices=['printcorr', 'plotscores', 'concreteness', 'coverage', 'compscores', 'compbrain'], default='printcorr')
-@arg('-lvns', '--ling_vecs_names', nargs='+', type=str, choices=['w2v13', 'wikinews', 'wikinews_sub', 'crawl', 'crawl_sub'], default=[])
+@arg('-a', '--actions', nargs='+',
+     choices=['printcorr', 'plotscores', 'concreteness', 'coverage', 'compscores', 'compbrain'], default='printcorr')
+@arg('-lvns', '--ling_vecs_names', nargs='+', type=str,
+     choices=['w2v13', 'wikinews', 'wikinews_sub', 'crawl', 'crawl_sub'], default=[])
 @arg('-vns', '--vecs_names', nargs='+', type=str)
 @arg('-plto', '--plot_orders', nargs='+', type=str)
 @arg('-pltv', '--plot_vecs', nargs='+', type=str)
 @arg('-mmembs', '--mm_embs_of', type=tuple_list)
 @arg('-pcorr', '--print_corr_for', choices=['gt', 'all'], default='all')
-def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath = None,
-         actions=['plotcorr'], plot_orders = ['ground_truth'], plot_vecs = [],
-         ling_vecs_names = [], pre_score_files: str = None, mm_embs_of: List[Tuple[str]] = None,
-         mm_lingvis = False, mm_padding = False, print_corr_for = None, common_subset = False,
+def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=None,
+         actions=['plotcorr'], plot_orders=['ground_truth'], plot_vecs=[],
+         ling_vecs_names=[], pre_score_files: str = None, mm_embs_of: List[Tuple[str]] = None,
+         mm_lingvis=False, mm_padding=False, print_corr_for=None, common_subset=False,
          tablefmt: str = "simple", concrete_num=100):
     """
+    :param mm_lingvis:
+    :param tablefmt:
+    :param concrete_num:
+    :param pre_score_files:
     :param datadir: Path to directory which contains evaluation data (and embedding data if embdir is not given)
     :param vecs_names: List[str] Names of embeddings
     :param embdir: Path to directory which contains embedding files.
@@ -614,11 +626,11 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath =
         vocabs = embeddings.vocabs
         names = embeddings.vecs_names
 
-        if mm_lingvis:    # TODO: test
+        if mm_lingvis:  # TODO: test
             mm_labels = list(product(ling_vecs_names, vecs_names))
             emb_tuples = [(embs[names.index(ln)], embs[names.index(vn)]) for ln, vn in mm_labels]
             vocab_tuples = [(vocabs[names.index(ln)], vocabs[names.index(vn)]) for ln, vn in mm_labels]
-        elif mm_embs_of:    # Create MM Embeddings based on the given embedding labels
+        elif mm_embs_of:  # Create MM Embeddings based on the given embedding labels
             emb_tuples = [tuple(embs[names.index(l)] for l in t) for t in mm_embs_of]
             vocab_tuples = [tuple(vocabs[names.index(l)] for l in t) for t in mm_embs_of]
             mm_labels = [tuple(l for l in t) for t in mm_embs_of]
@@ -628,20 +640,20 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath = None, loadpath =
         vocabs += mm_vocabs
         names += mm_labels
 
-        if 'compscores' in actions: # SemSim scores
+        if 'compscores' in actions:  # SemSim scores
             for name, dataset in datasets.datasets.items():
                 dscores, dpairs = eval_dataset(dataset, name, embs, vocabs, names)
                 scores[name] = dscores
                 pairs[name] = dpairs
 
-            if pre_score_files:   # Load previously saved score files and add the new scores.
+            if pre_score_files:  # Load previously saved score files and add the new scores.
                 print(f'Load {pre_score_files} and join with new scores...')
                 for name, dataset in datasets.datasets.items():
                     pre_scores = np.load(f'{pre_score_files}_{name}.npy', allow_pickle=True)
                     scores[name] = utils.join_struct_arrays([pre_scores, scores[name]])
 
         if 'compbrain' in actions:  # Brain scores
-            if common_subset: # Intersection of all vocabs for two_vs_two and it filters out the common subset
+            if common_subset:  # Intersection of all vocabs for two_vs_two and it filters out the common subset
                 vocabs = [list(set.intersection(*map(set, vocabs))) for v in vocabs]
             for emb, vocab, name in zip(embs, vocabs, names):
                 fMRI_scores, MEG_scores, length, fMRI_scores_avg, MEG_scores_avg \
