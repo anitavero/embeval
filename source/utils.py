@@ -12,6 +12,16 @@ def join_struct_arrays(arrays):
     return joint
 
 
+def dict2struct_array(d):
+    """Convert dict to structured array."""
+    dtype = [(k, np.ndarray) for k in d.keys()]
+    dim = len(list(d.values())[0])
+    ar = np.array(np.empty(dim), dtype=dtype)
+    for k, v in d.items():
+        ar[k] = np.array(v)
+    return ar
+
+
 def get_vec(word, embeddings, vocab):
     return embeddings[np.where(vocab == word)[0][0]].reshape(1, -1)
 

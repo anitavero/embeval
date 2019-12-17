@@ -22,7 +22,7 @@ import re
 
 from process_embeddings import mid_fusion, MM_TOKEN
 import utils
-from utils import get_vec, pfont, PrintFont, LaTeXFont, latex_table_post_process, latex_table_wrapper
+from utils import get_vec, pfont, PrintFont, LaTeXFont, latex_table_post_process, latex_table_wrapper, dict2struct_array
 
 sys.path.append('../2v2_software_privatefork/')
 import two_vs_two
@@ -410,6 +410,42 @@ def print_brain_scores(brain_scores, tablefmt: str = "simple"):
     print_data('MEG')
 
 
+def plot_brain_words(brain_scores, tablefmt: str = "simple"):
+    vals = list(zip(*[v.values() for v in brain_scores.values()]))
+
+    def plot_data(data):
+        dscores = {'fMRI': 6, 'MEG': 7}[data]
+        # word_vals = vals[dscores]
+        scores = {}
+        wordlists = []
+        labels = []
+        for name, val in brain_scores.items():  # embeddings
+            label = Embeddings.get_label(name)
+            labels.append(label)
+            word_dict = defaultdict(float)
+            for p in val[name]:  # participants
+                word_dict[p['word1']] += p['hit']
+                word_dict[p['word2']] += p['hit']
+            scores[label] = word_dict.values()
+            wordlists[label] = word_dict.keys()
+
+        # Convert to structured array
+        score_arrays = dict2struct_array(scores)
+        fig, ax = plt.subplots()
+        plot_scores(score_arrays,
+                    vecs_names=brain_scores.keys(),
+                    labels=labels,
+                    colours=None,
+                    linestyles=None,
+                    title=f'{data} words',
+                    alpha=0.7,
+                    xtick_labels=None,
+                    ax=ax)
+
+    plot_data('fMRI')
+    plot_data('MEG')
+
+
 def eval_dataset(dataset: List[Tuple[str, str, float]],
                  dataset_name: str,
                  embeddings: List[np.ndarray],
@@ -496,12 +532,7 @@ def plot_by_concreteness(scores: np.ndarray, word_pairs, common_subset=False, ve
             for k, v in corrs.items():
                 corrs_by_conc[k].append(v[0])  # Append correlations score for each embedding
 
-        # Convert dict to structured array
-        dtype = [(k, np.ndarray) for k in corrs_by_conc.keys()]
-        dim = len(list(corrs_by_conc.values())[0])
-        corrs_by_conc_a = np.array(np.empty(dim), dtype=dtype)
-        for name, v in corrs_by_conc.items():
-            corrs_by_conc_a[name] = np.array(v)
+        corrs_by_conc_a = dict2struct_array(corrs_by_conc)
 
         vnames = [n for n in corrs_by_conc_a.dtype.names if 'fmri' not in n and 'frcnn' not in n]
         labels = [Embeddings.get_label(n.split(NAME_DELIM)[1]) for n in vnames]
@@ -573,7 +604,8 @@ def tuple_list(arg):
 
 # TODO: Nicer parameter handling, with exception messages
 @arg('-a', '--actions', nargs='+',
-     choices=['printcorr', 'plotscores', 'concreteness', 'coverage', 'compscores', 'compbrain'], default='printcorr')
+     choices=['printcorr', 'plotscores', 'concreteness', 'coverage', 'compscores', 'compbrain',
+              'brainwords'], default='printcorr')
 @arg('-lvns', '--ling_vecs_names', nargs='+', type=str,
      choices=['w2v13', 'wikinews', 'wikinews_sub', 'crawl', 'crawl_sub'], default=[])
 @arg('-vns', '--vecs_names', nargs='+', type=str)
@@ -668,11 +700,12 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
             if common_subset:  # Intersection of all vocabs for two_vs_two and it filters out the common subset
                 vocabs = [list(set.intersection(*map(set, vocabs))) for v in vocabs]
             for emb, vocab, name in zip(embs, vocabs, names):
-                fMRI_scores, MEG_scores, length, fMRI_scores_avg, MEG_scores_avg \
-                    = two_vs_two.run_test(embedding=emb, vocab=vocab)
+                fMRI_scores, MEG_scores, length, fMRI_scores_avg, MEG_scores_avg, \
+                fMRI_word_scores, MEG_word_scores = two_vs_two.run_test(embedding=emb, vocab=vocab)
                 brain_scores[name] = {'fMRI': fMRI_scores, 'MEG': MEG_scores,
                                       'fMRI Avg': fMRI_scores_avg, 'MEG Avg': MEG_scores_avg,
-                                      'length': length}
+                                      'length': length,
+                                      'fMRI words': fMRI_word_scores, 'MEG words': MEG_word_scores}
 
             if pre_score_files:  # Load previously saved score files and add the new scores.
                 with open(f'{pre_score_files}_brain.json', 'r') as f:
@@ -700,6 +733,10 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
                                  concrete_num=concrete_num,
                                  title_prefix=name,
                                  pair_score_agg=pair_score_agg)
+
+    if 'brainwords' in actions:
+        print('Brain scores for words')
+        plot_brain_words(brain_scores, tablefmt=tablefmt)
 
     if 'printcorr' in actions:
         if scores != {}:
