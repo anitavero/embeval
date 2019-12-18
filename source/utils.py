@@ -40,8 +40,10 @@ PrintFont = {'PURPLE': '\033[95m',
              'UNDERLINE': '\033[4m',
              'END': '\033[0m'}
 
-def pfont(font, value):
-    return PrintFont[font.upper()] + str(value) + PrintFont['END']
+
+# def pfont(font, value):
+#     return PrintFont[font.upper()] + str(value) + PrintFont['END']
+
 
 #### LaTeX Font ####
 
@@ -51,13 +53,15 @@ LaTeXFont = {'BLUE': '\color{blue}{',
              'ITALIC': '\\textit{',
              'END': '}'}
 
+
 def pfont(fonts: List[str], value: str, format):
     """Wrap string in font code.
+    :param format: PrintFont or LaTeXFont
     :param fonts: list of font names, eg. ['red', 'bold']
     :param value: string to wrap in font
     """
     for font in fonts:
-          value = format[font.upper()] + str(value) + format['END']
+        value = format[font.upper()] + str(value) + format['END']
     return value
 
 
@@ -82,8 +86,7 @@ def latex_table_post_process(table, bottomrule_row_ids: List[int] = []):
     if bottomrule_row_ids:
         for r in bottomrule_row_ids:
             r += 1  # Omit header
-            rows[r+1] = '\n\\bottomrule' + rows[r+1]
+            rows[r + 1] = '\n\\bottomrule' + rows[r + 1]
         table = newline.join(rows)
 
     return table
-

@@ -754,8 +754,6 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
     if 'printcorr' in actions:
         if scores != {}:
             for name, scrs in scores.items():
-                # if 'latex' in tablefmt:
-                #     print('')
                 print(f'\n-------- {name} scores -------\n')
                 print_correlations(scrs, name_pairs=print_corr_for, common_subset=common_subset,
                                    tablefmt=tablefmt)
