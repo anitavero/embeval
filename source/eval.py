@@ -405,25 +405,32 @@ def print_brain_scores(brain_scores, tablefmt: str = "simple"):
     print_data('MEG')
 
 
-def plot_brain_words(brain_scores, tablefmt: str = "simple"):
+def plot_brain_words(brain_scores):
     vals = list(zip(*[v.values() for v in brain_scores.values()]))
     labels = [Embeddings.get_label(name) for name in brain_scores.keys()]
 
-    def plot_data(data):
+    # Order by word concreteness
+    word_concs = [[w] + list(wn_concreteness(w)) for w in DataSets.fmri_vocab]
+    ord_med_vocab = [w for w, cme, cma in sorted(word_concs, key=lambda x: x[1])]
+    ord_max_vocab = [w for w, cme, cma in sorted(word_concs, key=lambda x: x[2])]
+
+    def plot_data(data, ord_vocab):
         dscores = {'fMRI': 5, 'MEG': 6}[data]
         word_vals = vals[dscores]
         scores = {}
         wordlists = {}
         for label, val in zip(labels, word_vals):  # embeddings
             word_dict = {}  # Init dictionary with Brain vocab so we have vectors with same length to plot
-            for w in DataSets.fmri_vocab:
+            for w in ord_vocab:
                 word_dict[w] = 0
             for p in val:  # participants
                 for word_pair in p: # word pairs
                     word_dict[word_pair['word1']] += word_pair['hit']
                     word_dict[word_pair['word2']] += word_pair['hit']
+            # word_dict = dict(((w, word_dict[w]) for w in ord_vocab))  # Sort by concreteness
             scores[label] = list(word_dict.values())
             wordlists[label] = list(word_dict.keys())
+
 
         # Convert to structured array
         score_arrays = dict2struct_array(scores)
@@ -435,11 +442,13 @@ def plot_brain_words(brain_scores, tablefmt: str = "simple"):
                     linestyles=None,
                     title=f'{data} words',
                     alpha=0.7,
-                    xtick_labels=DataSets.fmri_vocab,
+                    xtick_labels=ord_vocab,
                     ax=ax)
 
-    plot_data('fMRI')
-    plot_data('MEG')
+    plot_data('fMRI', ord_med_vocab)
+    plot_data('MEG', ord_med_vocab)
+    plot_data('fMRI', ord_max_vocab)
+    plot_data('MEG', ord_max_vocab)
 
 
 def eval_dataset(dataset: List[Tuple[str, str, float]],
@@ -740,7 +749,7 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
 
     if 'brainwords' in actions:
         print('Brain scores for words')
-        plot_brain_words(brain_scores, tablefmt=tablefmt)
+        plot_brain_words(brain_scores)
 
     if 'printcorr' in actions:
         if scores != {}:
