@@ -39,7 +39,13 @@ class DataSets:
     men: List[Tuple[str, str, float]]
     simlex: List[Tuple[str, str, float]]
     # simverb: List[Tuple[str, str, float]]
-    fmri_vocab: List[str]
+    fmri_vocab = ['airplane', 'ant', 'apartment', 'arch', 'arm', 'barn', 'bear', 'bed', 'bee', 'beetle',
+                  'bell', 'bicycle', 'bottle', 'butterfly', 'car', 'carrot', 'cat', 'celery', 'chair',
+                  'chimney', 'chisel', 'church', 'closet', 'coat', 'corn', 'cow', 'cup', 'desk', 'dog',
+                  'door', 'dress', 'dresser', 'eye', 'fly', 'foot', 'glass', 'hammer', 'hand', 'horse',
+                  'house', 'igloo', 'key', 'knife', 'leg', 'lettuce', 'pants', 'pliers', 'refrigerator',
+                  'saw', 'screwdriver', 'shirt', 'skirt', 'spoon', 'table', 'telephone', 'tomato', 'train',
+                  'truck', 'watch', 'window']
     datasets = {}
     normalizers = {}
 
@@ -49,17 +55,6 @@ class DataSets:
         # self.simverb = list(map(lambda x: [x[0], x[1], x[3]], simverb_full))
         self.men = json.load(open(datadir + '/men.json'))
         self.simlex = json.load(open(datadir + '/simlex.json'))
-        self.fmri_vocab = ['airplane', 'ant', 'apartment', 'arch', 'arm', 'barn', 'bear', 'bed', 'bee', 'beetle',
-                           'bell',
-                           'bicycle', 'bottle', 'butterfly', 'car', 'carrot', 'cat', 'celery', 'chair', 'chimney',
-                           'chisel',
-                           'church', 'closet', 'coat', 'corn', 'cow', 'cup', 'desk', 'dog', 'door', 'dress', 'dresser',
-                           'eye', 'fly', 'foot', 'glass', 'hammer', 'hand', 'horse', 'house', 'igloo', 'key', 'knife',
-                           'leg',
-                           'lettuce', 'pants', 'pliers', 'refrigerator', 'saw', 'screwdriver', 'shirt', 'skirt',
-                           'spoon',
-                           'table', 'telephone', 'tomato', 'train', 'truck', 'watch', 'window']
-
         self.datasets = {'MEN': self.men, 'SimLex': self.simlex}  # , 'SimVerb': self.simverb}
         self.normalizers = {'MEN': 50, 'SimLex': 10}  # , 'SimVerb': 10}
 
@@ -412,34 +407,35 @@ def print_brain_scores(brain_scores, tablefmt: str = "simple"):
 
 def plot_brain_words(brain_scores, tablefmt: str = "simple"):
     vals = list(zip(*[v.values() for v in brain_scores.values()]))
+    labels = [Embeddings.get_label(name) for name in brain_scores.keys()]
 
     def plot_data(data):
-        dscores = {'fMRI': 6, 'MEG': 7}[data]
-        # word_vals = vals[dscores]
+        dscores = {'fMRI': 5, 'MEG': 6}[data]
+        word_vals = vals[dscores]
         scores = {}
-        wordlists = []
-        labels = []
-        for name, val in brain_scores.items():  # embeddings
-            label = Embeddings.get_label(name)
-            labels.append(label)
-            word_dict = defaultdict(float)
-            for p in val[name]:  # participants
-                word_dict[p['word1']] += p['hit']
-                word_dict[p['word2']] += p['hit']
-            scores[label] = word_dict.values()
-            wordlists[label] = word_dict.keys()
+        wordlists = {}
+        for label, val in zip(labels, word_vals):  # embeddings
+            word_dict = {}  # Init dictionary with Brain vocab so we have vectors with same length to plot
+            for w in DataSets.fmri_vocab:
+                word_dict[w] = 0
+            for p in val:  # participants
+                for word_pair in p: # word pairs
+                    word_dict[word_pair['word1']] += word_pair['hit']
+                    word_dict[word_pair['word2']] += word_pair['hit']
+            scores[label] = list(word_dict.values())
+            wordlists[label] = list(word_dict.keys())
 
         # Convert to structured array
         score_arrays = dict2struct_array(scores)
         fig, ax = plt.subplots()
         plot_scores(score_arrays,
-                    vecs_names=brain_scores.keys(),
+                    vecs_names=labels,
                     labels=labels,
                     colours=None,
                     linestyles=None,
                     title=f'{data} words',
                     alpha=0.7,
-                    xtick_labels=None,
+                    xtick_labels=DataSets.fmri_vocab,
                     ax=ax)
 
     plot_data('fMRI')
@@ -476,20 +472,28 @@ def plot_scores(scores: np.ndarray, gt_divisor=10, vecs_names=None, labels=None,
     scs = deepcopy(scores)
     if 'ground_truth' in scores.dtype.names:
         scs['ground_truth'] /= gt_divisor
+
     if vecs_names is None:
         vecs_names = scs.dtype.names
+    if labels is None:
+        labels = [None for i in range(len(vecs_names))]
+    if colours is None:
+        colours = [None for i in range(len(vecs_names))]
+    if linestyles is None:
+        linestyles = [None for i in range(len(vecs_names))]
+
     for nm, c, l, ls in zip(vecs_names, colours, labels, linestyles):
         mask = scs[nm] > MISSING  # Leave out the pairs which aren't covered
         if type == 'scatter':
             ax.scatter(np.arange(scs[nm].shape[0])[mask], scs[nm][mask], label=l, alpha=0.5, color=c)
         elif type == 'plot':
             ax.plot(np.arange(scs[nm].shape[0])[mask], scs[nm][mask], label=l, alpha=alpha, color=c, linestyle=ls)
-    ax.legend(fontsize='small', loc='center left', bbox_to_anchor=(1, 0.5), borderaxespad=0.)
+    ax.legend(fontsize='small', loc='center left', bbox_to_anchor=(1, 0.5), borderaxespad=0.2)
     if title:
         ax.set_title(title)
-    # if xtick_labels is not None:
-    #     ids = range(0, len(xtick_labels))
-    #     ax.xticks(ids, xtick_labels)
+    if xtick_labels is not None:
+        ax.xaxis.set_ticks(range(len(xtick_labels)))
+        ax.set_xticklabels(xtick_labels, rotation=70, fontsize=10)
     plt.show()
 
 
