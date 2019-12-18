@@ -77,7 +77,7 @@ def main(exp_name):
 
     ##### Common subset #####
 
-    if exp_name == 'padding_mitchell':
+    if exp_name == 'padding_mitchell_commonsubset':
         eval.main(datadir, actions=['compbrain'], embdir=embdir,
                   vecs_names=['fmri_google_resnet-18', 'fmri_google_alexnet',
                               'fmri-internal_m5_vs_descriptors', 'fmri-internal_m5_mm_descriptors',
@@ -90,7 +90,7 @@ def main(exp_name):
                   savepath=savedir + exp_name,
                   common_subset=True)
 
-    if exp_name == 'nopadding_mitchell':
+    if exp_name == 'nopadding_mitchell_commonsubset':
         eval.main(datadir, actions=['compbrain'], embdir=embdir,
                   vecs_names=['fmri_google_resnet-18', 'fmri_google_alexnet',
                               'fmri-internal_m5_vs_descriptors', 'fmri-internal_m5_mm_descriptors',
