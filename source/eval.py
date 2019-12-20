@@ -111,7 +111,7 @@ class Embeddings:
 
         def label(nm):
             cnn_format = {'vgg': 'VGG', 'alexnetfc7': 'AlexNet', 'alexnet': 'AlexNet',
-                          'resnet-18': 'ResNet'}
+                          'resnet-18': 'ResNet-18', 'resnet152': 'ResNet-152'}
             mod_format = {'vs': 'VIS', 'mm': 'MM'}
             if 'frcnn' in nm:
                 _, context, modality, _ = nm.split('_')
