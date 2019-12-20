@@ -52,16 +52,16 @@ def main(action):
     if action == 'concreteness':
 
         for pair_agg in ['sum', 'diff']:
-            print(f'\n\n------------ {pair_agg} ------------\n\n')
-
-            print('\n############## Padding ##############')
+            # print(f'\n\n------------ {pair_agg} ------------\n\n')
+            #
+            # print('\n############## Padding ##############')
             eval.main(datadir, actions=['concreteness'],
                       loadpath=embdir + 'padding',
                       concrete_num=100,
                       plot_vecs=[],
                       pair_score_agg=pair_agg)
 
-            print('\n############## Padding - common subset ##############')
+            # print('\n############## Padding - common subset ##############')
             eval.main(datadir, actions=['concreteness'],
                       loadpath=embdir + 'padding',
                       concrete_num=100,
@@ -70,14 +70,14 @@ def main(action):
                       common_subset=True)
 
 
-            print('\n############## No Padding ##############')
+            # print('\n############## No Padding ##############')
             eval.main(datadir, actions=['concreteness'],
                       loadpath=embdir + 'nopadding',
                       concrete_num=100,
                       plot_vecs=[],
                       pair_score_agg=pair_agg)
 
-            print('\n############## No Padding - common subset ##############')
+            # print('\n############## No Padding - common subset ##############')
             eval.main(datadir, actions=['concreteness'],
                       loadpath=embdir + 'nopadding',
                       concrete_num=100,

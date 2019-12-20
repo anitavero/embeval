@@ -480,7 +480,7 @@ def eval_dataset(dataset: List[Tuple[str, str, float]],
 
 
 def plot_scores(scores: np.ndarray, gt_divisor=10, vecs_names=None, labels=None, colours=None, linestyles=None,
-                title=None, type='plot', alpha=0.5, xtick_labels=None, ax=None) -> None:
+                title=None, type='plot', alpha=0.5, xtick_labels=None, ax=None, show=True) -> None:
     """Scatter plot of a structured array."""
     scs = deepcopy(scores)
     if 'ground_truth' in scores.dtype.names:
@@ -507,7 +507,8 @@ def plot_scores(scores: np.ndarray, gt_divisor=10, vecs_names=None, labels=None,
     if xtick_labels is not None:
         ax.xaxis.set_ticks(range(len(xtick_labels)))
         ax.set_xticklabels(xtick_labels, rotation=70, fontsize=10)
-    plt.show()
+    if show:
+        plt.show()
 
 
 def wn_concreteness(word, similarity_fn=wn.path_similarity):
@@ -538,8 +539,9 @@ def wn_concreteness_for_pairs(word_pairs, synset_agg: str, similarity_fn=wn.path
 
 
 def plot_by_concreteness(scores: np.ndarray, word_pairs, common_subset=False, vecs_names=None,
-                         concrete_num=100, title_prefix='', pair_score_agg='sum'):
+                         concrete_num=100, title_prefix='', pair_score_agg='sum', show=False):
     """Plot scores for data splits with increasing concreteness."""
+    subfigs = []
     for synset_agg in ['median', 'most_conc']:
         corrs_by_conc = defaultdict(list)
         ids12, concs = wn_concreteness_for_pairs(word_pairs, synset_agg, pair_score_agg=pair_score_agg)
@@ -570,18 +572,33 @@ def plot_by_concreteness(scores: np.ndarray, word_pairs, common_subset=False, ve
                 colours.append('red')
             linestyles.append(lst)
 
-        fig, ax1 = plt.subplots()
-        ax1.plot(concs, color='cyan')     # Concreteness scores on different axis bit the same plot
-        ax2 = ax1.twinx().twiny()
-        plot_scores(corrs_by_conc_a,
-                    vecs_names=vnames,
-                    labels=labels,
-                    colours=colours,
-                    linestyles=linestyles,
-                    title=f'{title_prefix} {synset_agg.capitalize()} {concrete_num} splits',
-                    alpha=0.7,
-                    xtick_labels=None,
-                    ax=ax2)
+        # fig, ax1 = plt.subplots()
+        # ax1.plot(concs, color='cyan', label=f'WN {pair_score_agg} concreteness') # Concreteness scores on different axis but the same plot
+        # ax2 = ax1.twinx().twiny()
+        # plot_scores(corrs_by_conc_a,
+        #             vecs_names=vnames,
+        #             labels=labels,
+        #             colours=colours,
+        #             linestyles=linestyles,
+        #             title='',
+        #             alpha=0.7,
+        #             xtick_labels=None,
+        #             ax=ax2,
+        #             show=show)
+
+        fname = f'concreteness_{title_prefix}_{pair_score_agg}_{synset_agg.capitalize()}_{concrete_num}'
+        fpath = 'figs/' + fname
+        latex_fig = '\\begin{subfigure}[b]{0.45\\textwidth}\n' +\
+                    '\includegraphics[width=\\textwidth]{' + fpath + '.png}\n' +\
+                    '\caption{' + f'{title_prefix} {synset_agg.capitalize()} {concrete_num} splits' + '}\n' +\
+                    '\end{subfigure}'
+        subfigs.append(latex_fig)
+
+        # plt.savefig(fpath)
+        # plt.close(fig)
+
+    latex_fig_row = '\n'.join(subfigs)
+    return latex_fig_row
 
 
 def eval_concreteness(scores: np.ndarray, word_pairs, num=100, gt_divisor=10, vecs_names=None, tablefmt='simple'):
@@ -751,16 +768,34 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
     if 'concreteness' in actions:
         with open(loadpath + '_pairs.json', 'r') as f:
             word_pairs = json.load(f)
+
+        if common_subset:
+            commonsub = 'common subset'
+        else:
+            commonsub = 'full'
+
+        latex_fig = '\\begin{figure}\n\centering\n'
+        subfig_rows = []
         for name, scrs in scores.items():
-            print(f'\n-------- {name} scores -------\n')
+            # print(f'\n-------- {name} scores -------\n')
             # eval_concreteness(scrs, word_pairs[name], num=concrete_num,
             #                   gt_divisor=datasets.normalizers[name], vecs_names=plot_vecs + ['ground_truth'],
             #                   tablefmt=tablefmt)
-            plot_by_concreteness(scrs, word_pairs[name], common_subset=common_subset,
-                                 vecs_names=plot_vecs + ['ground_truth'],
-                                 concrete_num=concrete_num,
-                                 title_prefix=name,
-                                 pair_score_agg=pair_score_agg)
+            subfig_row = plot_by_concreteness(scrs, word_pairs[name], common_subset=common_subset,
+                                              vecs_names=plot_vecs + ['ground_truth'],
+                                              concrete_num=concrete_num,
+                                              title_prefix='_'.join([name, title_pad, commonsub]),
+                                              pair_score_agg=pair_score_agg,
+                                              show=False)
+            subfig_rows.append(subfig_row)
+
+        latex_fig += '\n\\vfill\n'.join(subfig_rows) + \
+                     '\n\caption{' + f'Scores on splits of the {name} dataset, ordered by ' + \
+                     f'the {pair_score_agg} of WordNet concreteness scores of ' + \
+                     'the two words in every word pair.}' + \
+                     '\n\end{figure}\n'
+
+        print(latex_fig)
 
     if 'brainwords' in actions:
         print('Brain scores for words')
@@ -779,7 +814,7 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
 
     if 'printbraincorr' in actions:
         if 'commonsubset' in loadpath:
-            caption_suffix = 'on the common subset of vocabularies. '
+            caption_suffix = ' on the common subset of vocabularies. '
         else:
             caption_suffix = '. '
         print_brain_scores(brain_scores, tablefmt=tablefmt, caption=score_explanation, suffix=caption_suffix)
