@@ -325,7 +325,7 @@ def print_correlations(scores: np.ndarray, name_pairs='gt',
                               ['Name pairs', 'Spearman', 'P-value', 'Coverage']],
                      tablefmt=tablefmt)
     if 'latex' in tablefmt:
-        table = latex_table_post_process(table, [3, 8])
+        table = latex_table_post_process(table, [3, 9])
 
     print(table)
 
@@ -395,7 +395,7 @@ def print_brain_scores(brain_scores, tablefmt: str = "simple"):
                                     ['Modality'] + [f'P{i + 1}' for i in range(part_num)]],
                            tablefmt=tablefmt)
         if 'latex' in tablefmt:
-            table = latex_table_post_process(table, [3, 8])
+            table = latex_table_post_process(table, [3, 9])
             table_P = latex_table_post_process(table_P, [])  # latex_table_wrapper(table_P)
         print(table, '\n')
         print(table_P)
