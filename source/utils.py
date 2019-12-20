@@ -3,12 +3,13 @@ from typing import List
 import re
 import pickle
 import json
+import os
 
 
-def pkl2json(pkl_file):
+def pkl2json(pkl_file, savedir):
     with open(pkl_file, 'rb') as f:
         data = pickle.load(f)
-    with open(pkl_file.split('.')[0] +'.json', 'w') as f:
+    with open(os.path.join(savedir, pkl_file.split('.')[0] +'.json'), 'w') as f:
         json.dump(data, f)
 
 
