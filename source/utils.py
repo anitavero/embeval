@@ -1,6 +1,15 @@
 import numpy as np
 from typing import List
 import re
+import pickle
+import json
+
+
+def pkl2json(pkl_file):
+    with open(pkl_file, 'rb') as f:
+        data = pickle.load(f)
+    with open(pkl_file.split('.')[0] +'.json', 'w') as f:
+        json.dump(data, f)
 
 
 def join_struct_arrays(arrays):
