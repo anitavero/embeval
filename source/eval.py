@@ -303,7 +303,7 @@ def latex_escape(string):
 
 
 def print_correlations(scores: np.ndarray, name_pairs='gt',
-                       common_subset: bool = False, tablefmt: str = "simple", title=''):
+                       common_subset: bool = False, tablefmt: str = "simple", caption=''):
     correlations = compute_correlations(scores, name_pairs, common_subset=common_subset)
     maxcorr = max(list(zip(*correlations.values()))[0])
 
@@ -325,14 +325,12 @@ def print_correlations(scores: np.ndarray, name_pairs='gt',
                               ['Name pairs', 'Spearman', 'P-value', 'Coverage']],
                      tablefmt=tablefmt)
     if 'latex' in tablefmt:
-        if common_subset:
-            title += ' - common subset'
-        table = latex_table_post_process(table, [3, 9], title)
+        table = latex_table_post_process(table, [3, 9], caption)
 
     print(table)
 
 
-def print_brain_scores(brain_scores, tablefmt: str = "simple", title=''):
+def print_brain_scores(brain_scores, tablefmt: str = "simple", caption='', suffix=''):
     # Map for printable labels
     labels = dict((Embeddings.get_label(name), name) for name in brain_scores.keys())
     lingvnames = list(set(list(Embeddings.fasttext_vss.keys())).intersection(set(labels.keys())))
@@ -397,8 +395,12 @@ def print_brain_scores(brain_scores, tablefmt: str = "simple", title=''):
                                     ['Modality'] + [f'P{i + 1}' for i in range(part_num)]],
                            tablefmt=tablefmt)
         if 'latex' in tablefmt:
-            table = latex_table_post_process(table, [3, 9], f'{data} scores - {title}', fit_to_page=True)
-            table_P = latex_table_post_process(table_P, [], f'{data} - {title}: modalities for participants',
+            table = latex_table_post_process(table, [3, 9],
+                                             f'{data} scores for each participants and embeddings ' + suffix + caption,
+                                             fit_to_page=True)
+            table_P = latex_table_post_process(table_P, [],
+                                               f'{data} scores averaged over each modality' + suffix +\
+                                               ' Bold signifies the highest average performance for each participant.',
                                                fit_to_page=True)  # latex_table_wrapper(table_P)
         print(table, '\n')
         print(table_P)
@@ -677,9 +679,14 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
 
         # For printing tables
         if 'nopadding' in loadpath:
-            title_suffix = 'No Padding'
+            title_pad = 'without Padding'
         else:
-            title_suffix = 'Padding'
+            title_pad = 'with Padding'
+
+        score_explanation = f'Multi-modal embeddings are created {title_pad} technique. ' +\
+                            'The table sections contain linguistic, visual and multi-modal embeddings in this order. ' +\
+                            'Red colour signifies the best performance, blue means that the multi-modal ' +\
+                            'embedding outperformed the corresponding uni-modal ones.'
     else:
         if not embdir:
             embdir = datadir
@@ -763,11 +770,19 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
         if scores != {}:
             for name, scrs in scores.items():
                 print(f'\n-------- {name} scores -------\n')
+                if common_subset:
+                    caption = f'Spearman correlation on the common subset of the {name} dataset. '
+                else:
+                    caption = f'Spearman correlation on the {name} dataset. '
                 print_correlations(scrs, name_pairs=print_corr_for, common_subset=common_subset,
-                                   tablefmt=tablefmt, title=f'{name} - {title_suffix}')
+                                   tablefmt=tablefmt, caption=caption + score_explanation)
 
     if 'printbraincorr' in actions:
-        print_brain_scores(brain_scores, tablefmt=tablefmt, title=title_suffix)
+        if 'commonsubset' in loadpath:
+            caption_suffix = 'on the common subset of vocabularies. '
+        else:
+            caption_suffix = '. '
+        print_brain_scores(brain_scores, tablefmt=tablefmt, caption=score_explanation, suffix=caption_suffix)
 
     if 'coverage' in actions:
         for vocab, name in zip(embeddings.vocabs, embeddings.vecs_names):
