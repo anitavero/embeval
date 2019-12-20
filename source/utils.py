@@ -76,17 +76,20 @@ def pfont(fonts: List[str], value: str, format):
     return value
 
 
-def latex_table_wrapper(table):
-    prefix = '\\resizebox{\\textwidth}{!}{'
-    suffix = '\n}'
+def latex_table_wrapper(table, title, fit_to_page):
+    prefix = '\\begin{table}[]\n\centering\n'
+    if fit_to_page:
+        prefix += '\\resizebox{\\textwidth}{!}{\n'
+        table = re.sub('\\\end{tabular}', '\\\end{tabular}}', table)
+    suffix = '\n\caption{' +  title + '}\n\end{table}'
     return prefix + table + suffix
 
 
-def latex_table_post_process(table, bottomrule_row_ids: List[int] = []):
+def latex_table_post_process(table, bottomrule_row_ids: List[int] = [], title='', fit_to_page=False):
     """Add separator lines and align width to page.
     :param bottomrule_row_ids: Row indices (without header) below which we put a separator line.
     """
-    table = latex_table_wrapper(table)
+    table = latex_table_wrapper(table, title, fit_to_page)
 
     newline = '\\\\'
     rows = table.split(newline)

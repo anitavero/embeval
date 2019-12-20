@@ -303,7 +303,7 @@ def latex_escape(string):
 
 
 def print_correlations(scores: np.ndarray, name_pairs='gt',
-                       common_subset: bool = False, tablefmt: str = "simple"):
+                       common_subset: bool = False, tablefmt: str = "simple", title=''):
     correlations = compute_correlations(scores, name_pairs, common_subset=common_subset)
     maxcorr = max(list(zip(*correlations.values()))[0])
 
@@ -325,12 +325,14 @@ def print_correlations(scores: np.ndarray, name_pairs='gt',
                               ['Name pairs', 'Spearman', 'P-value', 'Coverage']],
                      tablefmt=tablefmt)
     if 'latex' in tablefmt:
-        table = latex_table_post_process(table, [3, 9])
+        if common_subset:
+            title += ' - common subset'
+        table = latex_table_post_process(table, [3, 9], title)
 
     print(table)
 
 
-def print_brain_scores(brain_scores, tablefmt: str = "simple"):
+def print_brain_scores(brain_scores, tablefmt: str = "simple", title=''):
     # Map for printable labels
     labels = dict((Embeddings.get_label(name), name) for name in brain_scores.keys())
     lingvnames = list(set(list(Embeddings.fasttext_vss.keys())).intersection(set(labels.keys())))
@@ -395,8 +397,9 @@ def print_brain_scores(brain_scores, tablefmt: str = "simple"):
                                     ['Modality'] + [f'P{i + 1}' for i in range(part_num)]],
                            tablefmt=tablefmt)
         if 'latex' in tablefmt:
-            table = latex_table_post_process(table, [3, 9])
-            table_P = latex_table_post_process(table_P, [])  # latex_table_wrapper(table_P)
+            table = latex_table_post_process(table, [3, 9], f'{data} scores - {title}', fit_to_page=True)
+            table_P = latex_table_post_process(table_P, [], f'{data} - {title}: modalities for participants',
+                                               fit_to_page=True)  # latex_table_wrapper(table_P)
         print(table, '\n')
         print(table_P)
 
@@ -671,6 +674,12 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
                 scores[name] = np.load(f'{loadpath}_{name}.npy', allow_pickle=True)
         with open(f'{loadpath}_brain.json', 'r') as f:
             brain_scores = json.load(f)
+
+        # For printing tables
+        if 'nopadding' in loadpath:
+            title_suffix = 'No Padding'
+        else:
+            title_suffix = 'Padding'
     else:
         if not embdir:
             embdir = datadir
@@ -755,10 +764,10 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
             for name, scrs in scores.items():
                 print(f'\n-------- {name} scores -------\n')
                 print_correlations(scrs, name_pairs=print_corr_for, common_subset=common_subset,
-                                   tablefmt=tablefmt)
+                                   tablefmt=tablefmt, title=f'{name} - {title_suffix}')
 
     if 'printbraincorr' in actions:
-        print_brain_scores(brain_scores, tablefmt=tablefmt)
+        print_brain_scores(brain_scores, tablefmt=tablefmt, title=title_suffix)
 
     if 'coverage' in actions:
         for vocab, name in zip(embeddings.vocabs, embeddings.vecs_names):
