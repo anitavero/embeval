@@ -331,7 +331,6 @@ def print_correlations(scores: np.ndarray, name_pairs='gt',
 
 
 def print_brain_scores(brain_scores, tablefmt: str = "simple"):
-    print('\n-------- Brain scores -------\n')
     # Map for printable labels
     labels = dict((Embeddings.get_label(name), name) for name in brain_scores.keys())
     lingvnames = list(set(list(Embeddings.fasttext_vss.keys())).intersection(set(labels.keys())))
@@ -359,7 +358,7 @@ def print_brain_scores(brain_scores, tablefmt: str = "simple"):
         score_dicts = [dict((k, v[data][p]) for k, v in brain_scores_ordered) for p in range(part_num)]
         avg_dict = dict((k, v[f'{data} Avg']) for k, v in brain_scores_ordered)
 
-        print('\n-------- fMRI --------\n')
+        print(f'\n-------- {data} --------\n')
         if 'latex' in tablefmt:
             escape = latex_escape
             font = LaTeXFont
@@ -618,7 +617,7 @@ def tuple_list(arg):
 # TODO: Nicer parameter handling, with exception messages
 @arg('-a', '--actions', nargs='+',
      choices=['printcorr', 'plotscores', 'concreteness', 'coverage', 'compscores', 'compbrain',
-              'brainwords'], default='printcorr')
+              'brainwords', 'printbraincorr'], default='printcorr')
 @arg('-lvns', '--ling_vecs_names', nargs='+', type=str,
      choices=['w2v13', 'wikinews', 'wikinews_sub', 'crawl', 'crawl_sub'], default=[])
 @arg('-vns', '--vecs_names', nargs='+', type=str)
@@ -758,6 +757,7 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
                 print_correlations(scrs, name_pairs=print_corr_for, common_subset=common_subset,
                                    tablefmt=tablefmt)
 
+    if 'printbraincorr' in actions:
         print_brain_scores(brain_scores, tablefmt=tablefmt)
 
     if 'coverage' in actions:
