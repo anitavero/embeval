@@ -79,7 +79,7 @@ def main(exp_name):
 
     if exp_name == 'padding_mitchell_commonsubset':
         eval.main(datadir, actions=['compbrain'], embdir=embdir,
-                  vecs_names=['fmri_google_resnet-18', 'fmri_google_alexnet',
+                  vecs_names=['fmri_google_resnet152', 'fmri_google_alexnet',
                               'fmri-internal_m5_vs_descriptors', 'fmri-internal_m5_mm_descriptors',
                               'fmri_combined_vs_descriptors', 'fmri_combined_mm_descriptors',
                               'frcnn_whole_vs_descriptors', 'frcnn_whole_mm_descriptors',
@@ -92,7 +92,7 @@ def main(exp_name):
 
     if exp_name == 'nopadding_mitchell_commonsubset':
         eval.main(datadir, actions=['compbrain'], embdir=embdir,
-                  vecs_names=['fmri_google_resnet-18', 'fmri_google_alexnet',
+                  vecs_names=['fmri_google_resnet152', 'fmri_google_alexnet',
                               'fmri-internal_m5_vs_descriptors', 'fmri-internal_m5_mm_descriptors',
                               'fmri_combined_vs_descriptors', 'fmri_combined_mm_descriptors',
                               'frcnn_whole_vs_descriptors', 'frcnn_whole_mm_descriptors',
