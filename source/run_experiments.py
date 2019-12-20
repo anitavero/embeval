@@ -49,31 +49,31 @@ def main(exp_name):
     #               savepath=savedir + exp_name)
 
 
-    # ######## Brain experiments ########
-    #
-    # if exp_name == 'padding_mitchell':
-    #     eval.main(datadir, actions=['compbrain'], embdir=embdir,
-    #               vecs_names=['fmri_google_resnet-18', 'fmri_google_alexnet',
-    #                           'fmri-internal_m5_vs_descriptors', 'fmri-internal_m5_mm_descriptors',
-    #                           'fmri_combined_vs_descriptors', 'fmri_combined_mm_descriptors',
-    #                           'frcnn_whole_vs_descriptors', 'frcnn_whole_mm_descriptors',
-    #                           'vecs3lem1'],
-    #               ling_vecs_names=['wikinews', 'wikinews_sub', 'crawl', 'w2v13'],
-    #               mm_lingvis=True,
-    #               mm_padding=True,
-    #               savepath=savedir + exp_name)
-    #
-    # if exp_name == 'nopadding_mitchell':
-    #     eval.main(datadir, actions=['compbrain'], embdir=embdir,
-    #               vecs_names=['fmri_google_resnet-18', 'fmri_google_alexnet',
-    #                           'fmri-internal_m5_vs_descriptors', 'fmri-internal_m5_mm_descriptors',
-    #                           'fmri_combined_vs_descriptors', 'fmri_combined_mm_descriptors',
-    #                           'frcnn_whole_vs_descriptors', 'frcnn_whole_mm_descriptors',
-    #                           'vecs3lem1'],
-    #               ling_vecs_names=['wikinews', 'wikinews_sub', 'crawl', 'w2v13'],
-    #               mm_lingvis=True,
-    #               mm_padding=False,
-    #               savepath=savedir + exp_name)
+    ######## Brain experiments ########
+
+    if exp_name == 'padding_mitchell':
+        eval.main(datadir, actions=['compbrain'], embdir=embdir,
+                  vecs_names=['fmri_google_resnet152', 'fmri_google_alexnet',
+                              'fmri-internal_m5_vs_descriptors', 'fmri-internal_m5_mm_descriptors',
+                              'fmri_combined_vs_descriptors', 'fmri_combined_mm_descriptors',
+                              'frcnn_whole_vs_descriptors', 'frcnn_whole_mm_descriptors',
+                              'vecs3lem1'],
+                  ling_vecs_names=['wikinews', 'wikinews_sub', 'crawl', 'w2v13'],
+                  mm_lingvis=True,
+                  mm_padding=True,
+                  savepath=savedir + exp_name)
+
+    if exp_name == 'nopadding_mitchell':
+        eval.main(datadir, actions=['compbrain'], embdir=embdir,
+                  vecs_names=['fmri_google_resnet152', 'fmri_google_alexnet',
+                              'fmri-internal_m5_vs_descriptors', 'fmri-internal_m5_mm_descriptors',
+                              'fmri_combined_vs_descriptors', 'fmri_combined_mm_descriptors',
+                              'frcnn_whole_vs_descriptors', 'frcnn_whole_mm_descriptors',
+                              'vecs3lem1'],
+                  ling_vecs_names=['wikinews', 'wikinews_sub', 'crawl', 'w2v13'],
+                  mm_lingvis=True,
+                  mm_padding=False,
+                  savepath=savedir + exp_name)
 
     ##### Common subset #####
 
