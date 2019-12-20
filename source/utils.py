@@ -9,7 +9,8 @@ import os
 def pkl2json(pkl_file, savedir):
     with open(pkl_file, 'rb') as f:
         data = pickle.load(f)
-    with open(os.path.join(savedir, pkl_file.split('.')[0] +'.json'), 'w') as f:
+    fname = os.path.basename(pkl_file)
+    with open(os.path.join(savedir, fname.split('.')[0] +'.json'), 'w') as f:
         json.dump(data, f)
 
 
