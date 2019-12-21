@@ -14,7 +14,7 @@ from typing import List, Tuple
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 import matplotlib
-matplotlib.style.use('fivethirtyeight')
+matplotlib.style.use('ggplot')
 import io
 from itertools import combinations, product
 from tabulate import tabulate, LATEX_ESCAPE_RULES
@@ -421,7 +421,7 @@ def plot_brain_words(brain_scores):
     ord_med_vocab = [w for w, cme, cma in sorted(word_concs, key=lambda x: x[1])]
     ord_max_vocab = [w for w, cme, cma in sorted(word_concs, key=lambda x: x[2])]
 
-    def plot_data(data, ord_vocab):
+    def plot_data(fg, axi, data, ord_vocab, ord_name):
         dscores = {'fMRI': 5, 'MEG': 6}[data]
         word_vals = vals[dscores]
         scores = {}
@@ -441,21 +441,27 @@ def plot_brain_words(brain_scores):
 
         # Convert to structured array
         score_arrays = dict2struct_array(scores)
-        fig, ax = plt.subplots()
+        ax = fg.add_subplot(2, 2, axi)
+        ax.set_xticklabels(['' for l in ax.get_xticklabels()])
+        ax.set_yticklabels(['' for l in ax.get_yticklabels()])
         plot_scores(score_arrays,
                     vecs_names=labels,
-                    labels=labels,
+                    labels=None,
                     colours=None,
                     linestyles=None,
-                    title=f'{data} words',
+                    title=f'{data} {ord_name} synset score',
                     alpha=0.7,
                     xtick_labels=ord_vocab,
-                    ax=ax)
+                    ax=ax,
+                    show=False)
 
-    plot_data('fMRI', ord_med_vocab)
-    plot_data('MEG', ord_med_vocab)
-    plot_data('fMRI', ord_max_vocab)
-    plot_data('MEG', ord_max_vocab)
+    axs = [i for i in range(4)]
+    fig, ((axs[0], axs[1]), (axs[2], axs[3])) = plt.subplots(2, 2, figsize=(20, 15))
+    plot_data(fig, 1, 'fMRI', ord_med_vocab, 'Median')
+    plot_data(fig, 2, 'MEG', ord_med_vocab, 'Median')
+    plot_data(fig, 3, 'fMRI', ord_max_vocab, 'Most concrete')
+    plot_data(fig, 4, 'MEG', ord_max_vocab, 'Most concrete')
+    return fig
 
 
 def eval_dataset(dataset: List[Tuple[str, str, float]],
@@ -512,7 +518,7 @@ def plot_scores(scores: np.ndarray, gt_divisor=10, vecs_names=None, labels=None,
         ax.set_title(title)
     if xtick_labels is not None:
         ax.xaxis.set_ticks(range(len(xtick_labels)))
-        ax.set_xticklabels(xtick_labels, rotation=70, fontsize=10)
+        ax.set_xticklabels(xtick_labels, rotation=70, fontsize=8)
     if show:
         plt.show()
 
@@ -836,8 +842,29 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
             f.write(latex_fig)
 
     if 'brainwords' in actions:
-        print('Brain scores for words')
         plot_brain_words(brain_scores)
+
+        if 'commonsubset' in loadpath:
+            commonsub = 'commonsubset'
+            caption_comsub = "the embeddings' common subset of"
+        else:
+            commonsub = 'full'
+            caption_comsub = "the full"
+
+        fname = f'brain_{commonsub}_{fname_pad}'
+        fpath = 'figs/' + fname + '.png'
+        latex_fig = '\\begin{figure}\n\centering\n' + \
+                    '\includegraphics[width=\\textwidth]{figs/' + fname + '.png}' + \
+                    '\n\caption{' + f'Scores on {caption_comsub} the Brain datasets words, ordered by ' + \
+                    f'their WordNet concreteness. The scores are the number of hits per word, averaged over ' + \
+                    f'all participants. Mid-fusion method: {title_pad}.' + '}\n' + \
+                    '\label{f:' + fname + '}' + \
+                    '\n\end{figure}\n\n'
+        # Save figure and figures tex file
+        plt.subplots_adjust(hspace=0.4)
+        plt.savefig(fpath, bbox_inches='tight')
+        with open('figs/figs_brain.tex', 'a+') as f:
+            f.write(latex_fig)
 
     if 'printcorr' in actions:
         if scores != {}:
