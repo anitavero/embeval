@@ -12,6 +12,8 @@ from argh import arg
 import argparse
 from typing import List, Tuple
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
+from matplotlib.patches import Patch
 import io
 from itertools import combinations, product
 from tabulate import tabulate, LATEX_ESCAPE_RULES
@@ -480,7 +482,7 @@ def eval_dataset(dataset: List[Tuple[str, str, float]],
 
 
 def plot_scores(scores: np.ndarray, gt_divisor=10, vecs_names=None, labels=None, colours=None, linestyles=None,
-                title=None, type='plot', alpha=0.5, xtick_labels=None, ax=None, show=True) -> None:
+                title=None, type='plot', alpha=0.5, xtick_labels=None, ax=None, show=True):
     """Scatter plot of a structured array."""
     scs = deepcopy(scores)
     if 'ground_truth' in scores.dtype.names:
@@ -489,19 +491,22 @@ def plot_scores(scores: np.ndarray, gt_divisor=10, vecs_names=None, labels=None,
     if vecs_names is None:
         vecs_names = scs.dtype.names
     if labels is None:
-        labels = [None for i in range(len(vecs_names))]
+        labs = [None for i in range(len(vecs_names))]
+    else:
+        labs = labels
     if colours is None:
         colours = [None for i in range(len(vecs_names))]
     if linestyles is None:
         linestyles = [None for i in range(len(vecs_names))]
 
-    for nm, c, l, ls in zip(vecs_names, colours, labels, linestyles):
+    for nm, c, l, ls in zip(vecs_names, colours, labs, linestyles):
         mask = scs[nm] > MISSING  # Leave out the pairs which aren't covered
         if type == 'scatter':
             ax.scatter(np.arange(scs[nm].shape[0])[mask], scs[nm][mask], label=l, alpha=0.5, color=c)
         elif type == 'plot':
             ax.plot(np.arange(scs[nm].shape[0])[mask], scs[nm][mask], label=l, alpha=alpha, color=c, linestyle=ls)
-    ax.legend(fontsize='small', loc='center left', bbox_to_anchor=(1, 0.5), borderaxespad=0.2)
+    if labels is not None:
+        ax.legend(fontsize='small', loc='center left', bbox_to_anchor=(1, 0.5), borderaxespad=0.2)
     if title:
         ax.set_title(title)
     if xtick_labels is not None:
@@ -509,6 +514,8 @@ def plot_scores(scores: np.ndarray, gt_divisor=10, vecs_names=None, labels=None,
         ax.set_xticklabels(xtick_labels, rotation=70, fontsize=10)
     if show:
         plt.show()
+
+    return ax
 
 
 def wn_concreteness(word, similarity_fn=wn.path_similarity):
@@ -538,11 +545,11 @@ def wn_concreteness_for_pairs(word_pairs, synset_agg: str, similarity_fn=wn.path
     return np.array(ids), np.array(scores)
 
 
-def plot_by_concreteness(scores: np.ndarray, word_pairs, common_subset=False, vecs_names=None,
+def plot_by_concreteness(scores: np.ndarray, word_pairs, axi1, axi2, fig, common_subset=False, vecs_names=None,
                          concrete_num=100, title_prefix='', pair_score_agg='sum', show=False):
     """Plot scores for data splits with increasing concreteness."""
-    subfigs = []
-    for synset_agg in ['median', 'most_conc']:
+    axes = []
+    for synset_agg, axi in zip(['median', 'most_conc'], [axi1, axi2]):
         corrs_by_conc = defaultdict(list)
         ids12, concs = wn_concreteness_for_pairs(word_pairs, synset_agg, pair_score_agg=pair_score_agg)
         scs = scores[ids12]
@@ -572,30 +579,35 @@ def plot_by_concreteness(scores: np.ndarray, word_pairs, common_subset=False, ve
                 colours.append('red')
             linestyles.append(lst)
 
-        # fig, ax1 = plt.subplots()
-        # ax1.plot(concs, color='cyan', label=f'WN {pair_score_agg} concreteness') # Concreteness scores on different axis but the same plot
-        # ax2 = ax1.twinx().twiny()
-        # plot_scores(corrs_by_conc_a,
-        #             vecs_names=vnames,
-        #             labels=labels,
-        #             colours=colours,
-        #             linestyles=linestyles,
-        #             title='',
-        #             alpha=0.7,
-        #             xtick_labels=None,
-        #             ax=ax2,
-        #             show=show)
 
-        fname = f'concreteness_{title_prefix}_{pair_score_agg}_{synset_agg.capitalize()}_{concrete_num}'
-        fpath = 'figs/' + fname
-        latex_fig = '\\begin{subfigure}[b]{0.45\\textwidth}\n' +\
-                    '\includegraphics[width=\\textwidth]{' + fpath + '.png}\n' +\
-                    '\caption{' + f'{title_prefix} {synset_agg.capitalize()} {concrete_num} splits' + '}\n' +\
-                    '\end{subfigure}'
-        subfigs.append(latex_fig)
+        ax0 = fig.add_subplot(2, 2, axi)
+        axn = plt.gca()
+        axn.plot(concs, color='cyan') # Concreteness scores on different axis but the same plot
+        axp = axn.twinx().twiny()
+        ax0 = plot_scores(corrs_by_conc_a,
+                         vecs_names=vnames,
+                         labels=None,
+                         colours=colours,
+                         linestyles=linestyles,
+                         title='',
+                         alpha=0.7,
+                         xtick_labels=None,
+                         ax=axp,
+                         show=show)
+        axes.append(ax0)
+    return fig
 
-        # plt.savefig(fpath)
-        # plt.close(fig)
+        #
+        # fname = f'concreteness_{title_prefix}_{pair_score_agg}_{synset_agg.capitalize()}_{concrete_num}'
+        # fpath = 'figs/' + fname
+        # latex_fig = '\\begin{subfigure}[b]{0.45\\textwidth}\n' +\
+        #             '\includegraphics[width=\\textwidth]{' + fpath + '.png}\n' +\
+        #             '\caption{' + f'{title_prefix} {synset_agg.capitalize()} {concrete_num} splits' + '}\n' +\
+        #             '\end{subfigure}'
+        # subfigs.append(latex_fig)
+        #
+        # # plt.savefig(fpath)
+        # # plt.close(fig)
 
     latex_fig_row = '\n'.join(subfigs)
     return latex_fig_row
@@ -776,18 +788,42 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
 
         latex_fig = '\\begin{figure}\n\centering\n'
         subfig_rows = []
+        ncol = 2
+        nrow = len(scores.items())
+        axs = [i for i in range(4)]
+        fig, ((axs[0], axs[1]), (axs[2], axs[3])) = plt.subplots(2, 2, figsize=(15, 10))
+        i = 0
         for name, scrs in scores.items():
             # print(f'\n-------- {name} scores -------\n')
             # eval_concreteness(scrs, word_pairs[name], num=concrete_num,
             #                   gt_divisor=datasets.normalizers[name], vecs_names=plot_vecs + ['ground_truth'],
             #                   tablefmt=tablefmt)
-            subfig_row = plot_by_concreteness(scrs, word_pairs[name], common_subset=common_subset,
-                                              vecs_names=plot_vecs + ['ground_truth'],
-                                              concrete_num=concrete_num,
-                                              title_prefix='_'.join([name, title_pad, commonsub]),
-                                              pair_score_agg=pair_score_agg,
-                                              show=False)
-            subfig_rows.append(subfig_row)
+            i += 1
+            fig = \
+                plot_by_concreteness(scrs, word_pairs[name], i, i+1, fig, common_subset=common_subset,
+                                     vecs_names=plot_vecs + ['ground_truth'],
+                                     concrete_num=concrete_num,
+                                     title_prefix='_'.join([name, title_pad, commonsub]),
+                                     pair_score_agg=pair_score_agg,
+                                     show=False)
+            i += 1
+
+        linewidth = 3
+        legs = [Patch(color='#e6b830', lw=linewidth),
+                Patch(color='blue', lw=linewidth),
+                Patch(color='purple', lw=linewidth),
+                Patch(color='green', lw=linewidth),
+                Patch(color='red', lw=linewidth)]
+        leglabels = ['Multi-modal',
+                     'Linguistic',
+                     'Visual Genome',
+                     'VG SceneGraph',
+                     'Visual']
+        fig.legend(legs, leglabels, bbox_to_anchor=(0., 1.02, 1., 0.04), loc=9,
+                   ncol=5, borderaxespad=0., numpoints=1)
+        plt.show()
+        import pdb; pdb.set_trace()
+            # subfig_rows.append(subfig_row)
 
         latex_fig += '\n\\vfill\n'.join(subfig_rows) + \
                      '\n\caption{' + f'Scores on splits of the {name} dataset, ordered by ' + \
