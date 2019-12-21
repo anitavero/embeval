@@ -13,7 +13,8 @@ import argparse
 from typing import List, Tuple
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
-from matplotlib.patches import Patch
+import matplotlib
+matplotlib.style.use('fivethirtyeight')
 import io
 from itertools import combinations, product
 from tabulate import tabulate, LATEX_ESCAPE_RULES
@@ -581,8 +582,14 @@ def plot_by_concreteness(scores: np.ndarray, word_pairs, axi1, axi2, fig, common
 
 
         ax0 = fig.add_subplot(2, 2, axi)
+        labelpad = 5
+        # Concreteness scores on different axis but the same plot
         axn = plt.gca()
-        axn.plot(concs, color='cyan') # Concreteness scores on different axis but the same plot
+        axn.plot(concs, color='cyan')
+        axn.set_xticklabels(['' for l in axn.get_xticklabels()])
+        axn.set_yticklabels(['' for l in axn.get_yticklabels()])
+        axn.set_xlabel('WordNet concreteness of word pairs', labelpad=labelpad)
+        ax0.set_ylabel("Spearman's correlation", labelpad=labelpad)
         axp = axn.twinx().twiny()
         ax0 = plot_scores(corrs_by_conc_a,
                          vecs_names=vnames,
@@ -594,23 +601,10 @@ def plot_by_concreteness(scores: np.ndarray, word_pairs, axi1, axi2, fig, common
                          xtick_labels=None,
                          ax=axp,
                          show=show)
-        axes.append(ax0)
+        ax0.set_xlabel('WordNet concreteness splits by 100 pairs', labelpad=labelpad)
+        syna = {'median': 'Median', 'most_conc': 'Most Concrete'}[synset_agg]
+        ax0.set_title(f'{title_prefix} - Synset Agg {syna}')
     return fig
-
-        #
-        # fname = f'concreteness_{title_prefix}_{pair_score_agg}_{synset_agg.capitalize()}_{concrete_num}'
-        # fpath = 'figs/' + fname
-        # latex_fig = '\\begin{subfigure}[b]{0.45\\textwidth}\n' +\
-        #             '\includegraphics[width=\\textwidth]{' + fpath + '.png}\n' +\
-        #             '\caption{' + f'{title_prefix} {synset_agg.capitalize()} {concrete_num} splits' + '}\n' +\
-        #             '\end{subfigure}'
-        # subfigs.append(latex_fig)
-        #
-        # # plt.savefig(fpath)
-        # # plt.close(fig)
-
-    latex_fig_row = '\n'.join(subfigs)
-    return latex_fig_row
 
 
 def eval_concreteness(scores: np.ndarray, word_pairs, num=100, gt_divisor=10, vecs_names=None, tablefmt='simple'):
@@ -709,8 +703,10 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
         # For printing tables
         if 'nopadding' in loadpath:
             title_pad = 'without Padding'
+            fname_pad = 'nopadding'
         else:
             title_pad = 'with Padding'
+            fname_pad = 'padding'
 
         score_explanation = f'Multi-modal embeddings are created {title_pad} technique. ' +\
                             'The table sections contain linguistic, visual and multi-modal embeddings in this order. ' +\
@@ -782,14 +778,12 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
             word_pairs = json.load(f)
 
         if common_subset:
-            commonsub = 'common subset'
+            commonsub = 'commonsubset'
+            caption_comsub = "the embeddings' common subset of"
         else:
             commonsub = 'full'
+            caption_comsub = "the full"
 
-        latex_fig = '\\begin{figure}\n\centering\n'
-        subfig_rows = []
-        ncol = 2
-        nrow = len(scores.items())
         axs = [i for i in range(4)]
         fig, ((axs[0], axs[1]), (axs[2], axs[3])) = plt.subplots(2, 2, figsize=(15, 10))
         i = 0
@@ -799,13 +793,12 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
             #                   gt_divisor=datasets.normalizers[name], vecs_names=plot_vecs + ['ground_truth'],
             #                   tablefmt=tablefmt)
             i += 1
-            fig = \
-                plot_by_concreteness(scrs, word_pairs[name], i, i+1, fig, common_subset=common_subset,
-                                     vecs_names=plot_vecs + ['ground_truth'],
-                                     concrete_num=concrete_num,
-                                     title_prefix='_'.join([name, title_pad, commonsub]),
-                                     pair_score_agg=pair_score_agg,
-                                     show=False)
+            fig = plot_by_concreteness(scrs, word_pairs[name], i, i+1, fig, common_subset=common_subset,
+                                       vecs_names=plot_vecs + ['ground_truth'],
+                                       concrete_num=concrete_num,
+                                       title_prefix=name,
+                                       pair_score_agg=pair_score_agg,
+                                       show=False)
             i += 1
 
         linewidth = 3
@@ -822,17 +815,25 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
                      'VG SceneGraph',
                      'Visual']
         fig.legend(legs, leglabels, loc=9, ncol=6, borderaxespad=1)
-        plt.show()
-        import pdb; pdb.set_trace()
+        plt.subplots_adjust(hspace=0.4)
+        # plt.show()
+        # import pdb; pdb.set_trace()
             # subfig_rows.append(subfig_row)
 
-        latex_fig += '\n\\vfill\n'.join(subfig_rows) + \
-                     '\n\caption{' + f'Scores on splits of the {name} dataset, ordered by ' + \
-                     f'the {pair_score_agg} of WordNet concreteness scores of ' + \
-                     'the two words in every word pair.}' + \
-                     '\n\end{figure}\n'
-
-        print(latex_fig)
+        agg = {'sum': 'sum', 'diff': 'difference'}[pair_score_agg]
+        fname = f'{commonsub}_{fname_pad}_{pair_score_agg}'
+        fpath = 'figs/' + fname + '.png'
+        latex_fig = '\\begin{figure}\n\centering\n' +\
+		             '\includegraphics[width=\\textwidth]{figs/' + fname + '.png}' + \
+                     '\n\caption{' + f'Scores on {caption_comsub} Semantic Similarity dataset splits, ordered by ' + \
+                     f'the {agg} of WordNet concreteness scores of ' + \
+                     f'the two words in every word pair. Mid-fusion method: {title_pad}.' + '}\n' + \
+                     '\label{f:' + fname + '}' +\
+                     '\n\end{figure}\n\n'
+        # Save figure and figures tex file
+        plt.savefig(fpath, bbox_inches='tight')
+        with open('figs/figs.tex', 'a+') as f:
+            f.write(latex_fig)
 
     if 'brainwords' in actions:
         print('Brain scores for words')
