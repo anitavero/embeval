@@ -809,18 +809,19 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
             i += 1
 
         linewidth = 3
-        legs = [Patch(color='#e6b830', lw=linewidth),
-                Patch(color='blue', lw=linewidth),
-                Patch(color='purple', lw=linewidth),
-                Patch(color='green', lw=linewidth),
-                Patch(color='red', lw=linewidth)]
-        leglabels = ['Multi-modal',
+        legs = [Line2D([0], [0], color='cyan', lw=linewidth),
+                Line2D([0], [0], color='#e6b830', lw=linewidth),
+                Line2D([0], [0], color='blue', lw=linewidth),
+                Line2D([0], [0], color='purple', lw=linewidth),
+                Line2D([0], [0], color='green', lw=linewidth),
+                Line2D([0], [0], color='red', lw=linewidth)]
+        leglabels = ['WordNet concreteness',
+                     'Multi-modal',
                      'Linguistic',
                      'Visual Genome',
                      'VG SceneGraph',
                      'Visual']
-        fig.legend(legs, leglabels, bbox_to_anchor=(0., 1.02, 1., 0.04), loc=9,
-                   ncol=5, borderaxespad=0., numpoints=1)
+        fig.legend(legs, leglabels, loc=9, ncol=6, borderaxespad=1)
         plt.show()
         import pdb; pdb.set_trace()
             # subfig_rows.append(subfig_row)
