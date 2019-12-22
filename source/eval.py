@@ -14,6 +14,7 @@ from typing import List, Tuple
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 import matplotlib
+
 matplotlib.style.use('ggplot')
 import io
 from itertools import combinations, product
@@ -68,6 +69,7 @@ class Embeddings:
     embeddings = List[np.ndarray]
     vocabs = List[List[str]]
     vecs_names = List[str]
+    vecs_labels = List[str]
 
     # Linguistic Embeddings
     fasttext_vss = {'wikinews': 'wiki-news-300d-1M.vec',
@@ -106,6 +108,12 @@ class Embeddings:
             vecs, vocab = self.load_vecs(vecs_name, datadir)
             self.embeddings.append(vecs)
             self.vocabs.append(vocab)
+
+        self.vecs_labels = [self.get_label(name) for name in self.vecs_names]
+
+    @staticmethod
+    def get_labels(name_list):
+        return [Embeddings.get_label(name) for name in name_list]
 
     @staticmethod
     def get_label(name):
@@ -402,7 +410,7 @@ def print_brain_scores(brain_scores, tablefmt: str = "simple", caption='', suffi
                                              f'{data} scores for each participants and embeddings ' + suffix + caption,
                                              fit_to_page=True)
             table_P = latex_table_post_process(table_P, [],
-                                               f'{data} scores averaged over each modality' + suffix +\
+                                               f'{data} scores averaged over each modality' + suffix + \
                                                ' Bold signifies the highest average performance for each participant.',
                                                fit_to_page=True)  # latex_table_wrapper(table_P)
         print(table, '\n')
@@ -412,14 +420,14 @@ def print_brain_scores(brain_scores, tablefmt: str = "simple", caption='', suffi
     print_data('MEG')
 
 
-def plot_brain_words(brain_scores):
+def plot_brain_words(brain_scores, plot_order):
+    """Plot hit counts for word in Brain data.
+    :param brain_scores: brain score dict
+    :param plot_order: 'concreteness' orders words for Wordnet conreteness
+                       <emb_name> orders plot for an embedding's scores
+    """
     vals = list(zip(*[v.values() for v in brain_scores.values()]))
-    labels = [Embeddings.get_label(name) for name in brain_scores.keys()]
-
-    # Order by word concreteness
-    word_concs = [[w] + list(wn_concreteness(w)) for w in DataSets.fmri_vocab]
-    ord_med_vocab = [w for w, cme, cma in sorted(word_concs, key=lambda x: x[1])]
-    ord_max_vocab = [w for w, cme, cma in sorted(word_concs, key=lambda x: x[2])]
+    labels = Embeddings.get_labels(brain_scores.keys())
 
     def plot_data(fg, axi, data, ord_vocab, ord_name):
         dscores = {'fMRI': 5, 'MEG': 6}[data]
@@ -431,17 +439,25 @@ def plot_brain_words(brain_scores):
             for w in ord_vocab:
                 word_dict[w] = 0
             for p in val:  # participants
-                for word_pair in p: # word pairs
+                for word_pair in p:  # word pairs
                     word_dict[word_pair['word1']] += word_pair['hit']
                     word_dict[word_pair['word2']] += word_pair['hit']
             # word_dict = dict(((w, word_dict[w]) for w in ord_vocab))  # Sort by concreteness
             scores[label] = list(word_dict.values())
             wordlists[label] = list(word_dict.keys())
 
-
         # Convert to structured array
         score_arrays = dict2struct_array(scores)
-        ax = fg.add_subplot(2, 2, axi)
+
+        nrow = 2
+        # Sort by ord_name Embedding
+        if ord_name != 'Median' and ord_name != 'Most concrete':
+            if ord_name not in labels:
+                ord_name = Embeddings.get_label(ord_name)
+            score_arrays = np.sort(score_arrays, order=ord_name)
+            nrow = 1
+
+        ax = fg.add_subplot(nrow, 2, axi)
         ax.set_xticklabels(['' for l in ax.get_xticklabels()])
         ax.set_yticklabels(['' for l in ax.get_yticklabels()])
         plot_scores(score_arrays,
@@ -455,12 +471,24 @@ def plot_brain_words(brain_scores):
                     ax=ax,
                     show=False)
 
-    axs = [i for i in range(4)]
-    fig, ((axs[0], axs[1]), (axs[2], axs[3])) = plt.subplots(2, 2, figsize=(20, 15))
-    plot_data(fig, 1, 'fMRI', ord_med_vocab, 'Median')
-    plot_data(fig, 2, 'MEG', ord_med_vocab, 'Median')
-    plot_data(fig, 3, 'fMRI', ord_max_vocab, 'Most concrete')
-    plot_data(fig, 4, 'MEG', ord_max_vocab, 'Most concrete')
+    if plot_order == 'concreteness':
+        # Order by word concreteness
+        word_concs = [[w] + list(wn_concreteness(w)) for w in DataSets.fmri_vocab]
+        ord_med_vocab = [w for w, cme, cma in sorted(word_concs, key=lambda x: x[1])]
+        ord_max_vocab = [w for w, cme, cma in sorted(word_concs, key=lambda x: x[2])]
+
+        axs = [i for i in range(4)]
+        fig, ((axs[0], axs[1]), (axs[2], axs[3])) = plt.subplots(2, 2, figsize=(20, 15))
+        plot_data(fig, 1, 'fMRI', ord_med_vocab, 'Median')
+        plot_data(fig, 2, 'MEG', ord_med_vocab, 'Median')
+        plot_data(fig, 3, 'fMRI', ord_max_vocab, 'Most concrete')
+        plot_data(fig, 4, 'MEG', ord_max_vocab, 'Most concrete')
+    else:
+        axs = [i for i in range(2)]
+        fig, ((axs[0], axs[1])) = plt.subplots(1, 2, figsize=(20, 10))
+        plot_data(fig, 1, 'fMRI', DataSets.fmri_vocab, plot_order)
+        plot_data(fig, 2, 'MEG', DataSets.fmri_vocab, plot_order)
+
     return fig
 
 
@@ -586,7 +614,6 @@ def plot_by_concreteness(scores: np.ndarray, word_pairs, axi1, axi2, fig, common
                 colours.append('red')
             linestyles.append(lst)
 
-
         ax0 = fig.add_subplot(2, 2, axi)
         labelpad = 5
         # Concreteness scores on different axis but the same plot
@@ -598,15 +625,15 @@ def plot_by_concreteness(scores: np.ndarray, word_pairs, axi1, axi2, fig, common
         ax0.set_ylabel("Spearman's correlation", labelpad=labelpad)
         axp = axn.twinx().twiny()
         ax0 = plot_scores(corrs_by_conc_a,
-                         vecs_names=vnames,
-                         labels=None,
-                         colours=colours,
-                         linestyles=linestyles,
-                         title='',
-                         alpha=0.7,
-                         xtick_labels=None,
-                         ax=axp,
-                         show=show)
+                          vecs_names=vnames,
+                          labels=None,
+                          colours=colours,
+                          linestyles=linestyles,
+                          title='',
+                          alpha=0.7,
+                          xtick_labels=None,
+                          ax=axp,
+                          show=show)
         ax0.set_xlabel('WordNet concreteness splits by 100 pairs', labelpad=labelpad)
         syna = {'median': 'Median', 'most_conc': 'Most Concrete'}[synset_agg]
         ax0.set_title(f'{title_prefix} - Synset Agg {syna}')
@@ -714,9 +741,9 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
             title_pad = 'with Padding'
             fname_pad = 'padding'
 
-        score_explanation = f'Multi-modal embeddings are created {title_pad} technique. ' +\
-                            'The table sections contain linguistic, visual and multi-modal embeddings in this order. ' +\
-                            'Red colour signifies the best performance, blue means that the multi-modal ' +\
+        score_explanation = f'Multi-modal embeddings are created {title_pad} technique. ' + \
+                            'The table sections contain linguistic, visual and multi-modal embeddings in this order. ' + \
+                            'Red colour signifies the best performance, blue means that the multi-modal ' + \
                             'embedding outperformed the corresponding uni-modal ones.'
     else:
         if not embdir:
@@ -799,7 +826,7 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
             #                   gt_divisor=datasets.normalizers[name], vecs_names=plot_vecs + ['ground_truth'],
             #                   tablefmt=tablefmt)
             i += 1
-            fig = plot_by_concreteness(scrs, word_pairs[name], i, i+1, fig, common_subset=common_subset,
+            fig = plot_by_concreteness(scrs, word_pairs[name], i, i + 1, fig, common_subset=common_subset,
                                        vecs_names=plot_vecs + ['ground_truth'],
                                        concrete_num=concrete_num,
                                        title_prefix=name,
@@ -824,25 +851,25 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
         plt.subplots_adjust(hspace=0.4)
         # plt.show()
         # import pdb; pdb.set_trace()
-            # subfig_rows.append(subfig_row)
+        # subfig_rows.append(subfig_row)
 
         agg = {'sum': 'sum', 'diff': 'difference'}[pair_score_agg]
         fname = f'{commonsub}_{fname_pad}_{pair_score_agg}'
         fpath = 'figs/' + fname + '.png'
-        latex_fig = '\\begin{figure}\n\centering\n' +\
-		             '\includegraphics[width=\\textwidth]{figs/' + fname + '.png}' + \
-                     '\n\caption{' + f'Scores on {caption_comsub} Semantic Similarity dataset splits, ordered by ' + \
-                     f'the {agg} of WordNet concreteness scores of ' + \
-                     f'the two words in every word pair. Mid-fusion method: {title_pad}.' + '}\n' + \
-                     '\label{f:' + fname + '}' +\
-                     '\n\end{figure}\n\n'
+        latex_fig = '\\begin{figure}\n\centering\n' + \
+                    '\includegraphics[width=\\textwidth]{figs/' + fname + '.png}' + \
+                    '\n\caption{' + f'Scores on {caption_comsub} Semantic Similarity dataset splits, ordered by ' + \
+                    f'the {agg} of WordNet concreteness scores of ' + \
+                    f'the two words in every word pair. Mid-fusion method: {title_pad}.' + '}\n' + \
+                    '\label{f:' + fname + '}' + \
+                    '\n\end{figure}\n\n'
         # Save figure and figures tex file
         plt.savefig(fpath, bbox_inches='tight')
         with open('figs/figs.tex', 'a+') as f:
             f.write(latex_fig)
 
     if 'brainwords' in actions:
-        plot_brain_words(brain_scores)
+        plot_brain_words(brain_scores, 'w2v13')
 
         if 'commonsubset' in loadpath:
             commonsub = 'commonsubset'
