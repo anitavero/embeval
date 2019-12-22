@@ -420,6 +420,28 @@ def print_brain_scores(brain_scores, tablefmt: str = "simple", caption='', suffi
     print_data('MEG')
 
 
+def colour_by_modality(labels):
+    # labels = [Embeddings.get_label(n.split(NAME_DELIM)[1]) for n in vnames]
+    colours = []
+    linestyles = []
+    for l in labels:
+        lst = '-'
+        if MM_TOKEN in l or 'MM' in l:
+            colours.append('#e6b830')
+            lst = '--'
+        elif l in ['wikinews', 'wikinews_sub', 'crawl', 'crawl_sub', 'w2v13']:
+            colours.append('blue')
+        elif 'VG-' in l:
+            colours.append('purple')
+        elif 'VG SceneGraph' == l:
+            colours.append('green')
+        else:
+            colours.append('red')
+        linestyles.append(lst)
+
+    return colours, linestyles
+
+
 def plot_brain_words(brain_scores, plot_order):
     """Plot hit counts for word in Brain data.
     :param brain_scores: brain score dict
@@ -450,21 +472,26 @@ def plot_brain_words(brain_scores, plot_order):
         score_arrays = dict2struct_array(scores)
 
         nrow = 2
+        plabels = None
         # Sort by ord_name Embedding
         if ord_name != 'Median' and ord_name != 'Most concrete':
             if ord_name not in labels:
                 ord_name = Embeddings.get_label(ord_name)
             score_arrays = np.sort(score_arrays, order=ord_name)
+            ord_vocab = [w for w, s in sorted(zip(wordlists[ord_name], scores[ord_name]), key=lambda x: x[1])]
             nrow = 1
+            plabels = [ord_name if l == ord_name else None for l in labels]
 
         ax = fg.add_subplot(nrow, 2, axi)
         ax.set_xticklabels(['' for l in ax.get_xticklabels()])
         ax.set_yticklabels(['' for l in ax.get_yticklabels()])
+        colours, linestyles = colour_by_modality(labels)
+
         plot_scores(score_arrays,
                     vecs_names=labels,
-                    labels=None,
-                    colours=None,
-                    linestyles=None,
+                    labels=plabels,
+                    colours=colours,
+                    linestyles=linestyles,
                     title=f'{data} {ord_name} synset score',
                     alpha=0.7,
                     xtick_labels=ord_vocab,
@@ -869,7 +896,7 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
             f.write(latex_fig)
 
     if 'brainwords' in actions:
-        plot_brain_words(brain_scores, 'w2v13')
+        plot_brain_words(brain_scores, 'VG-VIS combined')
 
         if 'commonsubset' in loadpath:
             commonsub = 'commonsubset'
