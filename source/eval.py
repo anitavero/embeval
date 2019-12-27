@@ -613,11 +613,10 @@ def wn_concreteness_for_pairs(word_pairs, synset_agg: str, similarity_fn=wn.path
     return np.array(ids), np.array(scores)
 
 
-def plot_by_concreteness(scores: np.ndarray, word_pairs, axi1, axi2, fig, common_subset=False, vecs_names=None,
+def plot_by_concreteness(scores: np.ndarray, word_pairs, ax1, ax2, common_subset=False, vecs_names=None,
                          concrete_num=100, title_prefix='', pair_score_agg='sum', show=False):
     """Plot scores for data splits with increasing concreteness."""
-    axes = []
-    for synset_agg, axi in zip(['median', 'most_conc'], [axi1, axi2]):
+    for synset_agg, ax in zip(['median', 'most_conc'], [ax1, ax2]):
         corrs_by_conc = defaultdict(list)
         ids12, concs = wn_concreteness_for_pairs(word_pairs, synset_agg, pair_score_agg=pair_score_agg)
         scs = scores[ids12]
@@ -633,19 +632,20 @@ def plot_by_concreteness(scores: np.ndarray, word_pairs, axi1, axi2, fig, common
 
         colours, linestyles, alphas = colour_by_modality(labels)
 
-        ax0 = fig.add_subplot(2, 2, axi)
+        # axn = fig.add_subplot(2, 2, axi)
         labelpad = 20
         # Concreteness scores on different axis but the same plot
-        axn = plt.gca()
+        axn = ax
         axn.plot(concs, color='cyan')
-        # axn.set_xticklabels(['' for l in axn.get_xticklabels()])
-        # axn.set_yticklabels(['' for l in axn.get_yticklabels()])
         axn.set_xlabel('Word pairs', labelpad=labelpad)
         axn.set_ylabel('WordNet concreteness', labelpad=labelpad)
+        n = scores.shape[0]
+        axn.xaxis.set_ticks(range(0, n, int(n / 6)))
+        axn.set_xticklabels([i for i in range(0, n, int(n / 6))])
 
         # Plot for Spearman's correlations
         axp = axn.twiny().twinx()
-        ax0 = plot_scores(corrs_by_conc_a,
+        axp = plot_scores(corrs_by_conc_a,
                           vecs_names=vnames,
                           labels=None,
                           colours=colours,
@@ -655,11 +655,11 @@ def plot_by_concreteness(scores: np.ndarray, word_pairs, axi1, axi2, fig, common
                           xtick_labels=None,
                           ax=axp,
                           show=show)
-        ax0.set_ylabel("Spearman's correlation", labelpad=labelpad - 5)
-        ax0.set_xlabel('WordNet concreteness splits by 100 pairs', labelpad=labelpad)   #TODO: Doesn't show
+        axp.set_ylabel("Spearman's correlation", labelpad=labelpad - 5)
+        axp.set_xlabel('WordNet concreteness splits by 100 pairs', labelpad=labelpad)   #TODO: Doesn't show
+        axp.set_xticklabels(['' for i in axp.get_xticklabels()])
         syna = {'median': 'Median', 'most_conc': 'Most Concrete'}[synset_agg]
-        ax0.set_title(f'{title_prefix} - Synset Agg {syna}')
-    return fig
+        axp.set_title(f'{title_prefix} - Synset Agg {syna}')
 
 
 def eval_concreteness(scores: np.ndarray, word_pairs, num=100, gt_divisor=10, vecs_names=None, tablefmt='simple'):
@@ -839,22 +839,18 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
             commonsub = 'full'
             caption_comsub = "the full"
 
-        axs = [i for i in range(4)]
-        fig, ((axs[0], axs[1]), (axs[2], axs[3])) = plt.subplots(2, 2, figsize=(15, 10))
-        i = 0
-        for name, scrs in scores.items():
+        fig, axes = plt.subplots(2, 2, figsize=(15, 10))
+        for i, (name, scrs) in enumerate(scores.items()):
             # print(f'\n-------- {name} scores -------\n')
             # eval_concreteness(scrs, word_pairs[name], num=concrete_num,
             #                   gt_divisor=datasets.normalizers[name], vecs_names=plot_vecs + ['ground_truth'],
             #                   tablefmt=tablefmt)
-            i += 1
-            fig = plot_by_concreteness(scrs, word_pairs[name], i, i + 1, fig, common_subset=common_subset,
-                                       vecs_names=plot_vecs + ['ground_truth'],
-                                       concrete_num=concrete_num,
-                                       title_prefix=name,
-                                       pair_score_agg=pair_score_agg,
-                                       show=False)
-            i += 1
+            plot_by_concreteness(scrs, word_pairs[name], axes[i][0], axes[i][1], common_subset=common_subset,
+                                 vecs_names=plot_vecs + ['ground_truth'],
+                                 concrete_num=concrete_num,
+                                 title_prefix=name,
+                                 pair_score_agg=pair_score_agg,
+                                 show=False)
 
         linewidth = 3
         legs = [Line2D([0], [0], color='cyan', lw=linewidth),
@@ -869,8 +865,7 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
                      'Visual Genome',
                      'VG SceneGraph',
                      'Visual']
-        fig.legend(legs, leglabels, loc=9, edgecolor='inherit',
-                   ncol=6, borderaxespad=0., numpoints=1)
+        fig.legend(legs, leglabels, loc=9, edgecolor='inherit', ncol=6, borderaxespad=-0.2, numpoints=1)
         fig.tight_layout(pad=1.0)
 
         agg = {'sum': 'sum', 'diff': 'difference'}[pair_score_agg]
