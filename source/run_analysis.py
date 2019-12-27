@@ -8,7 +8,7 @@ def main(action):
 
     if action == 'printcorr':
 
-        print('\n############## SEMSIM ##############\n')
+        print('\nSEMSIM\n')
 
         print('\nPadding\n')
         eval.main(datadir, actions=['printcorr'],
@@ -29,7 +29,7 @@ def main(action):
                   tablefmt='latex_raw',
                   common_subset=True)
 
-        print('\n############## BRAIN ##############\n')
+        print('\nBRAIN\n')
 
         print('\nNo padding Brain\n')
         eval.main(datadir, actions=['printbraincorr'],
@@ -51,17 +51,20 @@ def main(action):
 
     if action == 'concreteness':
 
-        for pair_agg in ['sum', 'diff']:
-            print(f'\n\n------------ {pair_agg} ------------\n\n')
+        with open('figs/figs.tex', 'w') as f:
+            f.write('')
 
-            print('\n############## Padding ##############')
+        for pair_agg in ['sum', 'diff']:
+            print(f'\n------------ {pair_agg} ------------')
+
+            print('\nPadding')
             eval.main(datadir, actions=['concreteness'],
                       loadpath=embdir + 'padding',
                       concrete_num=100,
                       plot_vecs=[],
                       pair_score_agg=pair_agg)
 
-            print('\n############## Padding - common subset ##############')
+            print('\nPadding - common subset')
             eval.main(datadir, actions=['concreteness'],
                       loadpath=embdir + 'padding',
                       concrete_num=100,
@@ -70,14 +73,14 @@ def main(action):
                       common_subset=True)
 
 
-            print('\n############## No Padding ##############')
+            print('\nNo Padding')
             eval.main(datadir, actions=['concreteness'],
                       loadpath=embdir + 'nopadding',
                       concrete_num=100,
                       plot_vecs=[],
                       pair_score_agg=pair_agg)
 
-            print('\n############## No Padding - common subset ##############')
+            print('\nNo Padding - common subset')
             eval.main(datadir, actions=['concreteness'],
                       loadpath=embdir + 'nopadding',
                       concrete_num=100,
@@ -87,11 +90,14 @@ def main(action):
 
     if action == 'brainwords':
 
-        print('\n############## No Padding Brain Words ##############')
+        with open('figs/figs_brain.tex', 'w') as f:
+            f.write('')
+
+        print('\nNo Padding Brain Words')
         eval.main(datadir, actions=['brainwords'],
                   loadpath=embdir + 'nopadding_mitchell')
 
-        print('\n############## No Padding Brain Words - common subset ##############')
+        print('\nNo Padding Brain Words - common subset')
         eval.main(datadir, actions=['brainwords'],
                   loadpath=embdir + 'nopadding_mitchell_commonsubset')
 

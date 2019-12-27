@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 import matplotlib
 
-matplotlib.style.use('ggplot')
+matplotlib.style.use('fivethirtyeight')
 import io
 from itertools import combinations, product
 from tabulate import tabulate, LATEX_ESCAPE_RULES
@@ -34,6 +34,7 @@ import two_vs_two
 MISSING = -2  # Signify word pairs which aren't covered by and embedding's vocabulary
 ROUND = 4  # Round scores in print
 NAME_DELIM = ' | '
+linewidth = 3
 
 
 # We could use dataclass decorator in case of python 3.7
@@ -424,11 +425,14 @@ def colour_by_modality(labels):
     # labels = [Embeddings.get_label(n.split(NAME_DELIM)[1]) for n in vnames]
     colours = []
     linestyles = []
+    alphas = []
     for l in labels:
         lst = '-'
+        al = 0.8
         if MM_TOKEN in l or 'MM' in l:
             colours.append('#e6b830')
-            lst = '--'
+            lst = ':'
+            al = 0.5
         elif l in ['wikinews', 'wikinews_sub', 'crawl', 'crawl_sub', 'w2v13']:
             colours.append('blue')
         elif 'VG-' in l:
@@ -438,8 +442,9 @@ def colour_by_modality(labels):
         else:
             colours.append('red')
         linestyles.append(lst)
+        alphas.append(al)
 
-    return colours, linestyles
+    return colours, linestyles, alphas
 
 
 def plot_brain_words(brain_scores, plot_order):
@@ -485,7 +490,7 @@ def plot_brain_words(brain_scores, plot_order):
         ax = fg.add_subplot(nrow, 2, axi)
         ax.set_xticklabels(['' for l in ax.get_xticklabels()])
         ax.set_yticklabels(['' for l in ax.get_yticklabels()])
-        colours, linestyles = colour_by_modality(labels)
+        colours, linestyles, alphas = colour_by_modality(labels)
 
         plot_scores(score_arrays,
                     vecs_names=labels,
@@ -493,7 +498,7 @@ def plot_brain_words(brain_scores, plot_order):
                     colours=colours,
                     linestyles=linestyles,
                     title=f'{data} {ord_name} synset score',
-                    alpha=0.7,
+                    alphas=alphas,
                     xtick_labels=ord_vocab,
                     ax=ax,
                     show=False)
@@ -544,7 +549,7 @@ def eval_dataset(dataset: List[Tuple[str, str, float]],
 
 
 def plot_scores(scores: np.ndarray, gt_divisor=10, vecs_names=None, labels=None, colours=None, linestyles=None,
-                title=None, type='plot', alpha=0.5, xtick_labels=None, ax=None, show=True):
+                title=None, type='plot', alphas=None, xtick_labels=None, ax=None, show=True):
     """Scatter plot of a structured array."""
     scs = deepcopy(scores)
     if 'ground_truth' in scores.dtype.names:
@@ -561,12 +566,13 @@ def plot_scores(scores: np.ndarray, gt_divisor=10, vecs_names=None, labels=None,
     if linestyles is None:
         linestyles = [None for i in range(len(vecs_names))]
 
-    for nm, c, l, ls in zip(vecs_names, colours, labs, linestyles):
+    for nm, c, l, ls, al in zip(vecs_names, colours, labs, linestyles, alphas):
         mask = scs[nm] > MISSING  # Leave out the pairs which aren't covered
         if type == 'scatter':
             ax.scatter(np.arange(scs[nm].shape[0])[mask], scs[nm][mask], label=l, alpha=0.5, color=c)
         elif type == 'plot':
-            ax.plot(np.arange(scs[nm].shape[0])[mask], scs[nm][mask], label=l, alpha=alpha, color=c, linestyle=ls)
+            ax.plot(np.arange(scs[nm].shape[0])[mask], scs[nm][mask], label=l, alpha=al, color=c, linestyle=ls,
+                    lw=linewidth)
     if labels is not None:
         ax.legend(fontsize='small', loc='center left', bbox_to_anchor=(1, 0.5), borderaxespad=0.2)
     if title:
@@ -624,44 +630,33 @@ def plot_by_concreteness(scores: np.ndarray, word_pairs, axi1, axi2, fig, common
 
         vnames = [n for n in corrs_by_conc_a.dtype.names if 'fmri' not in n and 'frcnn' not in n]
         labels = [Embeddings.get_label(n.split(NAME_DELIM)[1]) for n in vnames]
-        colours = []
-        linestyles = []
-        for l in labels:
-            lst = '-'
-            if MM_TOKEN in l or 'MM' in l:
-                colours.append('#e6b830')
-                lst = '--'
-            elif l in ['wikinews', 'wikinews_sub', 'crawl', 'crawl_sub', 'w2v13']:
-                colours.append('blue')
-            elif 'VG-' in l:
-                colours.append('purple')
-            elif 'VG SceneGraph' == l:
-                colours.append('green')
-            else:
-                colours.append('red')
-            linestyles.append(lst)
+
+        colours, linestyles, alphas = colour_by_modality(labels)
 
         ax0 = fig.add_subplot(2, 2, axi)
-        labelpad = 5
+        labelpad = 20
         # Concreteness scores on different axis but the same plot
         axn = plt.gca()
         axn.plot(concs, color='cyan')
-        axn.set_xticklabels(['' for l in axn.get_xticklabels()])
-        axn.set_yticklabels(['' for l in axn.get_yticklabels()])
-        axn.set_xlabel('WordNet concreteness of word pairs', labelpad=labelpad)
-        ax0.set_ylabel("Spearman's correlation", labelpad=labelpad)
-        axp = axn.twinx().twiny()
+        # axn.set_xticklabels(['' for l in axn.get_xticklabels()])
+        # axn.set_yticklabels(['' for l in axn.get_yticklabels()])
+        axn.set_xlabel('Word pairs', labelpad=labelpad)
+        axn.set_ylabel('WordNet concreteness', labelpad=labelpad)
+
+        # Plot for Spearman's correlations
+        axp = axn.twiny().twinx()
         ax0 = plot_scores(corrs_by_conc_a,
                           vecs_names=vnames,
                           labels=None,
                           colours=colours,
                           linestyles=linestyles,
                           title='',
-                          alpha=0.7,
+                          alphas=alphas,
                           xtick_labels=None,
                           ax=axp,
                           show=show)
-        ax0.set_xlabel('WordNet concreteness splits by 100 pairs', labelpad=labelpad)
+        ax0.set_ylabel("Spearman's correlation", labelpad=labelpad - 5)
+        ax0.set_xlabel('WordNet concreteness splits by 100 pairs', labelpad=labelpad)   #TODO: Doesn't show
         syna = {'median': 'Median', 'most_conc': 'Most Concrete'}[synset_agg]
         ax0.set_title(f'{title_prefix} - Synset Agg {syna}')
     return fig
@@ -874,11 +869,9 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
                      'Visual Genome',
                      'VG SceneGraph',
                      'Visual']
-        fig.legend(legs, leglabels, loc=9, ncol=6, borderaxespad=1)
-        plt.subplots_adjust(hspace=0.4)
-        # plt.show()
-        # import pdb; pdb.set_trace()
-        # subfig_rows.append(subfig_row)
+        fig.legend(legs, leglabels, loc=9, edgecolor='inherit',
+                   ncol=6, borderaxespad=0., numpoints=1)
+        fig.tight_layout(pad=1.0)
 
         agg = {'sum': 'sum', 'diff': 'difference'}[pair_score_agg]
         fname = f'{commonsub}_{fname_pad}_{pair_score_agg}'
