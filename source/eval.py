@@ -642,7 +642,7 @@ def plot_by_concreteness(scores: np.ndarray, word_pairs, ax1, ax2, common_subset
         # Xticklabels by step size
         n = scores.shape[0]
         step = 500
-        xtlabels = [1] + [i for i in range(1, n) if i % step == 0] + [n]
+        xtlabels = [i for i in range(concrete_num, n) if i % step == 0] + [n]
         axn.xaxis.set_ticks([i - 1 for i in xtlabels])
         axn.set_xticklabels(xtlabels)
 
@@ -661,6 +661,8 @@ def plot_by_concreteness(scores: np.ndarray, word_pairs, ax1, ax2, common_subset
         axp.set_ylabel("Spearman's correlation", labelpad=labelpad - 3)
         # TODO: Doesn't show, order of axn.twiny().twinx() matters...
         axp.set_xlabel('WordNet concreteness splits by 100 pairs', labelpad=labelpad)
+        n = corrs_by_conc_a.shape[0]
+        axp.xaxis.set_ticks([i for i in range(-1, n)])
         axp.set_xticklabels(['' for i in axp.get_xticklabels()])
         syna = {'median': 'Median', 'most_conc': 'Most Concrete'}[synset_agg]
         axp.set_title(f'{title_prefix} - Synset Agg {syna}')
