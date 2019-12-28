@@ -425,7 +425,6 @@ class PlotColour:
 
     @staticmethod
     def colour_by_modality(labels):
-        # labels = [Embeddings.get_label(n.split(NAME_DELIM)[1]) for n in vnames]
         colours = []
         linestyles = []
         alphas = []
@@ -453,11 +452,11 @@ class PlotColour:
     def get_legend():
         linewidth = 3
         legends = [Line2D([0], [0], color='blue', lw=linewidth),
-                Line2D([0], [0], color='#e6b830', lw=linewidth),
-                Line2D([0], [0], color='green', lw=linewidth),
-                Line2D([0], [0], color='purple', lw=linewidth),
-                Line2D([0], [0], color='cyan', lw=linewidth),
-                Line2D([0], [0], color='red', lw=linewidth)]
+                   Line2D([0], [0], color='#e6b830', lw=linewidth),
+                   Line2D([0], [0], color='green', lw=linewidth),
+                   Line2D([0], [0], color='purple', lw=linewidth),
+                   Line2D([0], [0], color='cyan', lw=linewidth),
+                   Line2D([0], [0], color='red', lw=linewidth)]
         leglabels = ['WordNet concreteness',
                      'Multi-modal',
                      'Linguistic',
@@ -476,7 +475,7 @@ def plot_brain_words(brain_scores, plot_order):
     vals = list(zip(*[v.values() for v in brain_scores.values()]))
     labels = Embeddings.get_labels(brain_scores.keys())
 
-    def plot_data(fg, axi, data, ord_vocab, ord_name):
+    def plot_data(ax, data, ord_vocab, ord_name):
         dscores = {'fMRI': 5, 'MEG': 6}[data]
         word_vals = vals[dscores]
         scores = {}
@@ -496,7 +495,6 @@ def plot_brain_words(brain_scores, plot_order):
         # Convert to structured array
         score_arrays = dict2struct_array(scores)
 
-        nrow = 2
         tsuffix = ord_name + ' synset score'
         # Sort by ord_name Embedding
         if ord_name != 'Median' and ord_name != 'Most concrete':
@@ -505,13 +503,10 @@ def plot_brain_words(brain_scores, plot_order):
             tsuffix = 'ordered by ' + ord_name
             score_arrays = np.sort(score_arrays, order=ord_name)
             ord_vocab = [w for w, s in sorted(zip(wordlists[ord_name], scores[ord_name]), key=lambda x: x[1])]
-            nrow = 1
 
-        ax = fg.add_subplot(nrow, 2, axi)
-        ax.set_xticklabels(['' for l in ax.get_xticklabels()])
-        ax.set_yticklabels(['' for l in ax.get_yticklabels()])
         colours, linestyles, alphas = PlotColour.colour_by_modality(labels)
-
+        # allhits = sum([hits for hits in scores.values()], [])
+        # ax.set_yticklabels([i for i in range(min(allhits), max(allhits), 6)], rotation=90)
         plot_scores(score_arrays,
                     vecs_names=labels,
                     labels=None,
@@ -522,7 +517,11 @@ def plot_brain_words(brain_scores, plot_order):
                     xtick_labels=ord_vocab,
                     ax=ax,
                     show=False,
-                    type='scatter')
+                    type='scatter',
+                    swapaxes=True)
+        ax.set_xlabel('Hit number')
+        ax.yaxis.set_ticks(range(len(ord_vocab)))
+        ax.set_yticklabels(ord_vocab, fontsize=14)
 
     if plot_order == 'concreteness':
         # Order by word concreteness
@@ -532,18 +531,18 @@ def plot_brain_words(brain_scores, plot_order):
 
         axs = [i for i in range(4)]
         fig, ((axs[0], axs[1]), (axs[2], axs[3])) = plt.subplots(2, 2, figsize=(20, 15))
-        plot_data(fig, 1, 'fMRI', ord_med_vocab, 'Median')
-        plot_data(fig, 2, 'MEG', ord_med_vocab, 'Median')
-        plot_data(fig, 3, 'fMRI', ord_max_vocab, 'Most concrete')
-        plot_data(fig, 4, 'MEG', ord_max_vocab, 'Most concrete')
+        plot_data(axs[0], 'fMRI', ord_med_vocab, 'Median')
+        plot_data(axs[1], 'MEG', ord_med_vocab, 'Median')
+        plot_data(axs[2], 'fMRI', ord_max_vocab, 'Most concrete')
+        plot_data(axs[3], 'MEG', ord_max_vocab, 'Most concrete')
     else:
         axs = [i for i in range(2)]
-        fig, ((axs[0], axs[1])) = plt.subplots(1, 2, figsize=(20, 10))
-        plot_data(fig, 1, 'fMRI', DataSets.fmri_vocab, plot_order)
-        plot_data(fig, 2, 'MEG', DataSets.fmri_vocab, plot_order)
+        fig, ((axs[0], axs[1])) = plt.subplots(1, 2, figsize=(20, 13))
+        plot_data(axs[0], 'fMRI', DataSets.fmri_vocab, plot_order)
+        plot_data(axs[1], 'MEG', DataSets.fmri_vocab, plot_order)
 
-    legs, leglabels = PlotColour.get_legend()
-    fig.legend(legs, leglabels, loc=9, edgecolor='inherit', ncol=6, borderaxespad=-0.2, numpoints=1)
+    legs, leglabels = PlotColour.get_legend()   # Leave out WordNet concreteness [1:]
+    fig.legend(legs[1:], leglabels[1:], loc=9, edgecolor='inherit', ncol=6, borderaxespad=-0.2, numpoints=1)
     fig.tight_layout(pad=1.0)
 
     return fig
@@ -574,7 +573,7 @@ def eval_dataset(dataset: List[Tuple[str, str, float]],
 
 
 def plot_scores(scores: np.ndarray, gt_divisor=10, vecs_names=None, labels=None, colours=None, linestyles=None,
-                title=None, type='plot', alphas=None, xtick_labels=None, ax=None, show=True):
+                title=None, type='plot', alphas=None, xtick_labels=None, ax=None, show=True, swapaxes=False):
     """Scatter plot of a structured array."""
     scs = deepcopy(scores)
     if 'ground_truth' in scores.dtype.names:
@@ -593,18 +592,20 @@ def plot_scores(scores: np.ndarray, gt_divisor=10, vecs_names=None, labels=None,
 
     for nm, c, l, ls, al in zip(vecs_names, colours, labs, linestyles, alphas):
         mask = scs[nm] > MISSING  # Leave out the pairs which aren't covered
+        x = np.arange(scs[nm].shape[0])[mask]
+        y = scs[nm][mask]
+        if swapaxes:
+            buf = deepcopy(x)
+            x = y
+            y = buf
         if type == 'scatter':
-            ax.scatter(np.arange(scs[nm].shape[0])[mask], scs[nm][mask], label=l, alpha=al, color=c)
+            ax.scatter(x, y, label=l, alpha=al, color=c)
         elif type == 'plot':
-            ax.plot(np.arange(scs[nm].shape[0])[mask], scs[nm][mask], label=l, alpha=al, color=c, linestyle=ls,
-                    lw=linewidth)
+            ax.plot(x, y, label=l, alpha=al, color=c, linestyle=ls, lw=linewidth)
     if labels is not None:
         ax.legend(fontsize='small', loc='center left', bbox_to_anchor=(1, 0.5), borderaxespad=0.2)
     if title:
         ax.set_title(title)
-    if xtick_labels is not None:
-        ax.xaxis.set_ticks(range(len(xtick_labels)))
-        ax.set_xticklabels(xtick_labels, rotation=70, fontsize=8)
     if show:
         plt.show()
 
