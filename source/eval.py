@@ -421,30 +421,50 @@ def print_brain_scores(brain_scores, tablefmt: str = "simple", caption='', suffi
     print_data('MEG')
 
 
-def colour_by_modality(labels):
-    # labels = [Embeddings.get_label(n.split(NAME_DELIM)[1]) for n in vnames]
-    colours = []
-    linestyles = []
-    alphas = []
-    for l in labels:
-        lst = '-'
-        al = 0.8
-        if MM_TOKEN in l or 'MM' in l:
-            colours.append('#e6b830')
-            lst = ':'
-            al = 0.5
-        elif l in ['wikinews', 'wikinews_sub', 'crawl', 'crawl_sub', 'w2v13']:
-            colours.append('green')
-        elif 'VG-' in l:
-            colours.append('purple')
-        elif 'VG SceneGraph' == l:
-            colours.append('cyan')
-        else:
-            colours.append('red')
-        linestyles.append(lst)
-        alphas.append(al)
+class PlotColour:
 
-    return colours, linestyles, alphas
+    @staticmethod
+    def colour_by_modality(labels):
+        # labels = [Embeddings.get_label(n.split(NAME_DELIM)[1]) for n in vnames]
+        colours = []
+        linestyles = []
+        alphas = []
+        for l in labels:
+            lst = '-'
+            al = 0.8
+            if MM_TOKEN in l or 'MM' in l:
+                colours.append('#e6b830')
+                lst = ':'
+                al = 0.5
+            elif l in ['wikinews', 'wikinews_sub', 'crawl', 'crawl_sub', 'w2v13']:
+                colours.append('green')
+            elif 'VG-' in l:
+                colours.append('purple')
+            elif 'VG SceneGraph' == l:
+                colours.append('cyan')
+            else:
+                colours.append('red')
+            linestyles.append(lst)
+            alphas.append(al)
+
+        return colours, linestyles, alphas
+
+    @staticmethod
+    def get_legend():
+        linewidth = 3
+        legends = [Line2D([0], [0], color='blue', lw=linewidth),
+                Line2D([0], [0], color='#e6b830', lw=linewidth),
+                Line2D([0], [0], color='green', lw=linewidth),
+                Line2D([0], [0], color='purple', lw=linewidth),
+                Line2D([0], [0], color='cyan', lw=linewidth),
+                Line2D([0], [0], color='red', lw=linewidth)]
+        leglabels = ['WordNet concreteness',
+                     'Multi-modal',
+                     'Linguistic',
+                     'Visual Genome',
+                     'VG SceneGraph',
+                     'Visual']
+        return legends, leglabels
 
 
 def plot_brain_words(brain_scores, plot_order):
@@ -477,31 +497,32 @@ def plot_brain_words(brain_scores, plot_order):
         score_arrays = dict2struct_array(scores)
 
         nrow = 2
-        plabels = None
+        tsuffix = ord_name + ' synset score'
         # Sort by ord_name Embedding
         if ord_name != 'Median' and ord_name != 'Most concrete':
             if ord_name not in labels:
                 ord_name = Embeddings.get_label(ord_name)
+            tsuffix = 'ordered by ' + ord_name
             score_arrays = np.sort(score_arrays, order=ord_name)
             ord_vocab = [w for w, s in sorted(zip(wordlists[ord_name], scores[ord_name]), key=lambda x: x[1])]
             nrow = 1
-            plabels = [ord_name if l == ord_name else None for l in labels]
 
         ax = fg.add_subplot(nrow, 2, axi)
         ax.set_xticklabels(['' for l in ax.get_xticklabels()])
         ax.set_yticklabels(['' for l in ax.get_yticklabels()])
-        colours, linestyles, alphas = colour_by_modality(labels)
+        colours, linestyles, alphas = PlotColour.colour_by_modality(labels)
 
         plot_scores(score_arrays,
                     vecs_names=labels,
-                    labels=plabels,
+                    labels=None,
                     colours=colours,
                     linestyles=linestyles,
-                    title=f'{data} {ord_name} synset score',
+                    title=f'{data} - {tsuffix}',
                     alphas=alphas,
                     xtick_labels=ord_vocab,
                     ax=ax,
-                    show=False)
+                    show=False,
+                    type='scatter')
 
     if plot_order == 'concreteness':
         # Order by word concreteness
@@ -520,6 +541,10 @@ def plot_brain_words(brain_scores, plot_order):
         fig, ((axs[0], axs[1])) = plt.subplots(1, 2, figsize=(20, 10))
         plot_data(fig, 1, 'fMRI', DataSets.fmri_vocab, plot_order)
         plot_data(fig, 2, 'MEG', DataSets.fmri_vocab, plot_order)
+
+    legs, leglabels = PlotColour.get_legend()
+    fig.legend(legs, leglabels, loc=9, edgecolor='inherit', ncol=6, borderaxespad=-0.2, numpoints=1)
+    fig.tight_layout(pad=1.0)
 
     return fig
 
@@ -569,7 +594,7 @@ def plot_scores(scores: np.ndarray, gt_divisor=10, vecs_names=None, labels=None,
     for nm, c, l, ls, al in zip(vecs_names, colours, labs, linestyles, alphas):
         mask = scs[nm] > MISSING  # Leave out the pairs which aren't covered
         if type == 'scatter':
-            ax.scatter(np.arange(scs[nm].shape[0])[mask], scs[nm][mask], label=l, alpha=0.5, color=c)
+            ax.scatter(np.arange(scs[nm].shape[0])[mask], scs[nm][mask], label=l, alpha=al, color=c)
         elif type == 'plot':
             ax.plot(np.arange(scs[nm].shape[0])[mask], scs[nm][mask], label=l, alpha=al, color=c, linestyle=ls,
                     lw=linewidth)
@@ -630,7 +655,7 @@ def plot_by_concreteness(scores: np.ndarray, word_pairs, ax1, ax2, common_subset
         vnames = [n for n in corrs_by_conc_a.dtype.names if 'fmri' not in n and 'frcnn' not in n]
         labels = [Embeddings.get_label(n.split(NAME_DELIM)[1]) for n in vnames]
 
-        colours, linestyles, alphas = colour_by_modality(labels)
+        colours, linestyles, alphas = PlotColour.colour_by_modality(labels)
         labelpad = 10
 
         # Concreteness scores on different axis but the same plot
@@ -858,19 +883,7 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
                                  pair_score_agg=pair_score_agg,
                                  show=False)
 
-        linewidth = 3
-        legs = [Line2D([0], [0], color='blue', lw=linewidth),
-                Line2D([0], [0], color='#e6b830', lw=linewidth),
-                Line2D([0], [0], color='green', lw=linewidth),
-                Line2D([0], [0], color='purple', lw=linewidth),
-                Line2D([0], [0], color='cyan', lw=linewidth),
-                Line2D([0], [0], color='red', lw=linewidth)]
-        leglabels = ['WordNet concreteness',
-                     'Multi-modal',
-                     'Linguistic',
-                     'Visual Genome',
-                     'VG SceneGraph',
-                     'Visual']
+        legs, leglabels = PlotColour.get_legend()
         fig.legend(legs, leglabels, loc=9, edgecolor='inherit', ncol=6, borderaxespad=-0.2, numpoints=1)
         fig.tight_layout(pad=1.0)
 
@@ -908,8 +921,8 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
                     f'all participants. Mid-fusion method: {title_pad}.' + '}\n' + \
                     '\label{f:' + fname + '}' + \
                     '\n\end{figure}\n\n'
+
         # Save figure and figures tex file
-        plt.subplots_adjust(hspace=0.4)
         plt.savefig(fpath, bbox_inches='tight')
         with open('figs/figs_brain.tex', 'a+') as f:
             f.write(latex_fig)
