@@ -408,7 +408,7 @@ def print_brain_scores(brain_scores, tablefmt: str = "simple", caption='', suffi
                            tablefmt=tablefmt)
         if 'latex' in tablefmt:
             table = latex_table_post_process(table, [3, 9],
-                                             f'{data} scores for each participants and embeddings ' + suffix + caption,
+                                             f'{data} scores for each participant and embedding' + suffix + caption,
                                              fit_to_page=True)
             table_P = latex_table_post_process(table_P, [],
                                                f'{data} scores averaged over each modality' + suffix + \
