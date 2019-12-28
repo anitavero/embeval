@@ -434,11 +434,11 @@ def colour_by_modality(labels):
             lst = ':'
             al = 0.5
         elif l in ['wikinews', 'wikinews_sub', 'crawl', 'crawl_sub', 'w2v13']:
-            colours.append('blue')
+            colours.append('green')
         elif 'VG-' in l:
             colours.append('purple')
         elif 'VG SceneGraph' == l:
-            colours.append('green')
+            colours.append('cyan')
         else:
             colours.append('red')
         linestyles.append(lst)
@@ -631,17 +631,20 @@ def plot_by_concreteness(scores: np.ndarray, word_pairs, ax1, ax2, common_subset
         labels = [Embeddings.get_label(n.split(NAME_DELIM)[1]) for n in vnames]
 
         colours, linestyles, alphas = colour_by_modality(labels)
+        labelpad = 10
 
-        # axn = fig.add_subplot(2, 2, axi)
-        labelpad = 20
         # Concreteness scores on different axis but the same plot
         axn = ax
-        axn.plot(concs, color='cyan')
+        axn.plot(concs, color='blue')
         axn.set_xlabel('Word pairs', labelpad=labelpad)
         axn.set_ylabel('WordNet concreteness', labelpad=labelpad)
+        axn.yaxis.label.set_color('blue')
+        # Xticklabels by step size
         n = scores.shape[0]
-        axn.xaxis.set_ticks(range(0, n, int(n / 6)))
-        axn.set_xticklabels([i for i in range(0, n, int(n / 6))])
+        step = 500
+        xtlabels = [1] + [i for i in range(1, n) if i % step == 0] + [n]
+        axn.xaxis.set_ticks([i - 1 for i in xtlabels])
+        axn.set_xticklabels(xtlabels)
 
         # Plot for Spearman's correlations
         axp = axn.twiny().twinx()
@@ -655,8 +658,9 @@ def plot_by_concreteness(scores: np.ndarray, word_pairs, ax1, ax2, common_subset
                           xtick_labels=None,
                           ax=axp,
                           show=show)
-        axp.set_ylabel("Spearman's correlation", labelpad=labelpad - 5)
-        axp.set_xlabel('WordNet concreteness splits by 100 pairs', labelpad=labelpad)   #TODO: Doesn't show
+        axp.set_ylabel("Spearman's correlation", labelpad=labelpad - 3)
+        # TODO: Doesn't show, order of axn.twiny().twinx() matters...
+        axp.set_xlabel('WordNet concreteness splits by 100 pairs', labelpad=labelpad)
         axp.set_xticklabels(['' for i in axp.get_xticklabels()])
         syna = {'median': 'Median', 'most_conc': 'Most Concrete'}[synset_agg]
         axp.set_title(f'{title_prefix} - Synset Agg {syna}')
@@ -853,11 +857,11 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
                                  show=False)
 
         linewidth = 3
-        legs = [Line2D([0], [0], color='cyan', lw=linewidth),
+        legs = [Line2D([0], [0], color='blue', lw=linewidth),
                 Line2D([0], [0], color='#e6b830', lw=linewidth),
-                Line2D([0], [0], color='blue', lw=linewidth),
-                Line2D([0], [0], color='purple', lw=linewidth),
                 Line2D([0], [0], color='green', lw=linewidth),
+                Line2D([0], [0], color='purple', lw=linewidth),
+                Line2D([0], [0], color='cyan', lw=linewidth),
                 Line2D([0], [0], color='red', lw=linewidth)]
         leglabels = ['WordNet concreteness',
                      'Multi-modal',
