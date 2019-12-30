@@ -8,36 +8,36 @@ def main(action):
 
     if action == 'printcorr':
 
-        print('\nSEMSIM\n')
+        # print('\nSEMSIM\n')
 
-        print('\nPadding\n')
+        # print('\nPadding\n')
         eval.main(datadir, actions=['printcorr'],
                   loadpath=embdir + 'padding',
                   print_corr_for='gt',
                   tablefmt='latex_raw')
 
-        print('\nNo Padding\n')
+        # print('\nNo Padding\n')
         eval.main(datadir, actions=['printcorr'],
                   loadpath=embdir + 'nopadding',
                   print_corr_for='gt',
                   tablefmt='latex_raw')
 
-        print('\nPadding - common subset\n')
+        # print('\nPadding - common subset\n')
         eval.main(datadir, actions=['printcorr'],
                   loadpath=embdir + 'nopadding',
                   print_corr_for='gt',
                   tablefmt='latex_raw',
                   common_subset=True)
 
-        print('\nBRAIN\n')
+        # print('\nBRAIN\n')
 
-        print('\nNo padding Brain\n')
+        # print('\nNo padding Brain\n')
         eval.main(datadir, actions=['printbraincorr'],
                   loadpath=embdir + 'nopadding_mitchell',
                   print_corr_for='gt',
                   tablefmt='latex_raw')
 
-        print('\nNo padding Brain - common subset\n')
+        # print('\nNo padding Brain - common subset\n')
         eval.main(datadir, actions=['printbraincorr'],
                   loadpath=embdir + 'nopadding_mitchell_commonsubset',
                   print_corr_for='gt',
