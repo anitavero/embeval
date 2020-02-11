@@ -748,7 +748,7 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
     """
     :param pair_score_agg:
     :param mm_lingvis:
-    :param tablefmt:
+    :param tablefmt: printed table format. 'simple' - terminal, 'latex_raw' - latex table.
     :param concrete_num:
     :param pre_score_files:
     :param datadir: Path to directory which contains evaluation data (and embedding data if embdir is not given)
