@@ -1,3 +1,3 @@
-# MMDeed
+# EmbEval
 
-Multi-modal toolkit in Pytorch, developed at the University of Cambridge Computer Laboratory.
+A toolkit to evaluate Embeddings of different sources and modalities, developed at the University of Cambridge Computer Laboratory.
