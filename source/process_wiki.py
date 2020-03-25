@@ -5,6 +5,7 @@
 import os
 from glob import glob
 import argh
+import json
 from tqdm import tqdm
 from collections import Counter
 from text_process import tokenize
@@ -44,7 +45,9 @@ def distribution(data_dir):
         with open(fl) as f:
             tokens = f.read().split()
             counter.update(tokens)
-    return counter
+    print('Saving...')
+    with open(os.path.join(data_dir, 'distribution.json'), 'w') as f:
+        json.dump(counter, f)
 
 
 if __name__ == '__main__':
