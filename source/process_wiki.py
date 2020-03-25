@@ -3,7 +3,6 @@
 """
 
 import os
-import json
 from glob import glob
 import argh
 from tqdm import tqdm
@@ -40,12 +39,13 @@ def tokenize_files(data_dir):
 def distribution(data_dir):
     """Count word frequencies from text files."""
     counter = Counter()
-    files = glob(os.path.join(data_dir, '*/*'))
+    files = glob(os.path.join(data_dir, '*/wiki*'))
     for fl in tqdm(files):
         with open(fl) as f:
             tokens = f.read().split()
             counter.update(tokens)
     return counter
+
 
 if __name__ == '__main__':
     argh.dispatch_commands([distribution, tokenize_files])
