@@ -6,6 +6,22 @@ import json
 import os
 
 
+def create_dir(directory):
+    try:
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+    except OSError:
+        print('Error: Creating directory. ' + directory)
+
+
+def read_jl(path):
+    articles = []
+    for line in open(path, "r"):
+        article = json.loads(line)
+        articles.append(article)
+    return articles
+
+
 def pkl2json(pkl_file, savedir):
     with open(pkl_file, 'rb') as f:
         data = pickle.load(f)
