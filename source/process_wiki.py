@@ -10,6 +10,7 @@ from tqdm import tqdm
 from collections import Counter
 from text_process import tokenize
 from utils import create_dir, read_jl
+from matplotlib import pyplot as plt
 
 
 LANG = 'english'
@@ -48,6 +49,16 @@ def distribution(data_dir):
     print('Saving...')
     with open(os.path.join(data_dir, 'distribution.json'), 'w') as f:
         json.dump(counter, f)
+
+
+def plot_distribution(data_dir, logscale=True):
+    with open(os.path.join(data_dir, 'distribution.json')) as f:
+        dist = json.load(f)
+    distc = Counter(dist)
+    plt.plot([v for k, v in distc.most_common()])
+    if logscale:
+        plt.semilogy()
+    plt.show()
 
 
 if __name__ == '__main__':
