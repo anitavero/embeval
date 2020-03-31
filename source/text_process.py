@@ -27,7 +27,8 @@ def tokenize(text, lang):
 
 
 def text2gensim(text, lang):
-    """Convert text to list of str format (sdt for gensim)."""
+    """Tokenize and filter stop words. Return list of str lists (sdt for gensim)
+        where each str list is a sentence and each text is a list of these lists."""
     sents = sent_tokenize(text)
     return iter([list(tokenize(s, lang)) for s in sents])
 
