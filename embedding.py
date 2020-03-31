@@ -6,20 +6,17 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-import text_process as tp
 
-
-def train(corpus, lang, save_path,
-          size=100, window=5, min_count=100, workers=4,
+def train(corpus, save_path,
+          size=300, window=5, min_count=10, workers=4,
           epochs=5, max_vocab_size=None):
     """
     Train w2v.
-    :param data_path: str, json file path
+    :param corpus: list of list strings
     :param save_path: Model file path
     :return: trained model
     """
-    texts = tp.text2gensim(corpus, lang)
-    texts, texts_build, texts_l = tee(texts, 3)
+    texts, texts_build, texts_l = tee(corpus, 3)
     total_examples = len(list(texts_l))
 
     if not os.path.exists(save_path):
