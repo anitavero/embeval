@@ -8,7 +8,7 @@ import argh
 import json
 from tqdm import tqdm
 from collections import Counter
-from text_process import tokenize
+from text_process import text2gensim
 from utils import create_dir, read_jl
 from matplotlib import pyplot as plt
 
@@ -16,8 +16,9 @@ from matplotlib import pyplot as plt
 LANG = 'english'
 
 
-def tokenize_files(data_dir):
-    """Tokenize all json files and save the tokenized texts to text files into the 'tokenized' directory."""
+def process_files(data_dir):
+    """Sentence tokenize and stop word filter all text files
+    and save the tokenized texts to json files into the 'tokenized' directory."""
     save_dir = os.path.join(data_dir, 'tokenized')
     create_dir(save_dir)
     # create the same directory structure
@@ -32,10 +33,10 @@ def tokenize_files(data_dir):
     for fl in tqdm(files):
         data = read_jl(fl)
         texts = ' '.join([l['text'] for l in data])
-        tokens = list(tokenize(texts, LANG))
+        sent_lists = list(text2gensim(texts, LANG))
         subd, fn = fl.split('/')[-2:]
-        with open(os.path.join(save_dir, subd, fn + '.txt'), 'w') as f:
-            f.write(' '.join(tokens))
+        with open(os.path.join(save_dir, subd, fn + '.json'), 'w') as f:
+            json.dump(sent_lists, f)
 
 
 def distribution(data_dir):
@@ -62,4 +63,4 @@ def plot_distribution(data_dir, logscale=True):
 
 
 if __name__ == '__main__':
-    argh.dispatch_commands([distribution, tokenize_files])
+    argh.dispatch_commands([distribution, process_files])
