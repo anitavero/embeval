@@ -5,12 +5,16 @@
 import os
 from glob import glob
 import argh
+from argh import arg
 import json
 from tqdm import tqdm
 from collections import Counter
+from matplotlib import pyplot as plt
+import random
+
 from text_process import text2gensim
 from utils import create_dir, read_jl
-from matplotlib import pyplot as plt
+import embedding
 
 
 LANG = 'english'
@@ -62,5 +66,31 @@ def plot_distribution(data_dir, logscale=True):
     plt.show()
 
 
+@arg('num', type=int)
+def w2v_for_quantity(data_dir, save_dir, num, size=300, window=5, min_count=10, workers=4,
+                    epochs=5, max_vocab_size=None):
+    """Train Word2Vec on a random number of tokenized json files.
+    :param data_dir: 'tokenized' directory with subdirectories of jsons."""
+    files = glob(os.path.join(data_dir, '*/wiki*json'))
+    tr_files = random.sample(files, num)
+    # Save training file paths
+    with open(os.path.join(save_dir, f'train_files_{num}.txt'), 'w') as f:
+        f.write('\n'.join(tr_files))
+    # Read files, merge content
+    corpus = []
+    for fn in tr_files:
+        with open(fn) as f:
+            corpus += json.load(f)
+    # Training Word2Vec
+    print('Training')
+    embedding.train(corpus, os.path.join(save_dir, f'model_{num}'),
+                    size=size, window=window, min_count=min_count, workers=workers,
+                    epochs=epochs, max_vocab_size=max_vocab_size)
+
+
+def w2v_for_freqrange():
+    pass
+
+
 if __name__ == '__main__':
-    argh.dispatch_commands([distribution, process_files])
+    argh.dispatch_commands([distribution, process_files, w2v_for_quantity, w2v_for_freqrange])

@@ -1,6 +1,5 @@
 import os
 from gensim.models import Word2Vec
-import argh
 from itertools import tee
 import logging
 
