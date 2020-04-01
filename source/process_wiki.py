@@ -74,7 +74,7 @@ def w2v_for_quantity(data_dir, save_dir, num, size=300, window=5, min_count=10, 
     files = glob(os.path.join(data_dir, '*/wiki*json'))
     tr_files = random.sample(files, num)
     # Save training file paths
-    with open(os.path.join(save_dir, f'train_files_{num}.txt'), 'w') as f:
+    with open(os.path.join(save_dir, f'train_files_n{num}_{filename_suffix}.txt'), 'w') as f:
         f.write('\n'.join(tr_files))
     # Read files, merge content
     corpus = []
