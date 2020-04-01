@@ -68,7 +68,7 @@ def plot_distribution(data_dir, logscale=True):
 
 @arg('num', type=int)
 def w2v_for_quantity(data_dir, save_dir, num, size=300, window=5, min_count=10, workers=4,
-                    epochs=5, max_vocab_size=None):
+                    epochs=5, max_vocab_size=None, filename_suffix=''):
     """Train Word2Vec on a random number of tokenized json files.
     :param data_dir: 'tokenized' directory with subdirectories of jsons."""
     files = glob(os.path.join(data_dir, '*/wiki*json'))
@@ -83,9 +83,15 @@ def w2v_for_quantity(data_dir, save_dir, num, size=300, window=5, min_count=10, 
             corpus += json.load(f)
     # Training Word2Vec
     print('Training')
-    embedding.train(corpus, os.path.join(save_dir, f'model_{num}'),
+    embedding.train(corpus, os.path.join(save_dir, f'model_n{num}_{filename_suffix}'),
                     size=size, window=window, min_count=min_count, workers=workers,
                     epochs=epochs, max_vocab_size=max_vocab_size)
+
+
+def w2v_for_quantities(data_dir, save_dir, num, size=300, window=5, min_count=10, workers=4,
+                       epochs=5, max_vocab_size=None):
+    """Train several Word2Vecs in parallel for the same data quantity, multiple times on random subsets."""
+    pass
 
 
 def w2v_for_freqrange():
