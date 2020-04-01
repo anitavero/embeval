@@ -72,8 +72,10 @@ def w2v_for_quantity(data_dir, save_dir, num, size=300, window=5, min_count=10, 
     """Train Word2Vec on a random number of tokenized json files.
     :param data_dir: 'tokenized' directory with subdirectories of jsons."""
     files = glob(os.path.join(data_dir, '*/wiki*json'))
-    if num > 0:     # otherwise we train on the whole corpus
+    if num > 0:
         tr_files = random.sample(files, num)
+    else:   # otherwise we train on the whole corpus
+        tr_files = files
     # Save training file paths
     with open(os.path.join(save_dir, f'train_files_n{num}_{filename_suffix}.txt'), 'w') as f:
         f.write('\n'.join(tr_files))
