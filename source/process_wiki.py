@@ -82,16 +82,19 @@ def w2v_for_quantity(data_dir, save_dir, num, size=300, window=5, min_count=10, 
         with open(fn) as f:
             corpus += json.load(f)
     # Training Word2Vec
-    print('Training')
     embedding.train(corpus, os.path.join(save_dir, f'model_n{num}_{filename_suffix}'),
                     size=size, window=window, min_count=min_count, workers=workers,
                     epochs=epochs, max_vocab_size=max_vocab_size)
 
 
-def w2v_for_quantities(data_dir, save_dir, num, size=300, window=5, min_count=10, workers=4,
+@arg('num', type=int)
+@arg('sample-num', type=int)
+def w2v_for_quantities(data_dir, save_dir, sample_num, num, size=300, window=5, min_count=10, workers=4,
                        epochs=5, max_vocab_size=None):
     """Train several Word2Vecs in parallel for the same data quantity, multiple times on random subsets."""
-    pass
+    for i in tqdm(range(sample_num)):
+        w2v_for_quantity(data_dir, save_dir, num, size, window, min_count, workers,
+                         epochs, max_vocab_size, filename_suffix=str(i))
 
 
 def w2v_for_freqrange():
@@ -99,4 +102,5 @@ def w2v_for_freqrange():
 
 
 if __name__ == '__main__':
-    argh.dispatch_commands([distribution, process_files, w2v_for_quantity, w2v_for_freqrange])
+    argh.dispatch_commands([distribution, process_files, w2v_for_quantity, w2v_for_freqrange,
+                            w2v_for_quantities])
