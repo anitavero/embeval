@@ -12,6 +12,7 @@ class EpochLogger(CallbackAny2Vec):
 
     def __init__(self):
         self.epoch = 0
+        print('\n')
 
     def on_epoch_begin(self, model):
         print("Epoch #{} start".format(self.epoch))
@@ -38,8 +39,7 @@ def train(corpus, save_path, load_path=None,
 
     if not os.path.exists(save_path) and load_path is None:
         model = Word2Vec(texts_build, size=size, window=window, min_count=min_count, workers=workers,
-                         max_vocab_size=max_vocab_size, compute_loss=True, iter=epochs,
-                         callbacks=[epoch_logger])
+                         max_vocab_size=max_vocab_size, compute_loss=True, iter=epochs)
     else:
         if load_path is None:
             load_path = save_path
@@ -48,7 +48,7 @@ def train(corpus, save_path, load_path=None,
         model.build_vocab(texts_build, update=True)
         logger.debug('Updates vocab, new size: {}'.format(len(model.wv.vocab)))
 
-    model.train(texts, total_examples=total_examples, epochs=epochs)
+    model.train(texts, total_examples=total_examples, epochs=epochs, callbacks=[epoch_logger])
 
     print('Saving model...')
     model.save(save_path)
