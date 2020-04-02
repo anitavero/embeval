@@ -22,7 +22,7 @@ class EpochLogger(CallbackAny2Vec):
         self.epoch += 1
 
 
-def train(corpus, save_path,
+def train(corpus, save_path, load_path=None,
           size=300, window=5, min_count=10, workers=4,
           epochs=5, max_vocab_size=None):
     """
@@ -36,13 +36,15 @@ def train(corpus, save_path,
 
     epoch_logger = EpochLogger()
 
-    if not os.path.exists(save_path):
+    if not os.path.exists(save_path) and load_path is None:
         model = Word2Vec(texts_build, size=size, window=window, min_count=min_count, workers=workers,
                          max_vocab_size=max_vocab_size, compute_loss=True, iter=epochs,
                          callbacks=[epoch_logger])
     else:
-        print('Loading previous model with the same name...')
-        model = Word2Vec.load(save_path)
+        if load_path is None:
+            load_path = save_path
+        print(f'Loading model {load_path}...')
+        model = Word2Vec.load(load_path)
         model.build_vocab(texts_build, update=True)
         logger.debug('Updates vocab, new size: {}'.format(len(model.wv.vocab)))
 
