@@ -39,7 +39,7 @@ def train(corpus, save_path, load_path=None,
 
     if not os.path.exists(save_path) and load_path is None:
         model = Word2Vec(texts_build, size=size, window=window, min_count=min_count, workers=workers,
-                         max_vocab_size=max_vocab_size, compute_loss=False, iter=epochs, hs=0, sg=1)
+                         max_vocab_size=max_vocab_size, compute_loss=False, hs=0, sg=1)
     else:
         if load_path is None:
             load_path = save_path
