@@ -71,6 +71,7 @@ def w2v_for_quantity(data_dir, save_dir, num, size=300, window=5, min_count=10, 
                     epochs=5, max_vocab_size=None, filename_suffix='', load_path=None):
     """Train Word2Vec on a random number of tokenized json files.
     :param data_dir: 'tokenized' directory with subdirectories of jsons."""
+    print('\nLoading corpus')
     files = glob(os.path.join(data_dir, '*/wiki*json'))
     if num > 0:
         tr_files = random.sample(files, num)
@@ -85,6 +86,7 @@ def w2v_for_quantity(data_dir, save_dir, num, size=300, window=5, min_count=10, 
         with open(fn) as f:
             corpus += json.load(f)
     # Training Word2Vec
+    print('Training')
     embedding.train(corpus, os.path.join(save_dir, f'model_n{num}_{filename_suffix}'), load_path,
                     size=size, window=window, min_count=min_count, workers=workers,
                     epochs=epochs, max_vocab_size=max_vocab_size)
