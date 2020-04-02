@@ -90,19 +90,19 @@ def w2v_for_quantity(data_dir, save_dir, num, size=300, window=5, min_count=10, 
                     epochs=epochs, max_vocab_size=max_vocab_size)
 
 
-@arg('num', type=int)
+@arg('trfile-num', type=int)
 @arg('sample-num', type=int)
-def w2v_for_quantities(data_dir, save_dir, sample_num, num, size=300, window=5, min_count=10, workers=4,
+def w2v_for_quantities(data_dir, save_dir, sample_num, trfile_num, size=300, window=5, min_count=10, workers=4,
                        epochs=5, max_vocab_size=None):
     """Train several Word2Vecs in parallel for the same data quantity, multiple times on random subsets.
     :param data_dir: 'tokenized' directory with subdirectories of jsons.
     :param save_dir: directory where we save the model and log files.
     :param sample_num: number of random trainings for the same number of files.
-    :param num: number of sampled files. If num <= 0 we train on the whole corpus.
+    :param trfile_num: number of sampled training files. If num <= 0 we train on the whole corpus.
     Rest are Word2Vec training parameters.
     """
     for i in tqdm(range(sample_num)):
-        w2v_for_quantity(data_dir, save_dir, num, size, window, min_count, workers,
+        w2v_for_quantity(data_dir, save_dir, trfile_num, size, window, min_count, workers,
                          epochs, max_vocab_size, filename_suffix=str(i))
 
 
