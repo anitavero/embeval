@@ -180,7 +180,7 @@ class Embeddings:
             else:
                 model = Word2Vec.load(path)
                 vecs = model.wv.vectors
-                vvocab = model.wv.vocab
+                vvocab = np.array(list(model.wv.vocab.keys()))
         except:
             print(f'Cannot load {path} gensim Word2Vec model or .npy and .vocab files.')
             return
