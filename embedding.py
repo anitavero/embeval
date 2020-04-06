@@ -48,7 +48,7 @@ class LossLogger(CallbackAny2Vec):
 
 def train(corpus, save_path, load_path=None,
           size=300, window=5, min_count=10, workers=4,
-          epochs=5, max_vocab_size=None, show_loss=False):
+          epochs=5, max_vocab_size=None, show_loss=False, save_loss=False):
     """
     Train w2v.
     :param corpus: list of list strings
@@ -75,8 +75,9 @@ def train(corpus, save_path, load_path=None,
 
     print('Saving model')
     model.save(save_path)
-    plt.savefig(save_path + '_losscurve.png')
-    with open(save_path + '_losscurve.json', 'w') as f:
-        json.dump(loss_logger.batch_losses, f)
+    if save_loss:
+        plt.savefig(save_path + '_losscurve.png')
+        with open(save_path + '_losscurve.json', 'w') as f:
+            json.dump(loss_logger.batch_losses, f)
 
     return model

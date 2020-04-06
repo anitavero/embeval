@@ -68,7 +68,8 @@ def plot_distribution(data_dir, logscale=True):
 
 @arg('num', type=int)
 def w2v_for_quantity(data_dir, save_dir, num, size=300, window=5, min_count=10, workers=4,
-                    epochs=5, max_vocab_size=None, filename_suffix='', load_path=None, show_loss=False):
+                     epochs=5, max_vocab_size=None, filename_suffix='', load_path=None, show_loss=False,
+                     save_loss=False):
     """Train Word2Vec on a random number of tokenized json files.
     :param data_dir: 'tokenized' directory with subdirectories of jsons."""
     print('\nLoading corpus')
@@ -89,13 +90,13 @@ def w2v_for_quantity(data_dir, save_dir, num, size=300, window=5, min_count=10, 
     print('Training')
     embedding.train(corpus, os.path.join(save_dir, f'model_n{num}_{filename_suffix}'), load_path,
                     size=size, window=window, min_count=min_count, workers=workers,
-                    epochs=epochs, max_vocab_size=max_vocab_size, show_loss=show_loss)
+                    epochs=epochs, max_vocab_size=max_vocab_size, show_loss=show_loss, save_loss=save_loss)
 
 
 @arg('trfile-num', type=int)
 @arg('sample-num', type=int)
 def w2v_for_quantities(data_dir, save_dir, sample_num, trfile_num, size=300, window=5, min_count=10, workers=4,
-                       epochs=5, max_vocab_size=None, show_loss=False):
+                       epochs=5, max_vocab_size=None, show_loss=False, save_loss=False):
     """Train several Word2Vecs in parallel for the same data quantity, multiple times on random subsets.
     :param data_dir: 'tokenized' directory with subdirectories of jsons.
     :param save_dir: directory where we save the model and log files.
@@ -105,7 +106,8 @@ def w2v_for_quantities(data_dir, save_dir, sample_num, trfile_num, size=300, win
     """
     for i in tqdm(range(sample_num)):
         w2v_for_quantity(data_dir, save_dir, trfile_num, size, window, min_count, workers,
-                         epochs, max_vocab_size, filename_suffix=str(i), load_path=None, show_loss=show_loss)
+                         epochs, max_vocab_size, filename_suffix=str(i), load_path=None, show_loss=show_loss,
+                         save_loss=save_loss)
 
 
 def w2v_for_freqrange():
