@@ -4,6 +4,7 @@ import numpy as np
 from sklearn.metrics.pairwise import cosine_distances, cosine_similarity
 from scipy.stats import spearmanr
 from nltk.corpus import wordnet as wn
+from gensim.models import Word2Vec
 import spacy
 from tqdm import tqdm
 import json
@@ -143,6 +144,8 @@ class Embeddings:
                 return f'VG-{context}'
             elif 'vecs' in nm:
                 return 'VG SceneGraph'
+            elif 'model' in nm:
+                return nm
             elif nm not in Embeddings.fasttext_vss.keys():
                 data, cnn = nm.split('_')
                 return f'{data.capitalize()} {cnn_format[cnn]}'
@@ -167,9 +170,20 @@ class Embeddings:
         return np.array(fasttext_vecs), np.array(fasttext_vocab)
 
     def load_vecs(self, vecs_name: str, datadir: str, filter_vocab=[]):
-        vecs = np.load(datadir + f'/{vecs_name}.npy')
-        vvocab = open(datadir + f'/{vecs_name}.vocab').read().split()
-        vvocab = np.array(vvocab)
+        """Load npy vector files and vocab files. If they are not present load try loading gensim model."""
+        path = datadir + f'/{vecs_name}'
+        try:
+            if os.path.exists(path + '.vocab'):
+                vecs = np.load(path + '.npy')
+                vvocab = open(path + '.vocab').read().split()
+                vvocab = np.array(vvocab)
+            else:
+                model = Word2Vec.load(path)
+                vecs = model.wv.vectors
+                vvocab = model.wv.vocab
+        except:
+            print(f'Cannot load {path} gensim Word2Vec model or .npy and .vocab files.')
+            return
         if filter_vocab:
             vecs, vvocab = filter_by_vocab(vecs, vvocab, filter_vocab)
         return vecs, vvocab
@@ -810,19 +824,21 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
         vocabs = embeddings.vocabs
         names = embeddings.vecs_names
 
-        if mm_lingvis:  # TODO: test
-            mm_labels = list(product(ling_vecs_names, vecs_names))
-            emb_tuples = [(embs[names.index(ln)], embs[names.index(vn)]) for ln, vn in mm_labels]
-            vocab_tuples = [(vocabs[names.index(ln)], vocabs[names.index(vn)]) for ln, vn in mm_labels]
-        elif mm_embs_of:  # Create MM Embeddings based on the given embedding labels
-            emb_tuples = [tuple(embs[names.index(l)] for l in t) for t in mm_embs_of]
-            vocab_tuples = [tuple(vocabs[names.index(l)] for l in t) for t in mm_embs_of]
-            mm_labels = [tuple(l for l in t) for t in mm_embs_of]
+        # Create multi-modal embeddings if ligvis or specific embedding pairs are given
+        if mm_lingvis or mm_embs_of:
+            if mm_lingvis:  # TODO: test
+                mm_labels = list(product(ling_vecs_names, vecs_names))
+                emb_tuples = [(embs[names.index(ln)], embs[names.index(vn)]) for ln, vn in mm_labels]
+                vocab_tuples = [(vocabs[names.index(ln)], vocabs[names.index(vn)]) for ln, vn in mm_labels]
+            elif mm_embs_of:  # Create MM Embeddings based on the given embedding labels
+                emb_tuples = [tuple(embs[names.index(l)] for l in t) for t in mm_embs_of]
+                vocab_tuples = [tuple(vocabs[names.index(l)] for l in t) for t in mm_embs_of]
+                mm_labels = [tuple(l for l in t) for t in mm_embs_of]
 
-        mm_embeddings, mm_vocabs, mm_labels = mid_fusion(emb_tuples, vocab_tuples, mm_labels, mm_padding)
-        embs += mm_embeddings
-        vocabs += mm_vocabs
-        names += mm_labels
+            mm_embeddings, mm_vocabs, mm_labels = mid_fusion(emb_tuples, vocab_tuples, mm_labels, mm_padding)
+            embs += mm_embeddings
+            vocabs += mm_vocabs
+            names += mm_labels
 
         if 'compscores' in actions:  # SemSim scores
             for name, dataset in datasets.datasets.items():
