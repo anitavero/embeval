@@ -798,8 +798,9 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
             score_file = f'{loadpath}_{name}.npy'
             if os.path.exists(score_file):
                 scores[name] = np.load(f'{loadpath}_{name}.npy', allow_pickle=True)
-        with open(f'{loadpath}_brain.json', 'r') as f:
-            brain_scores = json.load(f)
+        if os.path.exists(f'{loadpath}_brain.json'):
+            with open(f'{loadpath}_brain.json', 'r') as f:
+                brain_scores = json.load(f)
 
         # For printing tables
         if 'nopadding' in loadpath:

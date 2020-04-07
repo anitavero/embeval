@@ -2,7 +2,7 @@ import task_eval
 import argh
 
 
-def main(action):
+def main(action, tablefmt='simple'):
     ######## Test #######
     datadir = '/Users/anitavero/projects/data'
     embdir = '/Users/anitavero/projects/data/wikidump/models/'
@@ -13,7 +13,7 @@ def main(action):
         task_eval.main(datadir, actions=['printcorr'],
                        loadpath=embdir + 'quantity',
                        print_corr_for='gt',
-                       tablefmt='simple')
+                       tablefmt=tablefmt)
     ######## END Test #######
 
 
