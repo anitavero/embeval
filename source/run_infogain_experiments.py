@@ -2,7 +2,6 @@ import os
 import task_eval
 import argh
 from glob import glob
-import re
 
 
 def main(exp_name):

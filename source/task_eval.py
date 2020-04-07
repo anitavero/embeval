@@ -182,7 +182,7 @@ class Embeddings:
                 vecs = model.wv.vectors
                 vvocab = np.array(list(model.wv.vocab.keys()))
         except:
-            print(f'Cannot load {path} gensim Word2Vec model or .npy and .vocab files.')
+            print(sys.exc_info()[0])
             return
         if filter_vocab:
             vecs, vvocab = filter_by_vocab(vecs, vvocab, filter_vocab)
