@@ -3,7 +3,6 @@ import argh
 
 
 def main(action, tablefmt='simple'):
-    ######## Test #######
     datadir = '/Users/anitavero/projects/data'
     embdir = '/Users/anitavero/projects/data/wikidump/models/'
     savedir = embdir
@@ -14,7 +13,6 @@ def main(action, tablefmt='simple'):
                        loadpath=embdir + 'quantity',
                        print_corr_for='gt',
                        tablefmt=tablefmt)
-    ######## END Test #######
 
 
 if __name__ == '__main__':
