@@ -1,6 +1,8 @@
+import os
 import task_eval
 import argh
 from glob import glob
+import re
 
 
 def main(exp_name):
@@ -9,9 +11,12 @@ def main(exp_name):
     # embdir = '/Users/anitavero/projects/data/wikidump/models/'
     # savedir = embdir
     #
+    # quantity_models = glob(embdir + '*model*')
+    # quantity_models = [os.path.split(m)[1] for m in quantity_models if '.' not in m]
+    #
     # if exp_name == 'quantity':
     #     task_eval.main(datadir, actions=['compscores'], embdir=embdir,
-    #                    vecs_names=['model_n-1_0'],
+    #                    vecs_names=quantity_models,
     #                    ling_vecs_names=[],
     #                    mm_lingvis=False,
     #                    mm_padding=False,
@@ -23,7 +28,8 @@ def main(exp_name):
     savedir = embdir + '/results/infogain/'
 
     if exp_name == 'quantity':
-        quantity_models = []
+        quantity_models = glob(embdir + '*model*')
+        quantity_models = [os.path.split(m)[1] for m in quantity_models if '.' not in m]
 
         task_eval.main(datadir, actions=['compscores'], embdir=embdir,
                        vecs_names=quantity_models,
