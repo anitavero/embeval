@@ -32,8 +32,8 @@ def main(exp_name):
 
         task_eval.main(datadir, actions=['compscores'], embdir=embdir,
                        vecs_names=quantity_models,
-                       ling_vecs_names=None,
-                       mm_lingvis=True,
+                       ling_vecs_names=[],
+                       mm_lingvis=False,
                        mm_padding=False,
                        savepath=savedir + exp_name)
 
