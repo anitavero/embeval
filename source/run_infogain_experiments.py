@@ -6,14 +6,14 @@ from glob import glob
 
 def main(exp_name):
     ######## Test #######
-    # datadir = '/Users/anitavero/projects/data'
-    # embdir = '/Users/anitavero/projects/data/wikidump/models/'
-    # savedir = embdir
+    datadir = '/Users/anitavero/projects/data'
+    embdir = '/Users/anitavero/projects/data/wikidump/models/'
+    savedir = embdir
     ######## END Test #######
 
-    datadir = '/local/filespace/alv34/Datasets/'
-    embdir = '/local/filespace/alv34/embeval/'
-    savedir = embdir + '/results/infogain/'
+    # datadir = '/local/filespace/alv34/Datasets/'
+    # embdir = '/local/filespace/alv34/embeval/'
+    # savedir = embdir + '/results/infogain/'
 
     if exp_name == 'quantity':
         quantity_models = glob(embdir + '*model*')

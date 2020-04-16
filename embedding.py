@@ -56,13 +56,11 @@ def train(corpus, save_path, load_path=None,
     :return: trained model
     """
     texts, texts_build, texts_l = tee(corpus, 3)
-    total_examples = len(list(texts_l))
-
     loss_logger = LossLogger(show_loss)  # TODO: loss curve looks weird with multiple workers
 
     if not os.path.exists(save_path) and load_path is None:
         model = Word2Vec(texts_build, size=size, window=window, min_count=min_count, workers=workers,
-                         max_vocab_size=max_vocab_size, compute_loss=False, hs=0, sg=1)
+                         max_vocab_size=max_vocab_size, compute_loss=False, hs=0, sg=1, iter=epochs)
     else:
         if load_path is None:
             load_path = save_path
@@ -71,7 +69,7 @@ def train(corpus, save_path, load_path=None,
         model.build_vocab(texts_build, update=True)
         logger.debug('Updates vocab, new size: {}'.format(len(model.wv.vocab)))
 
-    model.train(texts, total_examples=total_examples, epochs=epochs, callbacks=[loss_logger], compute_loss=True)
+    model.train(texts, total_examples=model.corpus_count, epochs=model.iter, callbacks=[loss_logger], compute_loss=True)
 
     print('Saving model')
     model.save(save_path)
