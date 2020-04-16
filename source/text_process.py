@@ -3,7 +3,6 @@ from nltk.corpus import stopwords
 from nltk.tokenize import sent_tokenize
 from unidecode import unidecode
 import string
-from tqdm import tqdm
 
 
 hun_stopwords = stopwords.words('hungarian') + \
@@ -42,7 +41,7 @@ def hapax_legomena(text):
     return [w for w, c in cnt.most_common() if c == 1]
 
 
-def text2w2vf(text, lang):
+def text2w2vf(text, lang='english'):
     """Prepare contexts word2vecf:
         :return training_pairs:
                    textual file of word-context pairs.
@@ -51,7 +50,10 @@ def text2w2vf(text, lang):
                    The context is all non stop words in the same sentence.
     """
     training_pairs = ''
-    sents = text2gensim(text, lang)
+    if type(text) == str:   # raw text
+        sents = text2gensim(text, lang)
+    elif type(text) == list:    # Already in list of str list format
+        sents = text
     for s in sents:
         for w in s:
             for c in s:

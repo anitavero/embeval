@@ -12,7 +12,7 @@ from collections import Counter
 from matplotlib import pyplot as plt
 import random
 
-from text_process import text2gensim
+from text_process import text2gensim, text2w2vf
 from utils import create_dir, read_jl
 import embedding
 
@@ -43,6 +43,21 @@ def process_files(data_dir):
             json.dump(sent_lists, f)
 
 
+@arg('trfile_num', type=int)
+def context_pairs_for_quantity(data_dir, save_dir, trfile_num, filename_suffix=''):
+    """Prepare context files for word2vecf:
+        :return training_pairs:
+                   textual file of word-context pairs.
+                   each pair takes a separate line.
+                   the format of a pair is "<word> <context>", i.e. space delimited, where <word> and <context> are strings.
+                   The context is all non stop words in the same sentence.
+    """
+    corpus = corpus_for_quantity(data_dir, save_dir, trfile_num, filename_suffix)
+    context_pairs = text2w2vf(corpus)
+    with open(os.path.join(save_dir, f'context_pairs_n{trfile_num}_{filename_suffix}.txt'), 'w') as f:
+        f.write(context_pairs)
+
+
 def distribution(data_dir):
     """Count word frequencies from text files."""
     counter = Counter()
@@ -66,12 +81,7 @@ def plot_distribution(data_dir, logscale=True):
     plt.show()
 
 
-@arg('num', type=int)
-def w2v_for_quantity(data_dir, save_dir, num, size=300, window=5, min_count=10, workers=4,
-                     epochs=5, max_vocab_size=None, filename_suffix='', load_path=None, show_loss=False,
-                     save_loss=False):
-    """Train Word2Vec on a random number of tokenized json files.
-    :param data_dir: 'tokenized' directory with subdirectories of jsons."""
+def corpus_for_quantity(data_dir, save_dir, num, filename_suffix=''):
     print('\nLoading corpus')
     files = glob(os.path.join(data_dir, '*/wiki*json'))
     if num > 0:
@@ -86,6 +96,16 @@ def w2v_for_quantity(data_dir, save_dir, num, size=300, window=5, min_count=10, 
     for fn in tr_files:
         with open(fn) as f:
             corpus += json.load(f)
+    return corpus
+
+
+@arg('num', type=int)
+def w2v_for_quantity(data_dir, save_dir, num, size=300, window=5, min_count=10, workers=4,
+                     epochs=5, max_vocab_size=None, filename_suffix='', load_path=None, show_loss=False,
+                     save_loss=False):
+    """Train Word2Vec on a random number of tokenized json files.
+    :param data_dir: 'tokenized' directory with subdirectories of jsons."""
+    corpus = corpus_for_quantity(data_dir, save_dir, num, filename_suffix)
     # Training Word2Vec
     print('Training')
     embedding.train(corpus, os.path.join(save_dir, f'model_n{num}_{filename_suffix}'), load_path,
@@ -116,4 +136,4 @@ def w2v_for_freqrange():
 
 if __name__ == '__main__':
     argh.dispatch_commands([distribution, process_files, w2v_for_quantity, w2v_for_freqrange,
-                            w2v_for_quantities])
+                            w2v_for_quantities, context_pairs_for_quantity])
