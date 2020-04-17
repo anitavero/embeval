@@ -14,8 +14,7 @@ import random
 
 from text_process import text2gensim, text2w2vf
 from utils import create_dir, read_jl
-import embedding
-
+from source import embedding
 
 LANG = 'english'
 
