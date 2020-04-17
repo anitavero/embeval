@@ -62,7 +62,6 @@ def train(corpus, save_dir, w2v_dir, filename_suffix='', min_count=10, size=300,
          '-dumpcv', contextvecs],
         stdout=subprocess.PIPE)
     print(output.stdout.decode('utf-8'))
-    print(output.stderr.decode('utf-8'))
     with open(os.path.join(save_dir, f'trainlog{filename_suffix}.log'), 'a') as f:
         f.write('\nTrain:\n')
         f.write(output.stdout.decode('utf-8'))
