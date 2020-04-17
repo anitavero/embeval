@@ -7,21 +7,28 @@ Script to create `vecs.npy` and `vecs.vocab` from files with the following forma
 """
 
 import numpy as np
-import sys
+import argh
 
-fh = open(sys.argv[1])    # input file
-foutname = sys.argv[2]  # output file path
-first = fh.readline()
-size = list(map(int, first.strip().split()))
 
-wvecs = np.zeros((size[0], size[1]), float)
+def main(input_file, output_file):
+    fh = open(input_file, 'r', errors='replace')    # input file  TODO: try better encoding
+    foutname = output_file  # output file path
+    first = fh.readline()
+    size = list(map(int, first.strip().split()))
 
-vocab = []
-for i, line in enumerate(fh):
-    line = line.strip().split()
-    vocab.append(line[0])
-    wvecs[i, ] = np.array(list(map(float, line[1:])))
+    wvecs = np.zeros((size[0], size[1]), float)
 
-np.save(foutname + ".npy", wvecs)
-with open(foutname + ".vocab", "w") as outf:
-   outf.write(" ".join(vocab))
+    vocab = []
+    for i in range(size[0]):
+        ln = fh.readline()
+        line = ln.strip().split()
+        vocab.append(line[0])
+        wvecs[i, ] = np.array(list(map(float, line[1:])))
+
+    np.save(foutname + ".npy", wvecs)
+    with open(foutname + ".vocab", "w") as outf:
+       outf.write(" ".join(vocab))
+
+
+if __name__ == '__main__':
+    argh.dispatch_command(main)

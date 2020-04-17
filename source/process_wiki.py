@@ -14,7 +14,7 @@ import random
 
 from text_process import text2gensim, text2w2vf
 from utils import create_dir, read_jl
-from source import embedding
+import train_word2vecf
 
 LANG = 'english'
 
@@ -81,6 +81,7 @@ def plot_distribution(data_dir, logscale=True):
 
 
 def corpus_for_quantity(data_dir, save_dir, num, filename_suffix=''):
+    """Loads randomly chosen, given number of corpus files."""
     print('\nLoading corpus')
     files = glob(os.path.join(data_dir, '*/wiki*json'))
     if num > 0:
@@ -99,23 +100,21 @@ def corpus_for_quantity(data_dir, save_dir, num, filename_suffix=''):
 
 
 @arg('num', type=int)
-def w2v_for_quantity(data_dir, save_dir, num, size=300, window=5, min_count=10, workers=4,
-                     epochs=5, max_vocab_size=None, filename_suffix='', load_path=None, show_loss=False,
-                     save_loss=False):
+def w2v_for_quantity(data_dir, save_dir, w2v_dir, num, size=300, min_count=10, workers=4,
+                    negative=15, filename_suffix=''):
     """Train Word2Vec on a random number of tokenized json files.
     :param data_dir: 'tokenized' directory with subdirectories of jsons."""
     corpus = corpus_for_quantity(data_dir, save_dir, num, filename_suffix)
     # Training Word2Vec
     print('Training')
-    embedding.train(corpus, os.path.join(save_dir, f'model_n{num}_{filename_suffix}'), load_path,
-                    size=size, window=window, min_count=min_count, workers=workers,
-                    epochs=epochs, max_vocab_size=max_vocab_size, show_loss=show_loss, save_loss=save_loss)
+    train_word2vecf.train(corpus, save_dir, w2v_dir, filename_suffix=f'_n{num}_{filename_suffix}',
+                          min_count=min_count, size=size, negative=negative, threads=workers)
 
 
 @arg('trfile-num', type=int)
 @arg('sample-num', type=int)
-def w2v_for_quantities(data_dir, save_dir, sample_num, trfile_num, size=300, window=5, min_count=10, workers=4,
-                       epochs=5, max_vocab_size=None, show_loss=False, save_loss=False):
+def w2v_for_quantities(data_dir, save_dir, w2v_dir, sample_num, trfile_num, size=300, min_count=10, workers=4,
+                       negative=15):
     """Train several Word2Vecs in parallel for the same data quantity, multiple times on random subsets.
     :param data_dir: 'tokenized' directory with subdirectories of jsons.
     :param save_dir: directory where we save the model and log files.
@@ -124,9 +123,8 @@ def w2v_for_quantities(data_dir, save_dir, sample_num, trfile_num, size=300, win
     Rest are Word2Vec training parameters.
     """
     for i in tqdm(range(sample_num)):
-        w2v_for_quantity(data_dir, save_dir, trfile_num, size, window, min_count, workers,
-                         epochs, max_vocab_size, filename_suffix=str(i), load_path=None, show_loss=show_loss,
-                         save_loss=save_loss)
+        w2v_for_quantity(data_dir, save_dir, w2v_dir, trfile_num, size, min_count, workers,
+                         negative, filename_suffix=f's{i}')
 
 
 def w2v_for_freqrange():
