@@ -16,8 +16,8 @@ def main(exp_name):
     # savedir = embdir + '/results/infogain/'
 
     if exp_name == 'quantity':
-        quantity_models = glob(embdir + '*model*')
-        quantity_models = [os.path.split(m)[1] for m in quantity_models if '.' not in m]
+        quantity_models = glob(embdir + '*model*npy*')
+        quantity_models = [os.path.split(m)[1].split('.')[0] for m in quantity_models]
 
         task_eval.main(datadir, actions=['compscores'], embdir=embdir,
                        vecs_names=quantity_models,
