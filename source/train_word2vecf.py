@@ -47,7 +47,7 @@ def train(corpus, save_dir, w2v_dir, filename_suffix='', min_count=10, size=300,
     wv = os.path.join(save_dir, f'wv_{filename_suffix}')
     output = subprocess.run(
         [f'{w2v_dir}/count_and_filter', '-train', contexts_file, '-cvocab', cv, '-wvocab', wv, '-min-count', str(min_count)],
-        capture_output=True)
+        stdout=subprocess.PIPE)
     print(output.stdout.decode('utf-8'))
     with open(os.path.join(save_dir, f'trainlog{filename_suffix}.log'), 'w') as f:
         f.write(output.stdout.decode('utf-8'))
@@ -60,7 +60,7 @@ def train(corpus, save_dir, w2v_dir, filename_suffix='', min_count=10, size=300,
         [f'{w2v_dir}/word2vecf', '-train', contexts_file, '-cvocab', cv, '-wvocab', wv,
          '-output', modelfn, '-size', str(size), '-negative', str(negative), '-threads', str(threads),
          '-dumpcv', contextvecs],
-        capture_output=True)
+        stdout=subprocess.PIPE)
     print(output.stdout.decode('utf-8'))
     print(output.stderr.decode('utf-8'))
     with open(os.path.join(save_dir, f'trainlog{filename_suffix}.log'), 'a') as f:
