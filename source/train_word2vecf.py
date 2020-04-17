@@ -32,7 +32,7 @@ def train(corpus, save_dir, w2v_dir, filename_suffix='', min_count=10, size=300,
 
             ./myword2vec/word2vecf -train dep.contexts -wvocab wv -cvocab cv -output dim200vecs -size 200 -negative 15 -threads 10 -dumpcv dim200context-vecs
 
-        4. convert the embeddins to numpy-readable format.
+        4. convert the embeddings to numpy-readable format.
     """
     # 1. Create input data, which is in the form of (word,context) pairs.
     print('Create context pairs')
