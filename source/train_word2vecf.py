@@ -7,7 +7,7 @@ import vecs2nps
 
 
 def train(corpus, save_dir, w2v_dir, filename_suffix='', min_count=10, size=300, negative=15,
-          threads=4):
+          threads=4, window=5, vocab=[]):
     """Perform the stepst to train word2vecf on a given corpus:
 
         1. Create input data, which is in the form of (word,context) pairs.
@@ -36,7 +36,7 @@ def train(corpus, save_dir, w2v_dir, filename_suffix='', min_count=10, size=300,
     """
     # 1. Create input data, which is in the form of (word,context) pairs.
     print('Create context pairs')
-    context_pairs = text2w2vf(corpus)
+    context_pairs = text2w2vf(corpus, window, vocab)
     contexts_file = os.path.join(save_dir, f'context_pairs{filename_suffix}.txt')
     with open(contexts_file, 'w') as f:
         f.write(context_pairs)
