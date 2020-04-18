@@ -42,7 +42,7 @@ def hapax_legomena(text):
 
 
 def text2w2vf(text, window=5, vocab=[]):
-    """Prepare contexts word2vecf:
+    """Prepare contexts word2vecf using their context format:
         :return training_pairs:
                    textual file of word-context pairs.
                    each pair takes a separate line.
@@ -71,4 +71,25 @@ def extract_neighbours(tokens, vocab=[], window=5):
             c = tokens[i + j]
             if vocab and c not in vocab: continue
             training_pairs += f'{tok} {s}{c}\n'
+    return training_pairs
+
+
+def context_pairs(text, lang='english'):
+    """Prepare contexts word2vecf without their context format:
+        :return training_pairs:
+                   textual file of word-context pairs.
+                   each pair takes a separate line.
+                   the format of a pair is "<word> <context>", i.e. space delimited, where <word> and <context> are strings.
+                   The context is all non stop words in the same sentence.
+    """
+    training_pairs = ''
+    if type(text) == str:   # raw text
+        sents = text2gensim(text, lang)
+    elif type(text) == list:    # Already in list of str list format
+        sents = text
+    for s in sents:
+        for w in s:
+            for c in s:
+                if w != c:
+                    training_pairs += f'{w} {c}\n'
     return training_pairs
