@@ -67,7 +67,7 @@ def text2w2vf(text, contexts_file, window=5, vocab=[]):
 
 def extract_neighbours(tokens, contexts_file, vocab=[], window=5):
     positions = [(x, "l%s_" % x) for x in range(-window, +window + 1) if x != 0]
-    with open(contexts_file, 'a+') as f:
+    with open(contexts_file, 'w') as f:
         for i, tok in enumerate(tokens):
             if vocab and tok not in vocab: continue
             for j, s in positions:
@@ -90,7 +90,7 @@ def context_pairs(text, contexts_file, lang='english'):
         sents = text2gensim(text, lang)
     elif type(text) == list:    # Already in list of str list format
         sents = text
-    with open(contexts_file, 'a+') as f:
+    with open(contexts_file, 'w') as f:
         for s in sents:
             for w in s:
                 for c in s:
