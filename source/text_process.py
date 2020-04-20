@@ -1,3 +1,4 @@
+import os
 from collections import Counter
 from nltk.corpus import stopwords
 from nltk.tokenize import sent_tokenize
@@ -78,10 +79,15 @@ def text2w2vf(text, contexts_file, window=5, vocab=[], processes=1):
                 yield lst[i:i + size]
 
         txt_chunks = chunks(text, processes)
-        for p, t in enumerate(txt_chunks):
-            cont_file = contexts_file + f'_proc_{p}'
+        queue = []
+        for i, t in enumerate(txt_chunks):
+            cont_file = contexts_file + f'_proc_{i}'
             p = Process(target=contexts, args=(t, cont_file))
             p.start()
+            queue.append(p)
+        for p in queue:
+            p.join()
+
         # concatenate files and delete temporary process files
         with open(contexts_file, 'w') as cf:
             for p in range(processes):
@@ -90,6 +96,7 @@ def text2w2vf(text, contexts_file, window=5, vocab=[], processes=1):
                     if p_pairs[-1] != '\n':
                         p_pairs += '\n'
                     cf.write(p_pairs)
+                os.remove(contexts_file + f'_proc_{p}')
 
     else:
         contexts(text, contexts_file)
