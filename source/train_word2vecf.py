@@ -37,7 +37,7 @@ def train(corpus, save_dir, w2v_dir, filename_suffix='', min_count=10, size=300,
     # 1. Create input data, which is in the form of (word,context) pairs.
     print('Create context pairs')
     contexts_file = os.path.join(save_dir, f'context_pairs{filename_suffix}.txt')
-    text2w2vf(corpus, contexts_file, window, vocab)
+    text2w2vf(corpus, contexts_file, window, vocab, threads)
 
     # 2. Create word and context vocabularies
     print('Create vocabularies')

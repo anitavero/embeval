@@ -4,6 +4,8 @@ from nltk.tokenize import sent_tokenize
 from unidecode import unidecode
 import string
 from tqdm import tqdm
+from multiprocessing import Process
+import math
 
 
 hun_stopwords = stopwords.words('hungarian') + \
@@ -42,7 +44,7 @@ def hapax_legomena(text):
     return [w for w, c in cnt.most_common() if c == 1]
 
 
-def text2w2vf(text, contexts_file, window=5, vocab=[]):
+def text2w2vf(text, contexts_file, window=5, vocab=[], processes=1):
     """Prepare contexts word2vecf using their context format:
        textual file of word-context pairs.
        each pair takes a separate line.
@@ -54,16 +56,43 @@ def text2w2vf(text, contexts_file, window=5, vocab=[]):
                       words in the same sentence.
     """
     print("vocab:", len(vocab))
-    if window > 0:
-        if type(text[0]) == str:   # space separated tokens
-            extract_neighbours(text, contexts_file, vocab, window, showprogress=True)
-        elif type(text[0]) == list:    # list of str list format
-            for sent in tqdm(text):
-                extract_neighbours(sent, contexts_file, vocab, window, showprogress=False)
-    elif type(text[0]) == list:
-        context_pairs(text, contexts_file, lang='english')
+
+    def contexts(txt, cont_file):
+        if window > 0:
+            if type(txt[0]) == str:   # space separated tokens
+                extract_neighbours(txt, cont_file, vocab, window, showprogress=True)
+            elif type(txt[0]) == list:    # list of str list format
+                for sent in tqdm(txt):
+                    extract_neighbours(sent, cont_file, vocab, window, showprogress=False)
+        elif type(txt[0]) == list:
+            context_pairs(txt, cont_file, lang='english')
+        else:
+            print('Sentence context works only with list of str lists input.')
+
+    if processes > 1:
+        # Multiprocessing
+        def chunks(lst, n):
+            """Yield successive n chunks from lst."""
+            size = math.ceil(len(lst) / n)
+            for i in range(0, len(lst), size):
+                yield lst[i:i + size]
+
+        txt_chunks = chunks(text, processes)
+        for p, t in enumerate(txt_chunks):
+            cont_file = contexts_file + f'_proc_{p}'
+            p = Process(target=contexts, args=(t, cont_file))
+            p.start()
+        # concatenate files and delete temporary process files
+        with open(contexts_file, 'w') as cf:
+            for p in range(processes):
+                with open(contexts_file + f'_proc_{p}', 'r') as pf:
+                    p_pairs = pf.read()
+                    if p_pairs[-1] != '\n':
+                        p_pairs += '\n'
+                    cf.write(p_pairs)
+
     else:
-        print('Sentence context works only with list of str lists input.')
+        contexts(text, contexts_file)
 
 
 def extract_neighbours(tokens, contexts_file, vocab=[], window=5, showprogress=False):
