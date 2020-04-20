@@ -3,6 +3,7 @@ from nltk.corpus import stopwords
 from nltk.tokenize import sent_tokenize
 from unidecode import unidecode
 import string
+from tqdm import tqdm
 
 
 hun_stopwords = stopwords.words('hungarian') + \
@@ -55,20 +56,24 @@ def text2w2vf(text, contexts_file, window=5, vocab=[]):
     print("vocab:", len(vocab))
     if window > 0:
         if type(text[0]) == str:   # space separated tokens
-            extract_neighbours(text, contexts_file, vocab, window)
+            extract_neighbours(text, contexts_file, vocab, window, showprogress=True)
         elif type(text[0]) == list:    # list of str list format
-            for sent in text:
-                extract_neighbours(sent, contexts_file, vocab, window)
+            for sent in tqdm(text):
+                extract_neighbours(sent, contexts_file, vocab, window, showprogress=False)
     elif type(text[0]) == list:
         context_pairs(text, contexts_file, lang='english')
     else:
         print('Sentence context works only with list of str lists input.')
 
 
-def extract_neighbours(tokens, contexts_file, vocab=[], window=5):
+def extract_neighbours(tokens, contexts_file, vocab=[], window=5, showprogress=False):
+    if showprogress:
+        enum = lambda x: enumerate(tqdm(x))
+    else:
+        enum = lambda x: enumerate(x)
     positions = [(x, "l%s_" % x) for x in range(-window, +window + 1) if x != 0]
     with open(contexts_file, 'w') as f:
-        for i, tok in enumerate(tokens):
+        for i, tok in enum(tokens):
             if vocab and tok not in vocab: continue
             for j, s in positions:
                 if i + j < 0: continue
@@ -91,7 +96,7 @@ def context_pairs(text, contexts_file, lang='english'):
     elif type(text) == list:    # Already in list of str list format
         sents = text
     with open(contexts_file, 'w') as f:
-        for s in sents:
+        for s in tqdm(sents):
             for w in s:
                 for c in s:
                     if w != c:
