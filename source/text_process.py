@@ -85,11 +85,10 @@ def extract_neighbours(tokens, contexts_file, vocab=[], window=5, showprogress=F
 
 def context_pairs(text, contexts_file, lang='english'):
     """Prepare contexts word2vecf without their context format:
-        :return training_pairs:
-                   textual file of word-context pairs.
-                   each pair takes a separate line.
-                   the format of a pair is "<word> <context>", i.e. space delimited, where <word> and <context> are strings.
-                   The context is all non stop words in the same sentence.
+       textual file of word-context pairs.
+       each pair takes a separate line.
+       the format of a pair is "<word> <context>", i.e. space delimited, where <word> and <context> are strings.
+       The context is all non stop words in the same sentence.
     """
     if type(text) == str:   # raw text
         sents = text2gensim(text, lang)
