@@ -42,19 +42,19 @@ def process_files(data_dir):
             json.dump(sent_lists, f)
 
 
-@arg('trfile_num', type=int)
-def context_pairs_for_quantity(data_dir, save_dir, trfile_num, filename_suffix=''):
-    """Prepare context files for word2vecf:
-        :return training_pairs:
-                   textual file of word-context pairs.
-                   each pair takes a separate line.
-                   the format of a pair is "<word> <context>", i.e. space delimited, where <word> and <context> are strings.
-                   The context is all non stop words in the same sentence.
-    """
-    corpus = corpus_for_quantity(data_dir, save_dir, trfile_num, filename_suffix)
-    context_pairs = text2w2vf(corpus)
-    with open(os.path.join(save_dir, f'context_pairs_n{trfile_num}_{filename_suffix}.txt'), 'w') as f:
-        f.write(context_pairs)
+# @arg('trfile_num', type=int)
+# def context_pairs_for_quantity(data_dir, save_dir, trfile_num, filename_suffix=''):
+#     """Prepare context files for word2vecf:
+#         :return training_pairs:
+#                    textual file of word-context pairs.
+#                    each pair takes a separate line.
+#                    the format of a pair is "<word> <context>", i.e. space delimited, where <word> and <context> are strings.
+#                    The context is all non stop words in the same sentence.
+#     """
+#     corpus = corpus_for_quantity(data_dir, save_dir, trfile_num, filename_suffix)
+#     context_pairs = text2w2vf(corpus)
+#     with open(os.path.join(save_dir, f'context_pairs_n{trfile_num}_{filename_suffix}.txt'), 'w') as f:
+#         f.write(context_pairs)
 
 
 def distribution(data_dir):
@@ -80,10 +80,19 @@ def plot_distribution(data_dir, logscale=True):
     plt.show()
 
 
-def corpus_for_quantity(data_dir, save_dir, num, filename_suffix=''):
-    """Loads randomly chosen, given number of corpus files."""
-    print('\nLoading corpus')
-    files = glob(os.path.join(data_dir, '*/wiki*json'))
+def create_context_files(data_dir, window=5, vocab=[], processes=1):
+    files = glob(os.path.join(data_dir, '*/*.json'))
+    corpus_tup = []
+    for fl in files:
+        with open(fl, 'r') as f:
+            corpus_tup.append((fl, json.load(f)))
+    text2w2vf(corpus_tup, data_dir, window=window, vocab=vocab, processes=processes)
+
+
+def contexts_for_quantity(data_dir, save_dir, num, filename_suffix=''):
+    """Loads randomly chosen, given number of context files and concatenates them into one file."""
+    print('\nLoading contexts')
+    files = glob(os.path.join(data_dir, '*/*.contexts'))
     if num > 0:
         tr_files = random.sample(files, num)
     else:   # otherwise we train on the whole corpus
@@ -92,30 +101,35 @@ def corpus_for_quantity(data_dir, save_dir, num, filename_suffix=''):
     with open(os.path.join(save_dir, f'train_files_n{num}_{filename_suffix}.txt'), 'w') as f:
         f.write('\n'.join(tr_files))
     # Read files, merge content
-    corpus = []
+    contexts = ''
     for fn in tr_files:
         with open(fn) as f:
-            corpus += json.load(f)
-    return corpus
+            pairs = f.read()
+            if pairs[-1] != '\n':
+                pairs += '\n'
+            contexts += pairs
+    cont_file = os.path.join(data_dir, f'n{num}_{filename_suffix}.contexts')
+    with open(cont_file, 'w') as f:
+        f.write(contexts)
+    return cont_file
 
 
 @arg('num', type=int)
 def w2v_for_quantity(data_dir, save_dir, w2v_dir, num, size=300, min_count=10, workers=4,
-                    negative=15, filename_suffix='', window=5, vocab=[]):
+                    negative=15, filename_suffix=''):
     """Train Word2Vec on a random number of tokenized json files.
     :param data_dir: 'tokenized' directory with subdirectories of jsons."""
-    corpus = corpus_for_quantity(data_dir, save_dir, num, filename_suffix)
+    cont_file = contexts_for_quantity(data_dir, save_dir, num, filename_suffix)
     # Training Word2Vec
     print('Training')
-    train_word2vecf.train(corpus, save_dir, w2v_dir, filename_suffix=f'_n{num}_{filename_suffix}',
-                          min_count=min_count, size=size, negative=negative, threads=workers,
-                          window=window, vocab=vocab)
+    train_word2vecf.train(cont_file, save_dir, w2v_dir, filename_suffix=f'_n{num}_{filename_suffix}',
+                          min_count=min_count, size=size, negative=negative, threads=workers)
 
 
 @arg('trfile-num', type=int)
 @arg('sample-num', type=int)
 def w2v_for_quantities(data_dir, save_dir, w2v_dir, sample_num, trfile_num, size=300, min_count=10, workers=4,
-                       negative=15, window=5, vocab=[], exp_name=''):
+                       negative=15, exp_name=''):
     """Train several Word2Vecs in parallel for the same data quantity, multiple times on random subsets.
     :param data_dir: 'tokenized' directory with subdirectories of jsons.
     :param save_dir: directory where we save the model and log files.
@@ -132,11 +146,10 @@ def w2v_for_quantities(data_dir, save_dir, w2v_dir, sample_num, trfile_num, size
         f.write(f'Size: {size}\n')
         f.write(f'Min count: {min_count}\n')
         f.write(f'Negative: {negative}\n')
-        f.write(f'Window: {window}\n')
 
     for i in tqdm(range(sample_num)):
         w2v_for_quantity(data_dir, save_dir, w2v_dir, trfile_num, size, min_count, workers,
-                         negative, filename_suffix=f's{i}{exp_name}', window=window, vocab=vocab)
+                         negative, filename_suffix=f's{i}{exp_name}')
 
 
 def w2v_for_freqrange():
@@ -145,4 +158,4 @@ def w2v_for_freqrange():
 
 if __name__ == '__main__':
     argh.dispatch_commands([distribution, process_files, w2v_for_quantity, w2v_for_freqrange,
-                            w2v_for_quantities, context_pairs_for_quantity])
+                            w2v_for_quantities, create_context_files])

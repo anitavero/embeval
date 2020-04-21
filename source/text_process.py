@@ -5,6 +5,8 @@ from nltk.tokenize import sent_tokenize
 from unidecode import unidecode
 import string
 from tqdm import tqdm
+from glob import glob
+import json
 from multiprocessing import Process
 import math
 
@@ -45,30 +47,32 @@ def hapax_legomena(text):
     return [w for w, c in cnt.most_common() if c == 1]
 
 
-def text2w2vf(text, contexts_file, window=5, vocab=[], processes=1):
+def text2w2vf(corpus_tup, data_dir, window=5, vocab=[], processes=1):
     """Prepare contexts word2vecf using their context format:
        textual file of word-context pairs.
        each pair takes a separate line.
        the format of a pair is "<word> <context>", i.e. space delimited, where <word> and <context> are strings.
        The context is all non stop words in the same sentence or around the token if it's not sent_tokenized.
-       :param text: token (str) list or sentence list (list of str lists)
-       :param contexts_file: full file path to write context pairs to
+       :param corpus_tup: list with elements of: token (str) list or sentence list (list of str lists)
+       :param data_dir: directory to write context pairs to
        :param window: Window for w2v. If 0 and text is a sentence list the context of all words are all the other
                       words in the same sentence.
     """
     print("vocab:", len(vocab))
 
-    def contexts(txt, cont_file):
-        if window > 0:
-            if type(txt[0]) == str:   # space separated tokens
-                extract_neighbours(txt, cont_file, vocab, window, showprogress=True)
-            elif type(txt[0]) == list:    # list of str list format
-                for sent in tqdm(txt):
-                    extract_neighbours(sent, cont_file, vocab, window, showprogress=False)
-        elif type(txt[0]) == list:
-            context_pairs(txt, cont_file, lang='english')
-        else:
-            print('Sentence context works only with list of str lists input.')
+    def contexts(corp_tup):
+        for fn, txt in tqdm(corp_tup):
+            cont_file = os.path.splitext(fn)[0] + '.contexts'
+            if window > 0:
+                if type(txt[0]) == str:   # space separated tokens
+                    extract_neighbours(txt, cont_file, vocab, window)
+                elif type(txt[0]) == list:    # list of str list format
+                    for sent in txt:
+                        extract_neighbours(sent, cont_file, vocab, window)
+            elif type(txt[0]) == list:
+                context_pairs(txt, cont_file, lang='english')
+            else:
+                print('Sentence context works only with list of str lists input.')
 
     if processes > 1:
         # Multiprocessing
@@ -78,38 +82,33 @@ def text2w2vf(text, contexts_file, window=5, vocab=[], processes=1):
             for i in range(0, len(lst), size):
                 yield lst[i:i + size]
 
-        txt_chunks = chunks(text, processes)
+        file_chunks = chunks(corpus_tup, processes)
         queue = []
-        for i, t in enumerate(txt_chunks):
-            cont_file = contexts_file + f'_proc_{i}'
-            p = Process(target=contexts, args=(t, cont_file))
+        for c_tups in file_chunks:
+            p = Process(target=contexts, args=(c_tups, ))
             p.start()
             queue.append(p)
         for p in queue:
             p.join()
-
-        # concatenate files and delete temporary process files
-        with open(contexts_file, 'w') as cf:
-            for p in range(processes):
-                with open(contexts_file + f'_proc_{p}', 'r') as pf:
-                    p_pairs = pf.read()
-                    if p_pairs[-1] != '\n':
-                        p_pairs += '\n'
-                    cf.write(p_pairs)
-                os.remove(contexts_file + f'_proc_{p}')
-
     else:
-        contexts(text, contexts_file)
+        contexts(corpus_tup)
+
+    # concatenate files
+    print('Concatenate files')
+    with open(os.path.join(data_dir, 'contexts.txt'), 'w') as cf:
+        files = glob(os.path.join(data_dir, '*/*.contexts'))
+        for fn in tqdm(files):
+            with open(fn, 'r') as f:
+                p_pairs = f.read()
+                if p_pairs[-1] != '\n':
+                    p_pairs += '\n'
+                cf.write(p_pairs)
 
 
-def extract_neighbours(tokens, contexts_file, vocab=[], window=5, showprogress=False):
-    if showprogress:
-        enum = lambda x: enumerate(tqdm(x))
-    else:
-        enum = lambda x: enumerate(x)
+def extract_neighbours(tokens, contexts_file, vocab=[], window=5):
     positions = [(x, "l%s_" % x) for x in range(-window, +window + 1) if x != 0]
     with open(contexts_file, 'w') as f:
-        for i, tok in enum(tokens):
+        for i, tok in enumerate(tokens):
             if vocab and tok not in vocab: continue
             for j, s in positions:
                 if i + j < 0: continue
@@ -131,7 +130,7 @@ def context_pairs(text, contexts_file, lang='english'):
     elif type(text) == list:    # Already in list of str list format
         sents = text
     with open(contexts_file, 'w') as f:
-        for s in tqdm(sents):
+        for s in sents:
             for w in s:
                 for c in s:
                     if w != c:
