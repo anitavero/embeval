@@ -115,7 +115,7 @@ def w2v_for_quantity(data_dir, save_dir, w2v_dir, num, size=300, min_count=10, w
 @arg('trfile-num', type=int)
 @arg('sample-num', type=int)
 def w2v_for_quantities(data_dir, save_dir, w2v_dir, sample_num, trfile_num, size=300, min_count=10, workers=4,
-                       negative=15, window=5, vocab=[]):
+                       negative=15, window=5, vocab=[], exp_name=''):
     """Train several Word2Vecs in parallel for the same data quantity, multiple times on random subsets.
     :param data_dir: 'tokenized' directory with subdirectories of jsons.
     :param save_dir: directory where we save the model and log files.
@@ -123,7 +123,10 @@ def w2v_for_quantities(data_dir, save_dir, w2v_dir, sample_num, trfile_num, size
     :param trfile_num: number of sampled training files. If num <= 0 we train on the whole corpus.
     Rest are Word2Vec training parameters.
     """
-    with open(os.path.join(save_dir, 'experiment_params.log'), 'w') as f:
+    if exp_name:
+        exp_name = '_' + exp_name
+
+    with open(os.path.join(save_dir, f'experiment_params{exp_name}.log'), 'w') as f:
         f.write(f'Sample num: {sample_num}\n')
         f.write(f'Training file num: {trfile_num}\n')
         f.write(f'Size: {size}\n')
@@ -133,7 +136,7 @@ def w2v_for_quantities(data_dir, save_dir, w2v_dir, sample_num, trfile_num, size
 
     for i in tqdm(range(sample_num)):
         w2v_for_quantity(data_dir, save_dir, w2v_dir, trfile_num, size, min_count, workers,
-                         negative, filename_suffix=f's{i}', window=window, vocab=vocab)
+                         negative, filename_suffix=f's{i}{exp_name}', window=window, vocab=vocab)
 
 
 def w2v_for_freqrange():
