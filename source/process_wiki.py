@@ -137,35 +137,39 @@ def w2v_for_quantities(data_dir, save_dir, w2v_dir, sample_num, trfile_num, size
                          negative, filename_suffix=f's{i}{exp_name}')
 
 
-def contexts_for_freqrange(data_dir, save_dir, min_count, max_count, filename_suffix=''):
-    """Filter .contexts file for <min_count> <max_count> frequency range."""
-    pass
+@arg('min-count', type=int)
+@arg('max-count', type=int)
+def contexts_for_freqrange(contexts_file, distribution_file, min_count, max_count, filename_suffix=''):
+    """Filter contexts txt file for <min_count> <max_count> frequency range."""
+    with open(distribution_file, 'r') as f:
+        dist = json.load(f)
+    print(f'Filter dictionary for frequency range {min_count}-{max_count}')
+    fqvocab = map(lambda y: y[0], filter(lambda x: x[1] >= min_count and x[1] <= max_count, dist.items()))
 
+    fqcont_file = os.path.join(os.path.split(contexts_file)[0],
+                             f'freq{min_count}-{max_count}{filename_suffix}_contexts.txt')
 
-def w2v_for_freqrange(data_dir, save_dir, w2v_dir, min_count, max_count, size=300, workers=4,
-                      negative=15, filename_suffix=''):
-    """Train Word2Vec on a corpus filtered by the given word frequency range.
-    :param data_dir: 'tokenized' directory with subdirectories of .context files.
-    :param min_count: minimum word frequency
-    :param max_count: maximum word frequency
-    """
-    cont_file = contexts_for_freqrange(data_dir, save_dir, min_count, max_count, filename_suffix)
-    # Training Word2Vec
-    print('Training')
-    train_word2vecf.train(cont_file, save_dir, w2v_dir,
-                          filename_suffix=f'_frew{min_count}-{max_count}_{filename_suffix}',
-                          min_count=min_count, size=size, negative=negative, threads=workers)
+    print('Filter contexts file')
+    cf = open(contexts_file, 'r')
+    fqcf = open(fqcont_file, 'w')
+    with open(os.path.splitext(contexts_file)[0] + '.linenum', 'r') as f:
+        n = int(f.readline())
+    for i in tqdm(range(n)):
+        pair = cf.readline().split()
+        if pair[0] in fqvocab:
+            fqcf.write(' '.join(pair) + '\n')
+    fqcf.close()
+    cf.close()
+    return fqcont_file
 
 
 @arg('min-count', type=int)
 @arg('max-count', type=int)
-@arg('sample-num', type=int)
-def w2v_for_freqranges(data_dir, save_dir, w2v_dir, sample_num, min_count, max_count, size=300,
-                       workers=4, negative=15, exp_name=''):
-    """Train several Word2Vecs in parallel for the same word frequency range, multiple times on random subsets.
-    :param data_dir: 'tokenized' directory with subdirectories of jsons.
+def w2v_for_freqrange(data_dir, save_dir, w2v_dir, min_count, max_count, size=300, workers=4,
+                      negative=15, exp_name=''):
+    """Train Word2Vec on a corpus filtered by the given word frequency range.
+    :param data_dir: 'tokenized' directory with subdirectories of .context files.
     :param save_dir: directory where we save the model and log files.
-    :param sample_num: number of random trainings for the same number of files.
     :param min_count: minimum word frequency
     :param max_count: maximum word frequency
     Rest are Word2Vec training parameters.
@@ -174,17 +178,19 @@ def w2v_for_freqranges(data_dir, save_dir, w2v_dir, sample_num, min_count, max_c
         exp_name = '_' + exp_name
 
     with open(os.path.join(save_dir, f'experiment_params{exp_name}.log'), 'w') as f:
-        f.write(f'Sample num: {sample_num}\n')
         f.write(f'Min count: {min_count}\n')
         f.write(f'Max count: {max_count}\n')
         f.write(f'Size: {size}\n')
         f.write(f'Negative: {negative}\n')
 
-    for i in tqdm(range(sample_num)):
-        w2v_for_freqrange(data_dir, save_dir, w2v_dir, min_count, max_count, size, workers,
-                          negative, filename_suffix=f's{i}{exp_name}')
+    cont_file = contexts_for_freqrange(data_dir, save_dir, min_count, max_count, exp_name)
+    # Training Word2Vec
+    print('Training')
+    train_word2vecf.train(cont_file, save_dir, w2v_dir,
+                          filename_suffix=f'_freq{min_count}-{max_count}_{exp_name}',
+                          min_count=min_count, size=size, negative=negative, threads=workers)
 
 
 if __name__ == '__main__':
     argh.dispatch_commands([distribution, process_files, w2v_for_quantity, w2v_for_freqrange,
-                            w2v_for_quantities, create_context_files])
+                            create_context_files, contexts_for_freqrange])
