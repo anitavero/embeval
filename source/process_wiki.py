@@ -42,21 +42,6 @@ def process_files(data_dir):
             json.dump(sent_lists, f)
 
 
-# @arg('trfile_num', type=int)
-# def context_pairs_for_quantity(data_dir, save_dir, trfile_num, filename_suffix=''):
-#     """Prepare context files for word2vecf:
-#         :return training_pairs:
-#                    textual file of word-context pairs.
-#                    each pair takes a separate line.
-#                    the format of a pair is "<word> <context>", i.e. space delimited, where <word> and <context> are strings.
-#                    The context is all non stop words in the same sentence.
-#     """
-#     corpus = corpus_for_quantity(data_dir, save_dir, trfile_num, filename_suffix)
-#     context_pairs = text2w2vf(corpus)
-#     with open(os.path.join(save_dir, f'context_pairs_n{trfile_num}_{filename_suffix}.txt'), 'w') as f:
-#         f.write(context_pairs)
-
-
 def distribution(data_dir):
     """Count word frequencies from text files."""
     counter = Counter()
@@ -118,7 +103,7 @@ def contexts_for_quantity(data_dir, save_dir, num, filename_suffix=''):
 def w2v_for_quantity(data_dir, save_dir, w2v_dir, num, size=300, min_count=10, workers=4,
                     negative=15, filename_suffix=''):
     """Train Word2Vec on a random number of tokenized json files.
-    :param data_dir: 'tokenized' directory with subdirectories of jsons."""
+    :param data_dir: 'tokenized' directory with subdirectories of .context files."""
     cont_file = contexts_for_quantity(data_dir, save_dir, num, filename_suffix)
     # Training Word2Vec
     print('Training')
@@ -152,8 +137,52 @@ def w2v_for_quantities(data_dir, save_dir, w2v_dir, sample_num, trfile_num, size
                          negative, filename_suffix=f's{i}{exp_name}')
 
 
-def w2v_for_freqrange():
+def contexts_for_freqrange(data_dir, save_dir, min_count, max_count, filename_suffix=''):
+    """Filter .contexts file for <min_count> <max_count> frequency range."""
     pass
+
+
+def w2v_for_freqrange(data_dir, save_dir, w2v_dir, min_count, max_count, size=300, workers=4,
+                      negative=15, filename_suffix=''):
+    """Train Word2Vec on a corpus filtered by the given word frequency range.
+    :param data_dir: 'tokenized' directory with subdirectories of .context files.
+    :param min_count: minimum word frequency
+    :param max_count: maximum word frequency
+    """
+    cont_file = contexts_for_freqrange(data_dir, save_dir, min_count, max_count, filename_suffix)
+    # Training Word2Vec
+    print('Training')
+    train_word2vecf.train(cont_file, save_dir, w2v_dir,
+                          filename_suffix=f'_frew{min_count}-{max_count}_{filename_suffix}',
+                          min_count=min_count, size=size, negative=negative, threads=workers)
+
+
+@arg('min-count', type=int)
+@arg('max-count', type=int)
+@arg('sample-num', type=int)
+def w2v_for_freqranges(data_dir, save_dir, w2v_dir, sample_num, min_count, max_count, size=300,
+                       workers=4, negative=15, exp_name=''):
+    """Train several Word2Vecs in parallel for the same word frequency range, multiple times on random subsets.
+    :param data_dir: 'tokenized' directory with subdirectories of jsons.
+    :param save_dir: directory where we save the model and log files.
+    :param sample_num: number of random trainings for the same number of files.
+    :param min_count: minimum word frequency
+    :param max_count: maximum word frequency
+    Rest are Word2Vec training parameters.
+    """
+    if exp_name:
+        exp_name = '_' + exp_name
+
+    with open(os.path.join(save_dir, f'experiment_params{exp_name}.log'), 'w') as f:
+        f.write(f'Sample num: {sample_num}\n')
+        f.write(f'Min count: {min_count}\n')
+        f.write(f'Max count: {max_count}\n')
+        f.write(f'Size: {size}\n')
+        f.write(f'Negative: {negative}\n')
+
+    for i in tqdm(range(sample_num)):
+        w2v_for_freqrange(data_dir, save_dir, w2v_dir, min_count, max_count, size, workers,
+                          negative, filename_suffix=f's{i}{exp_name}')
 
 
 if __name__ == '__main__':
