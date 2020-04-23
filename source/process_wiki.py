@@ -11,6 +11,7 @@ from tqdm import tqdm
 from collections import Counter
 from matplotlib import pyplot as plt
 import random
+from itertools import chain
 
 from text_process import text2gensim, text2w2vf
 from utils import create_dir, read_jl
@@ -42,21 +43,28 @@ def process_files(data_dir):
             json.dump(sent_lists, f)
 
 
-def distribution(data_dir):
-    """Count word frequencies from text files."""
+@arg('--format', type=str, choices=['json', 'text'], default='json')
+def distribution(data_dir, format='json', file_suffix=''):
+    """Count word frequencies from text files or json files, containing list of str lists."""
     counter = Counter()
     files = glob(os.path.join(data_dir, '*/wiki*'))
     for fl in tqdm(files):
         with open(fl) as f:
-            tokens = f.read().split()
+            if format == 'text':
+                tokens = f.read().split()
+            elif format == 'json':
+                sents = json.load(f)
+                tokens = chain.from_iterable(sents)
             counter.update(tokens)
     print('Saving...')
-    with open(os.path.join(data_dir, 'distribution.json'), 'w') as f:
+    if file_suffix[0] != '_':
+        file_suffix = '_' + file_suffix
+    with open(os.path.join(data_dir, f'distribution{file_suffix}.json'), 'w') as f:
         json.dump(counter, f)
 
 
-def plot_distribution(data_dir, logscale=True):
-    with open(os.path.join(data_dir, 'distribution.json')) as f:
+def plot_distribution(dist_file, logscale=True):
+    with open(dist_file) as f:
         dist = json.load(f)
     distc = Counter(dist)
     plt.plot([v for k, v in distc.most_common()])
@@ -192,5 +200,5 @@ def w2v_for_freqrange(data_dir, save_dir, w2v_dir, min_count, max_count, size=30
 
 
 if __name__ == '__main__':
-    argh.dispatch_commands([distribution, process_files, w2v_for_quantity, w2v_for_freqrange,
+    argh.dispatch_commands([distribution, plot_distribution, process_files, w2v_for_quantity, w2v_for_freqrange,
                             create_context_files, contexts_for_freqrange])
