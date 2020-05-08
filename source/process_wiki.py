@@ -200,5 +200,5 @@ def w2v_for_freqrange(data_dir, save_dir, w2v_dir, min_count, max_count, size=30
 
 
 if __name__ == '__main__':
-    argh.dispatch_commands([distribution, plot_distribution, process_files, w2v_for_quantity, w2v_for_freqrange,
-                            create_context_files, contexts_for_freqrange])
+    argh.dispatch_commands([distribution, plot_distribution, process_files, w2v_for_quantity, w2v_for_quantities,
+                            w2v_for_freqrange, create_context_files, contexts_for_freqrange])
