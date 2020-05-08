@@ -142,4 +142,4 @@ def context_pairs(text, contexts_file, lang='english'):
 
 
 if __name__== '__main__':
-    argh.dispatch_commands(concatenate_files)
+    argh.dispatch_commands([concatenate_files])
