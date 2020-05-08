@@ -6,7 +6,7 @@ from unidecode import unidecode
 import string
 from tqdm import tqdm
 from glob import glob
-import json
+import argh
 from multiprocessing import Process
 import math
 
@@ -93,10 +93,14 @@ def text2w2vf(corpus_tup, data_dir, window=5, vocab=[], processes=1):
     else:
         contexts(corpus_tup)
 
+    concatenate_files(data_dir, '.contexts', 'contexts.txt')
+
+
+def concatenate_files(data_dir, file_pattern, outfile):
     # concatenate files
     print('Concatenate files')
-    with open(os.path.join(data_dir, 'contexts.txt'), 'w') as cf:
-        files = glob(os.path.join(data_dir, '*/*.contexts'))
+    with open(os.path.join(data_dir, outfile), 'w') as cf:
+        files = glob(os.path.join(data_dir, f'*/*{file_pattern}'))
         for fn in tqdm(files):
             with open(fn, 'r') as f:
                 p_pairs = f.read()
@@ -135,3 +139,7 @@ def context_pairs(text, contexts_file, lang='english'):
                 for c in s:
                     if w != c:
                         f.write(f'{w} {c}\n')
+
+
+if __name__== '__main__':
+    argh.dispatch_commands(concatenate_files)
