@@ -104,7 +104,7 @@ def concatenate_files(data_dir, file_pattern, outfile):
         for fn in tqdm(files):
             with open(fn, 'r') as f:
                 p_pairs = f.read()
-                if p_pairs[-1] != '\n':
+                if p_pairs and p_pairs[-1] != '\n':
                     p_pairs += '\n'
                 cf.write(p_pairs)
 
