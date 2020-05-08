@@ -98,7 +98,7 @@ def contexts_for_quantity(data_dir, save_dir, num, filename_suffix=''):
     for fn in tr_files:
         with open(fn) as f:
             pairs = f.read()
-            if pairs[-1] != '\n':
+            if pairs and pairs[-1] != '\n':
                 pairs += '\n'
             contexts += pairs
     cont_file = os.path.join(data_dir, f'n{num}_{filename_suffix}.contexts')
