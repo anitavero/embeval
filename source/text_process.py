@@ -57,12 +57,13 @@ def text2w2vf(corpus_tup, data_dir, window=5, vocab=[], processes=1):
        :param data_dir: directory to write context pairs to
        :param window: Window for w2v. If 0 and text is a sentence list the context of all words are all the other
                       words in the same sentence.
+       :param vocab: list of str, vocab to filter with in extract_neighbours.
     """
-    print("vocab:", len(vocab))
+    print("#vocab to filter with:", len(vocab))
 
     def contexts(corp_tup):
         for fn, txt in tqdm(corp_tup):
-            cont_file = os.path.splitext(fn)[0] + '.contexts'
+            cont_file = os.path.splitext(fn)[0] + f'_window-{window}.contexts'
             if window > 0:
                 if type(txt[0]) == str:   # space separated tokens
                     extract_neighbours(txt, cont_file, vocab, window)
@@ -93,7 +94,7 @@ def text2w2vf(corpus_tup, data_dir, window=5, vocab=[], processes=1):
     else:
         contexts(corpus_tup)
 
-    concatenate_files(data_dir, '.contexts', 'contexts.txt')
+    concatenate_files(data_dir, '.contexts', f'_window-{window}_contexts.txt')
 
 
 def concatenate_files(data_dir, file_pattern, outfile):
