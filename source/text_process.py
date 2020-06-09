@@ -47,7 +47,7 @@ def hapax_legomena(text):
     return [w for w, c in cnt.most_common() if c == 1]
 
 
-def text2w2vf(corpus_tup, data_dir, window=5, vocab=[], processes=1):
+def text2w2vf(corpus_tup, data_dir, window=5, vocab=[], processes=1, merge=False):
     """Prepare contexts word2vecf using their context format:
        textual file of word-context pairs.
        each pair takes a separate line.
@@ -94,7 +94,8 @@ def text2w2vf(corpus_tup, data_dir, window=5, vocab=[], processes=1):
     else:
         contexts(corpus_tup)
 
-    concatenate_files(data_dir, '.contexts', f'_window-{window}_contexts.txt')
+    if merge:
+        concatenate_files(data_dir, '.contexts', f'window-{window}_contexts.txt')
 
 
 def concatenate_files(data_dir, file_pattern, outfile):

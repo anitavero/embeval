@@ -73,13 +73,13 @@ def plot_distribution(dist_file, logscale=True):
     plt.show()
 
 
-def create_context_files(data_dir, window=5, vocab=[], processes=1):
+def create_context_files(data_dir, window=5, vocab=[], processes=1, merge=False):
     files = glob(os.path.join(data_dir, '*/*.json'))
     corpus_tup = []
     for fl in files:
         with open(fl, 'r') as f:
             corpus_tup.append((fl, json.load(f)))
-    text2w2vf(corpus_tup, data_dir, window=window, vocab=vocab, processes=processes)
+    text2w2vf(corpus_tup, data_dir, window=window, vocab=vocab, processes=processes, merge=merge)
 
 
 def contexts_for_quantity(data_dir, save_dir, num, filename_suffix=''):
