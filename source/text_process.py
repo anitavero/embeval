@@ -9,6 +9,7 @@ from glob import glob
 import argh
 from multiprocessing import Process
 import math
+from itertools import chain
 
 
 hun_stopwords = stopwords.words('hungarian') + \
@@ -68,8 +69,9 @@ def text2w2vf(corpus_tup, data_dir, window=5, vocab=[], processes=1, merge=False
                 if type(txt[0]) == str:   # space separated tokens
                     extract_neighbours(txt, cont_file, vocab, window)
                 elif type(txt[0]) == list:    # list of str list format
-                    for sent in txt:
-                        extract_neighbours(sent, cont_file, vocab, window)
+                    # for sent in txt:
+                    tokens = list(chain.from_iterable(txt))
+                    extract_neighbours(tokens, cont_file, vocab, window)
             elif type(txt[0]) == list:
                 context_pairs(txt, cont_file, lang='english')
             else:
