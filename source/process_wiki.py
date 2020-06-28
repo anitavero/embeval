@@ -84,7 +84,7 @@ def create_context_files(data_dir, window=5, vocab=[], processes=1, merge=False)
 
 def contexts_for_quantity(data_dir, save_dir, num, filename_suffix=''):
     """Loads randomly chosen, given number of context files and concatenates them into one file."""
-    print('\nLoading contexts')
+    # print('\nLoading contexts')
     files = glob(os.path.join(data_dir, '*/*.contexts'))
     if num > 0:
         tr_files = random.sample(files, num)
@@ -94,16 +94,18 @@ def contexts_for_quantity(data_dir, save_dir, num, filename_suffix=''):
     with open(os.path.join(save_dir, f'train_files_n{num}_{filename_suffix}.txt'), 'w') as f:
         f.write('\n'.join(tr_files))
     # Read files, merge content
-    contexts = ''
-    for fn in tr_files:
+    cont_file = os.path.join(data_dir, f'n{num}_{filename_suffix}.contexts')
+    for fn in tqdm(tr_files, desc='Loading contexts'):
         with open(fn) as f:
             pairs = f.read()
             if pairs and pairs[-1] != '\n':
                 pairs += '\n'
-            contexts += pairs
-    cont_file = os.path.join(data_dir, f'n{num}_{filename_suffix}.contexts')
-    with open(cont_file, 'w') as f:
-        f.write(contexts)
+        if os.path.exists(cont_file):
+            append_write = 'a'  # append if already exists
+        else:
+            append_write = 'w'  # make a new file if not
+        with open(cont_file, append_write) as f:
+            f.write(pairs)
     return cont_file
 
 
