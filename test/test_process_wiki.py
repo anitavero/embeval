@@ -78,5 +78,3 @@ def test_contexts_for_freqrange():
     with open(cont_file, 'r') as f:
         fq_contexts = f.read()
     assert fq_contexts == ''
-
-
