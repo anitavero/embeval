@@ -155,7 +155,7 @@ def contexts_for_freqrange(data_dir, distribution_file, min_count, max_count, fi
     with open(distribution_file, 'r') as f:
         dist = json.load(f)
     print(f'Filter dictionary for frequency range {min_count}-{max_count}')
-    fqvocab = map(lambda y: y[0], filter(lambda x: x[1] >= min_count and x[1] <= max_count, dist.items()))
+    fqvocab = list(map(lambda y: y[0], filter(lambda x: x[1] >= min_count and x[1] <= max_count, dist.items())))
 
     fqcont_file = os.path.join(data_dir, f'freq{min_count}-{max_count}{filename_suffix}_contexts.txt')
 
@@ -172,7 +172,10 @@ def contexts_for_freqrange(data_dir, distribution_file, min_count, max_count, fi
             for l in pairs:
                 if l != '':
                     w, cw = l.split()
-                    if w in fqvocab and cw.split('_')[1] in fqvocab:
+                    cww = cw
+                    if '_' in cw:   # when we use Goldberg's extract_neighbours method
+                        cww = cw.split('_')[1]
+                    if w in fqvocab and cww in fqvocab:
                         f.write(f'{w} {cw}\n')
     return fqcont_file
 
