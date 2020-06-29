@@ -14,7 +14,7 @@ def test_contexts_for_freqrange():
 
 
     dist = {'a': 1, 'b': 10, 'c': 20, 'd': 40}
-    distribution_file = 'dist.json'
+    distribution_file = data_dir + 'dist.json'
     with open(distribution_file, 'w') as f:
         json.dump(dist, f)
     contexts = 'a b\n' +\
