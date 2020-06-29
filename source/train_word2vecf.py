@@ -1,6 +1,7 @@
 import os
 import argh
 import subprocess
+import time
 
 import vecs2nps
 
@@ -46,6 +47,8 @@ def train(contexts_file, save_dir, w2v_dir, filename_suffix='', min_count=10, si
 
     # 3. Train the embeddings
     print('Train the embeddings')
+    start = time.time()
+
     modelfn = os.path.join(save_dir, f'model{filename_suffix}')
     contextvecs = os.path.join(save_dir, f'context-vecs{filename_suffix}')
     output = subprocess.run(
@@ -54,6 +57,12 @@ def train(contexts_file, save_dir, w2v_dir, filename_suffix='', min_count=10, si
          '-dumpcv', contextvecs],
         stdout=subprocess.PIPE)
     print(output.stdout.decode('utf-8'))
+    end = time.time()
+    etime = end - start
+    hours = etime // 3600 % 24
+    minutes = etime // 60 % 60
+    seconds = etime % 60
+    print(f'Training time: {hours}h {minutes}m {seconds}s')
     with open(os.path.join(save_dir, f'trainlog{filename_suffix}.log'), 'a') as f:
         f.write('\nTrain:\n')
         f.write(output.stdout.decode('utf-8'))
