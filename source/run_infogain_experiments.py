@@ -5,17 +5,17 @@ from glob import glob
 
 
 def main(exp_name):
-    ######## Test #######
-    datadir = '/Users/anitavero/projects/data'
-    embdir = '/Users/anitavero/projects/data/wikidump/models/'
-    savedir = embdir
-    ######## END Test #######
+  #  ######## Test #######
+  #  datadir = '/Users/anitavero/projects/data'
+  #  embdir = '/Users/anitavero/projects/data/wikidump/models/'
+  #  savedir = embdir
+  #  ######## END Test #######
 
-    # datadir = '/local/filespace/alv34/Datasets/'
-    # embdir = '/local/filespace/alv34/embeval/'
-    # savedir = embdir + '/results/infogain/'
+    datadir = '/local/filespace/alv34/Datasets/'
+    embdir = '/local/filespace/alv34/wikidump/extracted/models/'
+    savedir = embdir + '/results/'
 
-    if exp_name == 'quantity':
+    if 'quantity' in exp_name.split('_'):
         quantity_models = glob(embdir + '*model*npy*')
         quantity_models = [os.path.split(m)[1].split('.')[0] for m in quantity_models]
 
