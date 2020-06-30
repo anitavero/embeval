@@ -82,10 +82,10 @@ def create_context_files(data_dir, window=5, vocab=[], processes=1, merge=False)
     text2w2vf(corpus_tup, data_dir, window=window, vocab=vocab, processes=processes, merge=merge)
 
 
-def contexts_for_quantity(data_dir, save_dir, num, filename_suffix=''):
+def contexts_for_quantity(data_dir, save_dir, num, filename_suffix='', contexts_pattern=''):
     """Loads randomly chosen, given number of context files and concatenates them into one file."""
     # print('\nLoading contexts')
-    files = glob(os.path.join(data_dir, '*/*.contexts'))
+    files = glob(os.path.join(data_dir, f'*/*{contexts_pattern}*.contexts'))
     if num > 0:
         tr_files = random.sample(files, num)
     else:   # otherwise we train on the whole corpus
@@ -111,10 +111,10 @@ def contexts_for_quantity(data_dir, save_dir, num, filename_suffix=''):
 
 @arg('num', type=int)
 def w2v_for_quantity(data_dir, save_dir, w2v_dir, num, size=300, min_count=10, workers=4,
-                    negative=15, filename_suffix=''):
+                    negative=15, filename_suffix='', contexts_pattern=''):
     """Train Word2Vec on a random number of tokenized json files.
     :param data_dir: 'tokenized' directory with subdirectories of .context files."""
-    cont_file = contexts_for_quantity(data_dir, save_dir, num, filename_suffix)
+    cont_file = contexts_for_quantity(data_dir, save_dir, num, filename_suffix, contexts_pattern=contexts_pattern)
     # Training Word2Vec
     print('Training')
     train_word2vecf.train(cont_file, save_dir, w2v_dir, filename_suffix=f'_n{num}_{filename_suffix}',
@@ -125,7 +125,7 @@ def w2v_for_quantity(data_dir, save_dir, w2v_dir, num, size=300, min_count=10, w
 @arg('trfile-num', type=int)
 @arg('sample-num', type=int)
 def w2v_for_quantities(data_dir, save_dir, w2v_dir, sample_num, trfile_num, size=300, min_count=10, workers=4,
-                       negative=15, exp_name=''):
+                       negative=15, exp_name='', contexts_pattern=''):
     """Train several Word2Vecs in parallel for the same data quantity, multiple times on random subsets.
     :param data_dir: 'tokenized' directory with subdirectories of jsons.
     :param save_dir: directory where we save the model and log files.
@@ -145,7 +145,7 @@ def w2v_for_quantities(data_dir, save_dir, w2v_dir, sample_num, trfile_num, size
 
     for i in tqdm(range(sample_num)):
         w2v_for_quantity(data_dir, save_dir, w2v_dir, trfile_num, size, min_count, workers,
-                         negative, filename_suffix=f's{i}{exp_name}')
+                         negative, filename_suffix=f's{i}{exp_name}', contexts_pattern=contexts_pattern)
 
 
 @arg('min-count', type=int)
@@ -178,6 +178,8 @@ def contexts_for_freqrange(data_dir, distribution_file, min_count, max_count, fi
                     if w in fqvocab and cww in fqvocab:
                         f.write(f'{w} {cw}\n')
     return fqcont_file
+
+#TODO: extract_neighbours could also filter for freq ragne vocab while creating context files
 
 
 @arg('min-count', type=int)
