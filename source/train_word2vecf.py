@@ -34,6 +34,8 @@ def train(contexts_file, save_dir, w2v_dir, filename_suffix='', min_count=10, si
     # contexts_file = os.path.join(save_dir, f'context_pairs{filename_suffix}.txt')
     # text2w2vf(corpus, contexts_file, window, vocab, threads)
 
+    start = time.time()
+
     # 2. Create word and context vocabularies
     print('Create vocabularies')
     cv = os.path.join(save_dir, f'cv_{filename_suffix}')
@@ -47,8 +49,6 @@ def train(contexts_file, save_dir, w2v_dir, filename_suffix='', min_count=10, si
 
     # 3. Train the embeddings
     print('Train the embeddings')
-    start = time.time()
-
     modelfn = os.path.join(save_dir, f'model{filename_suffix}')
     contextvecs = os.path.join(save_dir, f'context-vecs{filename_suffix}')
     output = subprocess.run(

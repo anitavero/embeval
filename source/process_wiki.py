@@ -150,27 +150,33 @@ def w2v_for_quantities(data_dir, save_dir, w2v_dir, sample_num, trfile_num, size
 
 @arg('min-count', type=int)
 @arg('max-count', type=int)
-def contexts_for_freqrange(contexts_file, distribution_file, min_count, max_count, filename_suffix=''):
+def contexts_for_freqrange(data_dir, distribution_file, min_count, max_count, filename_suffix=''):
     """Filter contexts txt file for <min_count> <max_count> frequency range."""
     with open(distribution_file, 'r') as f:
         dist = json.load(f)
     print(f'Filter dictionary for frequency range {min_count}-{max_count}')
-    fqvocab = map(lambda y: y[0], filter(lambda x: x[1] >= min_count and x[1] <= max_count, dist.items()))
+    fqvocab = list(map(lambda y: y[0], filter(lambda x: x[1] >= min_count and x[1] <= max_count, dist.items())))
 
-    fqcont_file = os.path.join(os.path.split(contexts_file)[0],
-                             f'freq{min_count}-{max_count}{filename_suffix}_contexts.txt')
+    fqcont_file = os.path.join(data_dir, f'freq{min_count}-{max_count}{filename_suffix}_contexts.txt')
 
-    print('Filter contexts file')
-    cf = open(contexts_file, 'r')
-    fqcf = open(fqcont_file, 'w')
-    with open(os.path.splitext(contexts_file)[0] + '.linenum', 'r') as f:
-        n = int(f.readline())
-    for i in tqdm(range(n)):
-        pair = cf.readline().split()
-        if pair[0] in fqvocab:
-            fqcf.write(' '.join(pair) + '\n')
-    fqcf.close()
-    cf.close()
+    print('Filter contexts files')
+    cfiles = glob(os.path.join(data_dir, '*/*.contexts'))
+    for cf in tqdm(cfiles):
+        with open(cf) as f:
+            pairs = f.read().split('\n')
+        if os.path.exists(fqcont_file):
+            append_write = 'a'  # append if already exists
+        else:
+            append_write = 'w'  # make a new file if not
+        with open(fqcont_file, append_write) as f:
+            for l in pairs:
+                if l != '':
+                    w, cw = l.split()
+                    cww = cw
+                    if '_' in cw:   # when we use Goldberg's extract_neighbours method
+                        cww = cw.split('_')[1]
+                    if w in fqvocab and cww in fqvocab:
+                        f.write(f'{w} {cw}\n')
     return fqcont_file
 
 
