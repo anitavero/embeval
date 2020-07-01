@@ -83,8 +83,10 @@ def create_context_files(data_dir, window=5, vocab=[], processes=1, merge=False)
 
 
 def contexts_for_quantity(data_dir, save_dir, num, filename_suffix='', contexts_pattern=''):
-    """Loads randomly chosen, given number of context files and concatenates them into one file."""
-    # print('\nLoading contexts')
+    """Loads randomly chosen, given number of context files and concatenates them into one file.
+        If there are no .contexts files under data_dir/* subdirectories, but one .contexts file exists under
+        data_dir directly, it will just return this file name.
+    """
     files = glob(os.path.join(data_dir, f'*/*{contexts_pattern}*.contexts'))
     if num > 0:
         tr_files = random.sample(files, num)
@@ -95,6 +97,7 @@ def contexts_for_quantity(data_dir, save_dir, num, filename_suffix='', contexts_
         f.write('\n'.join(tr_files))
     # Read files, merge content
     cont_file = os.path.join(data_dir, f'n{num}_{filename_suffix}.contexts')
+    # If there are no small .contexts files, we don't go into this loop and just return cont_file
     for fn in tqdm(tr_files, desc='Loading contexts'):
         with open(fn) as f:
             pairs = f.read()
