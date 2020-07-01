@@ -48,7 +48,7 @@ def hapax_legomena(text):
     return [w for w, c in cnt.most_common() if c == 1]
 
 
-def text2w2vf(corpus_tup, data_dir, window=5, vocab=[], processes=1, merge=False):
+def text2w2vf(corpus_tup, data_dir, window=5, vocab=[], processes=1, merge=False, filename_suffix=''):
     """Prepare contexts word2vecf using their context format:
        textual file of word-context pairs.
        each pair takes a separate line.
@@ -64,7 +64,7 @@ def text2w2vf(corpus_tup, data_dir, window=5, vocab=[], processes=1, merge=False
 
     def contexts(corp_tup):
         for fn, txt in tqdm(corp_tup):
-            cont_file = os.path.splitext(fn)[0] + f'_window-{window}.contexts'
+            cont_file = os.path.splitext(fn)[0] + f'{filename_suffix}_window-{window}.contexts'
             if window > 0:
                 if type(txt[0]) == str:   # space separated tokens
                     extract_neighbours(txt, cont_file, vocab, window)
@@ -97,20 +97,25 @@ def text2w2vf(corpus_tup, data_dir, window=5, vocab=[], processes=1, merge=False
         contexts(corpus_tup)
 
     if merge:
-        concatenate_files(data_dir, '.contexts', f'window-{window}_contexts.txt')
+        concatenate_files(data_dir, f'{filename_suffix}.contexts',
+                          f'{filename_suffix + "_" if filename_suffix else ""}window-{window}_contexts.txt')
 
 
 def concatenate_files(data_dir, file_pattern, outfile):
-    # concatenate files
-    print('Concatenate files')
-    with open(os.path.join(data_dir, outfile), 'w') as cf:
-        files = glob(os.path.join(data_dir, f'*/*{file_pattern}'))
-        for fn in tqdm(files):
-            with open(fn, 'r') as f:
-                p_pairs = f.read()
-                if p_pairs and p_pairs[-1] != '\n':
-                    p_pairs += '\n'
-                cf.write(p_pairs)
+    """ Concatenate files into one big file. """
+    whole_file = os.path.join(data_dir, outfile)
+    files = glob(os.path.join(data_dir, f'*/*{file_pattern}'))
+    for fn in tqdm(files, desc=f'Concatenating {file_pattern} files'):
+        with open(fn) as f:
+            pairs = f.read()
+            if pairs and pairs[-1] != '\n':
+                pairs += '\n'
+        if os.path.exists(whole_file):
+            append_write = 'a'  # append if already exists
+        else:
+            append_write = 'w'  # make a new file if not
+        with open(whole_file, append_write) as f:
+            f.write(pairs)
 
 
 def extract_neighbours(tokens, contexts_file, vocab=[], window=5):
@@ -125,7 +130,7 @@ def extract_neighbours(tokens, contexts_file, vocab=[], window=5):
                 if vocab and c not in vocab: continue
                 f.write(f'{tok} {s}{c}\n')
 
-
+# TODO: filter by a given vocab here too
 def context_pairs(text, contexts_file, lang='english'):
     """Prepare contexts word2vecf without their context format:
        textual file of word-context pairs.

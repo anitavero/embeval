@@ -73,7 +73,8 @@ def plot_distribution(dist_file, logscale=True):
     plt.show()
 
 
-def create_context_files(data_dir=None, jsons=None, window=5, vocab=[], processes=1, merge=False):
+def create_context_files(data_dir=None, jsons=None, window=5, vocab=[], processes=1, merge=False,
+                         filename_suffix=''):
     if data_dir:
         files = glob(os.path.join(data_dir, '*/*.json'))
     elif jsons:
@@ -85,7 +86,8 @@ def create_context_files(data_dir=None, jsons=None, window=5, vocab=[], processe
     for fl in files:
         with open(fl, 'r') as f:
             corpus_tup.append((fl, json.load(f)))
-    text2w2vf(corpus_tup, data_dir, window=window, vocab=vocab, processes=processes, merge=merge)
+    text2w2vf(corpus_tup, data_dir, window=window, vocab=vocab, processes=processes, merge=merge,
+              filename_suffix=filename_suffix)
 
 
 def contexts_for_quantity(data_dir, save_dir, num, filename_suffix='', contexts_pattern='',
@@ -178,42 +180,47 @@ def w2v_for_quantities(data_dir, save_dir, w2v_dir, sample_num, trfile_num, size
 
 @arg('min-count', type=int)
 @arg('max-count', type=int)
-def contexts_for_freqrange(data_dir, distribution_file, min_count, max_count, filename_suffix=''):
+def contexts_for_freqrange(data_dir, distribution_file, min_count, max_count, filename_suffix='', window=5,
+                           filter_context_files=False, processes=1):
     """Filter contexts txt file for <min_count> <max_count> frequency range."""
     with open(distribution_file, 'r') as f:
         dist = json.load(f)
     print(f'Filter dictionary for frequency range {min_count}-{max_count}')
     fqvocab = list(map(lambda y: y[0], filter(lambda x: x[1] >= min_count and x[1] <= max_count, dist.items())))
 
-    fqcont_file = os.path.join(data_dir, f'freq{min_count}-{max_count}{filename_suffix}_contexts.txt')
+    fqcont_file = os.path.join(data_dir, f'{filename_suffix}_contexts.txt')
 
-    print('Filter contexts files')
-    cfiles = glob(os.path.join(data_dir, '*/*.contexts'))
-    for cf in tqdm(cfiles):
-        with open(cf) as f:
-            pairs = f.read().split('\n')
-        if os.path.exists(fqcont_file):
-            append_write = 'a'  # append if already exists
-        else:
-            append_write = 'w'  # make a new file if not
-        with open(fqcont_file, append_write) as f:
-            for l in pairs:
-                if l != '':
-                    w, cw = l.split()
-                    cww = cw
-                    if '_' in cw:   # when we use Goldberg's extract_neighbours method
-                        cww = cw.split('_')[1]
-                    if w in fqvocab and cww in fqvocab:
-                        f.write(f'{w} {cw}\n')
+    if filter_context_files:
+        cfiles = glob(os.path.join(data_dir, '*/*.contexts'))
+        print('Filter contexts files')
+        for cf in tqdm(cfiles):
+            with open(cf) as f:
+                pairs = f.read().split('\n')
+            if os.path.exists(fqcont_file):
+                append_write = 'a'  # append if already exists
+            else:
+                append_write = 'w'  # make a new file if not
+            with open(fqcont_file, append_write) as f:
+                for l in pairs:
+                    if l != '':
+                        w, cw = l.split()
+                        cww = cw
+                        if '_' in cw:   # when we use Goldberg's extract_neighbours method
+                            cww = cw.split('_')[1]
+                        if w in fqvocab and cww in fqvocab:
+                            f.write(f'{w} {cw}\n')
+    else:   # extract_neighbours filters for freq range vocab while creating context files
+        create_context_files(data_dir=data_dir, jsons=None, window=window, vocab=fqvocab, processes=processes,
+                             merge=True, filename_suffix=filename_suffix)
+
+
     return fqcont_file
-
-#TODO: extract_neighbours could also filter for freq ragne vocab while creating context files
 
 
 @arg('min-count', type=int)
 @arg('max-count', type=int)
-def w2v_for_freqrange(data_dir, save_dir, w2v_dir, min_count, max_count, size=300, workers=4,
-                      negative=15, exp_name=''):
+def w2v_for_freqrange(data_dir, save_dir, distribution_file, w2v_dir, min_count, max_count, size=300, workers=4, window=5,
+                      negative=15, exp_name='', filter_context_files=False):
     """Train Word2Vec on a corpus filtered by the given word frequency range.
     :param data_dir: 'tokenized' directory with subdirectories of .context files.
     :param save_dir: directory where we save the model and log files.
@@ -230,11 +237,13 @@ def w2v_for_freqrange(data_dir, save_dir, w2v_dir, min_count, max_count, size=30
         f.write(f'Size: {size}\n')
         f.write(f'Negative: {negative}\n')
 
-    cont_file = contexts_for_freqrange(data_dir, save_dir, min_count, max_count, exp_name)
+    suffix = f'_freq{min_count}-{max_count}_{exp_name}'
+
+    cont_file = contexts_for_freqrange(data_dir, distribution_file, min_count, max_count, filename_suffix=suffix,
+                                       window=window, processes=workers, filter_context_files=filter_context_files)
     # Training Word2Vec
     print('Training')
-    train_word2vecf.train(cont_file, save_dir, w2v_dir,
-                          filename_suffix=f'_freq{min_count}-{max_count}_{exp_name}',
+    train_word2vecf.train(cont_file, save_dir, w2v_dir, filename_suffix=suffix,
                           min_count=min_count, size=size, negative=negative, threads=workers)
 
 
