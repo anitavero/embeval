@@ -73,8 +73,14 @@ def plot_distribution(dist_file, logscale=True):
     plt.show()
 
 
-def create_context_files(data_dir, window=5, vocab=[], processes=1, merge=False):
-    files = glob(os.path.join(data_dir, '*/*.json'))
+def create_context_files(data_dir=None, jsons=None, window=5, vocab=[], processes=1, merge=False):
+    if data_dir:
+        files = glob(os.path.join(data_dir, '*/*.json'))
+    elif jsons:
+        files = jsons
+    else:
+        print('Either data_dir or jsons parameter is required.')
+        raise
     corpus_tup = []
     for fl in files:
         with open(fl, 'r') as f:
@@ -82,42 +88,60 @@ def create_context_files(data_dir, window=5, vocab=[], processes=1, merge=False)
     text2w2vf(corpus_tup, data_dir, window=window, vocab=vocab, processes=processes, merge=merge)
 
 
-def contexts_for_quantity(data_dir, save_dir, num, filename_suffix='', contexts_pattern=''):
+def contexts_for_quantity(data_dir, save_dir, num, filename_suffix='', contexts_pattern='',
+                          window=5, vocab=[], processes=1):
     """Loads randomly chosen, given number of context files and concatenates them into one file.
         If there are no .contexts files under data_dir/* subdirectories, but one .contexts file exists under
         data_dir directly, it will just return this file name.
     """
     files = glob(os.path.join(data_dir, f'*/*{contexts_pattern}*.contexts'))
-    if num > 0:
+    tr_files = files
+    if files and num > 0:   # if num <= 0 we train on the whole corpus
         tr_files = random.sample(files, num)
-    else:   # otherwise we train on the whole corpus
-        tr_files = files
-    # Save training file paths
-    with open(os.path.join(save_dir, f'train_files_n{num}_{filename_suffix}.txt'), 'w') as f:
-        f.write('\n'.join(tr_files))
+
     # Read files, merge content
     cont_file = os.path.join(data_dir, f'n{num}_{filename_suffix}.contexts')
-    # If there are no small .contexts files, we don't go into this loop and just return cont_file
-    for fn in tqdm(tr_files, desc='Loading contexts'):
-        with open(fn) as f:
-            pairs = f.read()
-            if pairs and pairs[-1] != '\n':
-                pairs += '\n'
-        if os.path.exists(cont_file):
-            append_write = 'a'  # append if already exists
-        else:
-            append_write = 'w'  # make a new file if not
-        with open(cont_file, append_write) as f:
-            f.write(pairs)
+
+    # If big cont_file exists, we just return it. Otherwise:
+    if not os.path.exists(cont_file):
+        # If neither big cont_file nor .contexts files in tr_files exist,
+        #  then call create_context_files with randomly sampled jsons
+        if tr_files == []:
+            print('Creating .contexts files from jsons.')
+            jsons = glob(os.path.join(data_dir, '*/*.json'))
+            if num > 0:
+                tr_jsons = random.sample(jsons, num)
+            else:  # otherwise we train on the whole corpus
+                tr_jsons = jsons
+            create_context_files(data_dir=None, jsons=tr_jsons, window=window, vocab=vocab, processes=processes, merge=False)
+            tr_files = [os.path.splitext(fn)[0] + f'_window-{window}.contexts' for fn in tr_jsons]
+        # Concatenate .contexts files into one big file
+        for fn in tqdm(tr_files, desc='Loading contexts'):
+            with open(fn) as f:
+                pairs = f.read()
+                if pairs and pairs[-1] != '\n':
+                    pairs += '\n'
+            if os.path.exists(cont_file):
+                append_write = 'a'  # append if already exists
+            else:
+                append_write = 'w'  # make a new file if not
+            with open(cont_file, append_write) as f:
+                f.write(pairs)
+
+        # Save training file paths
+        with open(os.path.join(save_dir, f'train_files_n{num}_{filename_suffix}.txt'), 'w') as f:
+            f.write('\n'.join(tr_files))
+
     return cont_file
 
 
 @arg('num', type=int)
 def w2v_for_quantity(data_dir, save_dir, w2v_dir, num, size=300, min_count=10, workers=4,
-                    negative=15, filename_suffix='', contexts_pattern=''):
+                    negative=15, filename_suffix='', contexts_pattern='', window=5, vocab=[]):
     """Train Word2Vec on a random number of tokenized json files.
     :param data_dir: 'tokenized' directory with subdirectories of .context files."""
-    cont_file = contexts_for_quantity(data_dir, save_dir, num, filename_suffix, contexts_pattern=contexts_pattern)
+    cont_file = contexts_for_quantity(data_dir, save_dir, num, filename_suffix, contexts_pattern=contexts_pattern,
+                                      window=window, vocab=vocab, processes=workers)
     # Training Word2Vec
     print('Training')
     train_word2vecf.train(cont_file, save_dir, w2v_dir, filename_suffix=f'_n{num}_{filename_suffix}',
@@ -128,7 +152,7 @@ def w2v_for_quantity(data_dir, save_dir, w2v_dir, num, size=300, min_count=10, w
 @arg('trfile-num', type=int)
 @arg('sample-num', type=int)
 def w2v_for_quantities(data_dir, save_dir, w2v_dir, sample_num, trfile_num, size=300, min_count=10, workers=4,
-                       negative=15, exp_name='', contexts_pattern=''):
+                       negative=15, exp_name='', contexts_pattern='', window=5, vocab=[]):
     """Train several Word2Vecs in parallel for the same data quantity, multiple times on random subsets.
     :param data_dir: 'tokenized' directory with subdirectories of jsons.
     :param save_dir: directory where we save the model and log files.
@@ -148,7 +172,8 @@ def w2v_for_quantities(data_dir, save_dir, w2v_dir, sample_num, trfile_num, size
 
     for i in tqdm(range(sample_num)):
         w2v_for_quantity(data_dir, save_dir, w2v_dir, trfile_num, size, min_count, workers,
-                         negative, filename_suffix=f's{i}{exp_name}', contexts_pattern=contexts_pattern)
+                         negative, filename_suffix=f's{i}{exp_name}', contexts_pattern=contexts_pattern,
+                         window=window, vocab=vocab)
 
 
 @arg('min-count', type=int)
