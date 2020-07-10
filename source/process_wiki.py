@@ -96,10 +96,10 @@ def contexts_for_quantity(data_dir, save_dir, num, filename_suffix='', contexts_
         If there are no .contexts files under data_dir/* subdirectories, but one .contexts file exists under
         data_dir directly, it will just return this file name.
     """
-    files = glob(os.path.join(data_dir, f'*/*{contexts_pattern}*.contexts'))
-    tr_files = files
-    if files and num > 0:   # if num <= 0 we train on the whole corpus
-        tr_files = random.sample(files, num)
+    # files = glob(os.path.join(data_dir, f'*/*{contexts_pattern}*.contexts'))
+    # tr_files = files
+    # if files and num > 0:   # if num <= 0 we train on the whole corpus
+    #     tr_files = random.sample(files, num)
 
     # Read files, merge content
     cont_file = os.path.join(data_dir, f'n{num}_{filename_suffix}.contexts')
@@ -108,17 +108,22 @@ def contexts_for_quantity(data_dir, save_dir, num, filename_suffix='', contexts_
     if not os.path.exists(cont_file):
         # If neither big cont_file nor .contexts files in tr_files exist,
         #  then call create_context_files with randomly sampled jsons
-        if tr_files == []:
-            print('Creating .contexts files from jsons.')
-            jsons = glob(os.path.join(data_dir, '*/*.json'))
-            if num > 0:
-                tr_jsons = random.sample(jsons, num)
-            else:  # otherwise we train on the whole corpus
-                tr_jsons = jsons
-            create_context_files(data_dir=None, jsons=tr_jsons, window=window, vocab=vocab, processes=processes, merge=False)
-            tr_files = [os.path.splitext(fn)[0] + f'_window-{window}.contexts' for fn in tr_jsons]
+        # if tr_files == []:
+        print('Loading .contexts files or creating them from jsons')
+        jsons = glob(os.path.join(data_dir, '*/*.json'))
+        if num > 0:
+            tr_jsons = random.sample(jsons, num)
+        else:  # otherwise we train on the whole corpus
+            tr_jsons = jsons
+        js2cx = lambda js: js.replace('.json', f'_window-{window}.contexts')
+        tr_files = [js2cx(js) for js in tr_jsons if os.path.exists(js2cx(js))]
+        cr_cx_jsons = [js for js in tr_jsons if not os.path.exists(js2cx(js))]
+        if cr_cx_jsons:
+            print('Create contexts from:\n', '\n'.join(cr_cx_jsons))
+            create_context_files(data_dir=None, jsons=cr_cx_jsons, window=window, vocab=vocab, processes=processes, merge=False)
+        tr_files += [os.path.splitext(fn)[0] + f'_window-{window}.contexts' for fn in tr_jsons]
         # Concatenate .contexts files into one big file
-        for fn in tqdm(tr_files, desc='Loading contexts'):
+        for fn in tqdm(tr_files, desc='Concatenating contexts'):
             with open(fn) as f:
                 pairs = f.read()
                 if pairs and pairs[-1] != '\n':
