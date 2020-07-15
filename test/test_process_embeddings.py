@@ -5,6 +5,38 @@ sys.path.append(os.getcwd() + '/source')
 from source.process_embeddings import *
 
 
+data_dir = 'test/data/'
+
+
+def test_filter_for_freqrange():
+    """
+    test vecs = np.array([[1, 1, 1],
+                          [2, 2, 2],
+                          [3, 3, 3],
+                          [4, 4, 4]])
+    test vocab = ['a', 'b', 'c', 'd']
+    dist = {"a": 1, "b": 10, "c": 20, "d": 40}
+    """
+    fq_ranges = [(0, 15), (30, 100), (50, 60), (1, 40)]
+    fembs = filter_for_freqrange(data_dir, ['test_model'], data_dir + '/dist.json', fq_ranges)
+
+    assert (fembs[f'{0} {15}']['vecs'] == np.array([[1, 1, 1],
+                                                    [2, 2, 2]])).all()
+    assert fembs[f'{0} {15}']['vocab'] == ['a', 'b']
+
+    assert (fembs[f'{30} {100}']['vecs'] == np.array([[4, 4, 4]])).all()
+    assert fembs[f'{30} {100}']['vocab'] == ['d']
+
+    assert (fembs[f'{50} {60}']['vecs'] == np.empty((0, 3))).all()
+    assert fembs[f'{50} {60}']['vocab'] == []
+
+    assert (fembs[f'{1} {40}']['vecs'] == np.array([[1, 1, 1],
+                                                    [2, 2, 2],
+                                                    [3, 3, 3],
+                                                    [4, 4, 4]])).all()
+    assert fembs[f'{1} {40}']['vocab'] == ['a', 'b', 'c', 'd']
+
+
 def test_filter_by_vocab():
     emb = np.array([[1, 2, 3],
                     [4, 5, 6],
