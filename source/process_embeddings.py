@@ -4,9 +4,136 @@ import json
 import numpy as np
 from tqdm import tqdm
 import argh
-from typing import List
 from itertools import combinations
-from utils import get_vec
+from typing import List, Tuple
+from gensim.models import Word2Vec
+import re
+import io
+from copy import deepcopy
+
+
+class Embeddings:
+    """Data class for storing embeddings."""
+    # Embeddings
+    embeddings = List[np.ndarray]
+    vocabs = List[List[str]]
+    vecs_names = List[str]
+    vecs_labels = List[str]
+
+    # Linguistic Embeddings
+    fasttext_vss = {'wikinews': 'wiki-news-300d-1M.vec',
+                    'wikinews_sub': 'wiki-news-300d-1M-subword.vec',
+                    'crawl': 'crawl-300d-2M.vec',
+                    'crawl_sub': 'crawl-300d-2M-subword',
+                    'w2v13': ''}
+
+    def __init__(self, datadir: str, vecs_names, ling_vecs_names=None):
+        # Load Linguistic Embeddings if they are given
+        if ling_vecs_names is None:
+            ling_vecs_names = []
+        self.embeddings = []
+        self.vocabs = []
+        self.vecs_names = []
+        if ling_vecs_names:
+            self.vecs_names = deepcopy(ling_vecs_names)
+            for lvn in ling_vecs_names:
+                if lvn == 'w2v13':
+                    print(f'Loading W2V 2013...')
+                    w2v = json.load(open(datadir + '/w2v_simverb.json'))
+                    w2v_simrel = json.load(open(datadir + '/simrel-wikipedia.json'))
+                    w2v.update(w2v_simrel)
+                    self.embeddings.append(np.array(list(w2v.values())))
+                    self.vocabs.append(np.array(list(w2v.keys())))
+                else:
+                    print(f'Loading FastText - {lvn}...')
+                    fasttext_vecs, fasttext_vocab = self.load_fasttext(datadir + self.fasttext_vss[lvn])
+                    self.embeddings.append(fasttext_vecs)
+                    self.vocabs.append(fasttext_vocab)
+                print('Done.')
+
+        # Load other (visual) embeddings
+        self.vecs_names += vecs_names
+        for vecs_name in vecs_names:
+            vecs, vocab = self.load_vecs(vecs_name, datadir)
+            self.embeddings.append(vecs)
+            self.vocabs.append(vocab)
+
+        self.vecs_labels = [self.get_label(name) for name in self.vecs_names]
+
+    @staticmethod
+    def get_labels(name_list):
+        return [Embeddings.get_label(name) for name in name_list]
+
+    @staticmethod
+    def get_label(name):
+        """Return a printable label for embedding names."""
+        name = re.sub('ground_truth [-|\|] ', '', name)  # Remove ground_truth prefix
+
+        def label(nm):
+            cnn_format = {'vgg': 'VGG', 'alexnetfc7': 'AlexNet', 'alexnet': 'AlexNet',
+                          'resnet-18': 'ResNet-18', 'resnet152': 'ResNet-152'}
+            mod_format = {'vs': 'VIS', 'mm': 'MM'}
+            if 'frcnn' in nm:
+                _, context, modality, _ = nm.split('_')
+                return f'Google-{mod_format[modality]} {context}'
+            elif 'fmri' in nm:
+                if 'combined' in nm:
+                    _, context, modality, _ = nm.split('_')
+                    return f'VG-{mod_format[modality]} {context}'
+                elif 'descriptors' in nm:
+                    context, _, modality, _ = nm.split('-')[1].split('_')
+                    return f'VG-{mod_format[modality]} {context}'
+                else:
+                    _, data, cnn = nm.split('_')
+                    return f'{data.capitalize()} {cnn_format[cnn]}'
+            elif 'men' in nm:
+                _, context = nm.split('-')
+                return f'VG-{context}'
+            elif 'vecs' in nm:
+                return 'VG SceneGraph'
+            elif 'model' in nm:
+                return nm
+            elif nm not in Embeddings.fasttext_vss.keys():
+                data, cnn = nm.split('_')
+                return f'{data.capitalize()} {cnn_format[cnn]}'
+            else:
+                return nm
+
+        if MM_TOKEN in name:
+            name1, name2 = name.split(MM_TOKEN)
+            return label(name1) + MM_TOKEN + label(name2)
+        else:
+            return label(name)
+
+    def load_fasttext(self, fname: str) -> Tuple[np.ndarray, np.ndarray]:
+        fin = io.open(fname, 'r', encoding='utf-8', newline='\n', errors='ignore')
+        n, d = map(int, fin.readline().split())
+        fasttext_vocab = []
+        fasttext_vecs = []
+        for line in fin:
+            tokens = line.rstrip().split(' ')
+            fasttext_vocab.append(tokens[0])
+            fasttext_vecs.append(list(map(float, tokens[1:])))
+        return np.array(fasttext_vecs), np.array(fasttext_vocab)
+
+    def load_vecs(self, vecs_name: str, datadir: str, filter_vocab=[]):
+        """Load npy vector files and vocab files. If they are not present load try loading gensim model."""
+        path = datadir + f'/{vecs_name}'
+        try:
+            if os.path.exists(path + '.vocab'):
+                vecs = np.load(path + '.npy')
+                vvocab = open(path + '.vocab').read().split()
+                vvocab = np.array(vvocab)
+            else:
+                model = Word2Vec.load(path)
+                vecs = model.wv.vectors
+                vvocab = np.array(list(model.wv.vocab.keys()))
+        except FileNotFoundError as err:
+            print(f'{err.filename} not found.')
+            return
+        if filter_vocab:
+            vecs, vvocab = filter_by_vocab(vecs, vvocab, filter_vocab)
+        return vecs, vvocab
 
 
 def serialize2npy(filepath: str, savedir: str, maxnum: int = 10):
@@ -129,6 +256,31 @@ def mid_fusion(embeddings, vocabs, labels,
         assert mm_embedding.shape == (len(mm_vocab), emb1.shape[1] + emb2.shape[1])
 
     return mm_embeddings, mm_vocabs, mm_labels
+
+
+def filter_by_vocab(vecs, vocab, filter_vocab):
+    fvecs = np.empty((0, vecs[0].shape[0]))
+    fvocab = []
+    for w in filter_vocab:
+        if w in vocab:
+            fvocab.append(w)
+            fvecs = np.vstack([fvecs, vecs[np.where(vocab == w)[0][0]]])
+    return fvecs, fvocab
+
+
+def filter_for_freqrange(datadir, vecs_names, distribution_file, freq_ranges):
+    print('Load embeddings and distribution file')
+    embs = Embeddings(datadir, vecs_names)
+    with open(distribution_file, 'r') as f:
+        dist = json.load(f)
+    fembs = {}
+    print('Filter embeddings for freq ranges')
+    for emb, vocab, label in tqdm(zip(embs.embeddings, embs.vocabs, embs.vecs_labels)):
+        for min, max in freq_ranges:
+            filter_vocab = list(map(lambda y: y[0], filter(lambda x: x[1] >= min and x[1] <= max, dist.items())))
+            femb, fvocab = filter_by_vocab(emb, vocab, filter_vocab)
+            fembs[f'{min} {max}'] = {'label': label, 'vecs': femb, 'vocab': fvocab}
+    return fembs
 
 
 if __name__ == '__main__':

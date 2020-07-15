@@ -4,7 +4,6 @@ import numpy as np
 from sklearn.metrics.pairwise import cosine_distances, cosine_similarity
 from scipy.stats import spearmanr
 from nltk.corpus import wordnet as wn
-from gensim.models import Word2Vec
 import spacy
 from tqdm import tqdm
 import json
@@ -17,15 +16,13 @@ from matplotlib.lines import Line2D
 import matplotlib
 
 matplotlib.style.use('fivethirtyeight')
-import io
 from itertools import combinations, product
 from tabulate import tabulate, LATEX_ESCAPE_RULES
 from copy import deepcopy
 from collections import defaultdict
 import warnings
-import re
 
-from process_embeddings import mid_fusion, MM_TOKEN
+from source.process_embeddings import mid_fusion, MM_TOKEN, Embeddings
 import utils
 from utils import get_vec, pfont, PrintFont, LaTeXFont, latex_table_post_process, latex_table_wrapper, dict2struct_array
 
@@ -65,143 +62,9 @@ class DataSets:
         self.normalizers = {'MEN': 50, 'SimLex': 10}  # , 'SimVerb': 10}
 
 
-class Embeddings:
-    """Data class for storing embeddings."""
-    # Embeddings
-    embeddings = List[np.ndarray]
-    vocabs = List[List[str]]
-    vecs_names = List[str]
-    vecs_labels = List[str]
-
-    # Linguistic Embeddings
-    fasttext_vss = {'wikinews': 'wiki-news-300d-1M.vec',
-                    'wikinews_sub': 'wiki-news-300d-1M-subword.vec',
-                    'crawl': 'crawl-300d-2M.vec',
-                    'crawl_sub': 'crawl-300d-2M-subword',
-                    'w2v13': ''}
-
-    def __init__(self, datadir: str, vecs_names, ling_vecs_names=None):
-        # Load Linguistic Embeddings if they are given
-        if ling_vecs_names is None:
-            ling_vecs_names = []
-        self.embeddings = []
-        self.vocabs = []
-        self.vecs_names = []
-        if ling_vecs_names:
-            self.vecs_names = deepcopy(ling_vecs_names)
-            for lvn in ling_vecs_names:
-                if lvn == 'w2v13':
-                    print(f'Loading W2V 2013...')
-                    w2v = json.load(open(datadir + '/w2v_simverb.json'))
-                    w2v_simrel = json.load(open(datadir + '/simrel-wikipedia.json'))
-                    w2v.update(w2v_simrel)
-                    self.embeddings.append(np.array(list(w2v.values())))
-                    self.vocabs.append(np.array(list(w2v.keys())))
-                else:
-                    print(f'Loading FastText - {lvn}...')
-                    fasttext_vecs, fasttext_vocab = self.load_fasttext(datadir + self.fasttext_vss[lvn])
-                    self.embeddings.append(fasttext_vecs)
-                    self.vocabs.append(fasttext_vocab)
-                print('Done.')
-
-        # Load other (visual) embeddings
-        self.vecs_names += vecs_names
-        for vecs_name in vecs_names:
-            vecs, vocab = self.load_vecs(vecs_name, datadir)
-            self.embeddings.append(vecs)
-            self.vocabs.append(vocab)
-
-        self.vecs_labels = [self.get_label(name) for name in self.vecs_names]
-
-    @staticmethod
-    def get_labels(name_list):
-        return [Embeddings.get_label(name) for name in name_list]
-
-    @staticmethod
-    def get_label(name):
-        """Return a printable label for embedding names."""
-        name = re.sub('ground_truth [-|\|] ', '', name)  # Remove ground_truth prefix
-
-        def label(nm):
-            cnn_format = {'vgg': 'VGG', 'alexnetfc7': 'AlexNet', 'alexnet': 'AlexNet',
-                          'resnet-18': 'ResNet-18', 'resnet152': 'ResNet-152'}
-            mod_format = {'vs': 'VIS', 'mm': 'MM'}
-            if 'frcnn' in nm:
-                _, context, modality, _ = nm.split('_')
-                return f'Google-{mod_format[modality]} {context}'
-            elif 'fmri' in nm:
-                if 'combined' in nm:
-                    _, context, modality, _ = nm.split('_')
-                    return f'VG-{mod_format[modality]} {context}'
-                elif 'descriptors' in nm:
-                    context, _, modality, _ = nm.split('-')[1].split('_')
-                    return f'VG-{mod_format[modality]} {context}'
-                else:
-                    _, data, cnn = nm.split('_')
-                    return f'{data.capitalize()} {cnn_format[cnn]}'
-            elif 'men' in nm:
-                _, context = nm.split('-')
-                return f'VG-{context}'
-            elif 'vecs' in nm:
-                return 'VG SceneGraph'
-            elif 'model' in nm:
-                return nm
-            elif nm not in Embeddings.fasttext_vss.keys():
-                data, cnn = nm.split('_')
-                return f'{data.capitalize()} {cnn_format[cnn]}'
-            else:
-                return nm
-
-        if MM_TOKEN in name:
-            name1, name2 = name.split(MM_TOKEN)
-            return label(name1) + MM_TOKEN + label(name2)
-        else:
-            return label(name)
-
-    def load_fasttext(self, fname: str) -> Tuple[np.ndarray, np.ndarray]:
-        fin = io.open(fname, 'r', encoding='utf-8', newline='\n', errors='ignore')
-        n, d = map(int, fin.readline().split())
-        fasttext_vocab = []
-        fasttext_vecs = []
-        for line in fin:
-            tokens = line.rstrip().split(' ')
-            fasttext_vocab.append(tokens[0])
-            fasttext_vecs.append(list(map(float, tokens[1:])))
-        return np.array(fasttext_vecs), np.array(fasttext_vocab)
-
-    def load_vecs(self, vecs_name: str, datadir: str, filter_vocab=[]):
-        """Load npy vector files and vocab files. If they are not present load try loading gensim model."""
-        path = datadir + f'/{vecs_name}'
-        try:
-            if os.path.exists(path + '.vocab'):
-                vecs = np.load(path + '.npy')
-                vvocab = open(path + '.vocab').read().split()
-                vvocab = np.array(vvocab)
-            else:
-                model = Word2Vec.load(path)
-                vecs = model.wv.vectors
-                vvocab = np.array(list(model.wv.vocab.keys()))
-        except FileNotFoundError as err:
-            print(f'{err.filename} not found.')
-            return
-        if filter_vocab:
-            vecs, vvocab = filter_by_vocab(vecs, vvocab, filter_vocab)
-        return vecs, vvocab
-
-
 def dataset_vocab(dataset: str) -> list:
     pairs = list(zip(*dataset))[:2]
     return list(set(pairs[0] + pairs[1]))
-
-
-def filter_by_vocab(vecs, vocab, filter_vocab):
-    fvecs = np.empty((0, vecs[0].shape[0]))
-    fvocab = []
-    for w in filter_vocab:
-        if w in vocab:
-            fvocab.append(w)
-            fvecs = np.vstack([fvecs, vecs[np.where(vocab == w)[0][0]]])
-    return fvecs, fvocab
 
 
 def compute_dists(vecs):
