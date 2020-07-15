@@ -293,4 +293,4 @@ def filter_for_freqrange(datadir, vecs_names, distribution_file, freq_ranges):
 
 
 if __name__ == '__main__':
-    argh.dispatch_command(serialize2npy)
+    argh.dispatch_commands([serialize2npy, filter_for_freqrange])
