@@ -23,7 +23,7 @@ from collections import defaultdict
 import warnings
 
 from source.process_embeddings import mid_fusion, MM_TOKEN, Embeddings
-import utils
+import source.utils as utils
 from utils import get_vec, pfont, PrintFont, LaTeXFont, latex_table_post_process, latex_table_wrapper, dict2struct_array
 
 sys.path.append('../2v2_software_privatefork/')
