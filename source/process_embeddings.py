@@ -282,6 +282,13 @@ def filter_for_freqrange(datadir, vecs_names, distribution_file, freq_ranges):
             filter_vocab = list(map(lambda y: y[0], filter(lambda x: x[1] >= min and x[1] <= max, dist.items())))
             femb, fvocab = filter_by_vocab(emb, vocab, filter_vocab)
             fembs[f'{min} {max}'] = {'label': label, 'vecs': femb, 'vocab': fvocab}
+
+            # Save embeddings and vocabs for freq range
+            new_label = f'{datadir}/{label}_fqrng_{min}-{max}'
+            with open(f'{new_label}.vocab', 'w') as f:
+                f.write('\n'.join(fvocab))
+            np.save(f'{new_label}.npy', femb)
+
     return fembs
 
 
