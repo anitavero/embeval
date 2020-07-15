@@ -10,12 +10,13 @@ data_dir = 'test/data/'
 
 def test_filter_for_freqrange():
     """
-    test vecs = np.array([[1, 1, 1],
-                          [2, 2, 2],
-                          [3, 3, 3],
-                          [4, 4, 4]])
-    test vocab = ['a', 'b', 'c', 'd']
-    dist = {"a": 1, "b": 10, "c": 20, "d": 40}
+    Test data which is loaded from 'test/data':
+        test_model = np.array([[1, 1, 1],
+                               [2, 2, 2],
+                               [3, 3, 3],
+                               [4, 4, 4]])
+        test_vocab = ['a', 'b', 'c', 'd']
+        dist = {"a": 1, "b": 10, "c": 20, "d": 40}
     """
     fq_ranges = [(0, 15), (30, 100), (50, 60), (1, 40)]
     fembs = filter_for_freqrange(data_dir, ['test_model'], data_dir + '/dist.json', fq_ranges)
