@@ -1,7 +1,37 @@
 import sys, os
+sys.path.append(os.getcwd())
 sys.path.append(os.getcwd() + '/source')
 
 from source.process_embeddings import *
+
+
+def test_filter_by_vocab():
+    emb = np.array([[1, 2, 3],
+                    [4, 5, 6],
+                    [7, 8, 9],
+                    [10, 11, 12]])
+    vocab = np.array(['a', 'b', 'c', 'd'])
+
+    filter_vocab = ['a']
+    femb, fvocab = filter_by_vocab(emb, vocab, filter_vocab)
+    assert fvocab == ['a']
+    assert (femb == np.array([[1, 2, 3]])).all()
+
+    filter_vocab = []
+    femb, fvocab = filter_by_vocab(emb, vocab, filter_vocab)
+    assert fvocab == []
+    assert (femb == np.empty((0, 3))).all()
+
+    filter_vocab = ['b', 'd']
+    femb, fvocab = filter_by_vocab(emb, vocab, filter_vocab)
+    assert fvocab == ['b', 'd']
+    assert (femb == np.array([[4, 5, 6],
+                             [10, 11, 12]])).all()
+
+    filter_vocab = vocab
+    femb, fvocab = filter_by_vocab(emb, vocab, filter_vocab)
+    assert (fvocab == vocab).all()
+    assert (femb == emb).all()
 
 
 def test_mid_fusion():

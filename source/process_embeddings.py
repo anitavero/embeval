@@ -259,6 +259,8 @@ def mid_fusion(embeddings, vocabs, labels,
 
 
 def filter_by_vocab(vecs, vocab, filter_vocab):
+    """Filter numpy array and corresponding vocab, so they contain words and vectors for
+        words in filter_vocab."""
     fvecs = np.empty((0, vecs[0].shape[0]))
     fvocab = []
     for w in filter_vocab:
