@@ -286,6 +286,7 @@ def filter_for_freqranges(datadir, file_pattern, distribution_file, num_groups=3
     #         fmin, fmax = int(fqf1[-1]), int(fqf2[0])
     #         fqvocabs[]
 
+    print(f'Divide vocab to {num_groups} splits with approx. equal mass')
     fqvocabs = divide_vocab_by_freqranges(distribution_file, num_groups)
 
     vecs_names = [get_file_name(path) for path in glob(os.path.join(datadir, f'*{file_pattern}*.npy'))]
@@ -310,7 +311,7 @@ def filter_for_freqranges(datadir, file_pattern, distribution_file, num_groups=3
     return fembs
 
 
-def divide_vocab_by_freqranges(distribution_file, num_groups=3):
+def divide_vocab_by_freqranges(distribution_file, num_groups=3, save=False):
     with open(distribution_file, 'r') as f:
         dist = json.load(f)
     sorted_dist = sorted(dist.items(), key=lambda item: item[1])    # sort words by frequency
@@ -327,18 +328,20 @@ def divide_vocab_by_freqranges(distribution_file, num_groups=3):
         group_sum += c
         if group_sum > group_mass:
             fqvocabs[f'{fmin} {sorted_dist[i-1][1]}'] = fqvocab[:-1]
-            # Save embeddings and vocabs for freq range
-            new_label = f'{os.path.splitext(distribution_file)[0]}_fqrng_{fmin}-{sorted_dist[i-1][1]}'
-            with open(f'{new_label}.vocab', 'w') as f:
-                f.write('\n'.join(fqvocab))
+            if save:
+                # Save embeddings and vocabs for freq range
+                new_label = f'{os.path.splitext(distribution_file)[0]}_fqrng_{fmin}-{sorted_dist[i-1][1]}'
+                with open(f'{new_label}.vocab', 'w') as f:
+                    f.write('\n'.join(fqvocab))
             fqvocab = [w]
             fmin = c
             group_sum = c
         if i == vocablen - 1:
             fqvocabs[f'{fmin} {sorted_dist[i][1]}'] = fqvocab
-            new_label = f'{os.path.splitext(distribution_file)[0]}_fqrng_{fmin}-{sorted_dist[i][1]}'
-            with open(f'{new_label}.vocab', 'w') as f:
-                f.write('\n'.join(fqvocab))
+            if save:
+                new_label = f'{os.path.splitext(distribution_file)[0]}_fqrng_{fmin}-{sorted_dist[i][1]}'
+                with open(f'{new_label}.vocab', 'w') as f:
+                    f.write('\n'.join(fqvocab))
 
     return fqvocabs
 
