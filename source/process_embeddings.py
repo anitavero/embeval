@@ -265,15 +265,10 @@ def mid_fusion(embeddings, vocabs, labels,
 def filter_by_vocab(vecs, vocab, filter_vocab):
     """Filter numpy array and corresponding vocab, so they contain words and vectors for
         words in filter_vocab."""
-    # fvocab = []
     if filter_vocab == []:
         return [], []
     vidx = {x: i for i, x in tqdm(enumerate(vocab), desc='Vocab index')}
     idx, fvocab = zip(*[(vidx[w], w) for w in tqdm(vocab, desc='Filter index') if w in filter_vocab])
-    # for w in tqdm(filter_vocab):
-    #     if w in vocab:
-    #         fvocab.append(w)
-    #         idx.append(int(np.where(vocab == w)[0][0]))
     fvecs = vecs[np.array(idx, dtype=int), :]
     return fvecs, list(fvocab)
 
