@@ -265,12 +265,13 @@ def mid_fusion(embeddings, vocabs, labels,
 def filter_by_vocab(vecs, vocab, filter_vocab):
     """Filter numpy array and corresponding vocab, so they contain words and vectors for
         words in filter_vocab."""
-    fvecs = np.empty((0, vecs[0].shape[0]))
     fvocab = []
+    idx = []
     for w in filter_vocab:
         if w in vocab:
             fvocab.append(w)
-            fvecs = np.vstack([fvecs, vecs[np.where(vocab == w)[0][0]]])
+            idx.append(int(np.where(vocab == w)[0][0]))
+    fvecs = vecs[np.array(idx, dtype=int), :]
     return fvecs, fvocab
 
 
