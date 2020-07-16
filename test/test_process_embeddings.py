@@ -8,7 +8,7 @@ from source.process_embeddings import *
 data_dir = 'test/data/'
 
 
-def test_filter_for_freqrange():
+def test_divide_vocab_by_freqranges():
     """
     Test data which is loaded from 'test/data':
         test_model = np.array([[1, 1, 1],
@@ -17,25 +17,25 @@ def test_filter_for_freqrange():
                                [4, 4, 4]])
         test_vocab = ['a', 'b', 'c', 'd']
         dist = {"a": 1, "b": 10, "c": 20, "d": 40}
+        dist1 = {"a": 1, "b": 5, "c": 10, "d": 15, "e": 21, "f": 25}
     """
-    fq_ranges = [(0, 15), (30, 100), (50, 60), (1, 40)]
-    fembs = filter_for_freqranges(data_dir, ['test_model'], data_dir + '/dist.json', fq_ranges)
+    fqvocabs = divide_vocab_by_freqranges(data_dir + '/dist.json', num_groups=3)
+    assert list(fqvocabs.keys()) == ['1 10', '20 20', '40 40']
+    assert fqvocabs['1 10'] == ['a', 'b']
+    assert fqvocabs['20 20'] == ['c']
+    assert fqvocabs['40 40'] == ['d']
 
-    assert (fembs[f'{0} {15}']['vecs'] == np.array([[1, 1, 1],
-                                                    [2, 2, 2]])).all()
-    assert fembs[f'{0} {15}']['vocab'] == ['a', 'b']
+    fqvocabs = divide_vocab_by_freqranges(data_dir + '/dist.json', num_groups=2)
+    assert list(fqvocabs.keys()) == ['1 20', '40 40']
+    assert fqvocabs['1 20'] == ['a', 'b', 'c']
+    assert fqvocabs['40 40'] == ['d']
 
-    assert (fembs[f'{30} {100}']['vecs'] == np.array([[4, 4, 4]])).all()
-    assert fembs[f'{30} {100}']['vocab'] == ['d']
+    fqvocabs = divide_vocab_by_freqranges(data_dir + '/dist.json', num_groups=1)
+    assert list(fqvocabs.keys()) == ['1 40']
+    assert fqvocabs['1 40'] == ['a', 'b', 'c', 'd']
 
-    assert (fembs[f'{50} {60}']['vecs'] == np.empty((0, 3))).all()
-    assert fembs[f'{50} {60}']['vocab'] == []
-
-    assert (fembs[f'{1} {40}']['vecs'] == np.array([[1, 1, 1],
-                                                    [2, 2, 2],
-                                                    [3, 3, 3],
-                                                    [4, 4, 4]])).all()
-    assert fembs[f'{1} {40}']['vocab'] == ['a', 'b', 'c', 'd']
+    fqvocabs = divide_vocab_by_freqranges(data_dir + '/dist1.json', num_groups=3)
+    assert list(fqvocabs.keys()) == ['1 10', '15 15', '21 21', '25 25']
 
 
 def test_filter_by_vocab():

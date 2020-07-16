@@ -274,7 +274,21 @@ def filter_by_vocab(vecs, vocab, filter_vocab):
     return fvecs, fvocab
 
 
-def filter_for_freqranges(datadir, vecs_names, distribution_file, freq_ranges):
+def filter_for_freqranges(datadir, file_pattern, distribution_file, num_groups=3, load_fqvocabs=False):
+    """Filter embedding files with the given file pattern.
+        :param num_groups: int, number of frequency groups. The groups have approximately equal frequency mass.
+    """
+    # if load_fqvocabs:
+    #     fqv_files = glob(datadir + f'{os.path.split(distribution_file)[0]}/fqrng_*')
+    #     fqvocabs = []
+    #     for fqf in fqv_files:
+    #         fqf1, fqf2 = fqf.split('_')
+    #         fmin, fmax = int(fqf1[-1]), int(fqf2[0])
+    #         fqvocabs[]
+
+    fqvocabs = divide_vocab_by_freqranges(distribution_file, num_groups)
+
+    vecs_names = [get_file_name(path) for path in glob(os.path.join(datadir, f'*{file_pattern}*.npy'))]
     print('Load embeddings and distribution file')
     embs = Embeddings(datadir, vecs_names)
     with open(distribution_file, 'r') as f:
@@ -282,13 +296,13 @@ def filter_for_freqranges(datadir, vecs_names, distribution_file, freq_ranges):
     fembs = {}
     print('Filter embeddings for freq ranges')
     for emb, vocab, label in tqdm(zip(embs.embeddings, embs.vocabs, embs.vecs_labels)):
-        for min, max in freq_ranges:
-            filter_vocab = list(map(lambda y: y[0], filter(lambda x: x[1] >= min and x[1] <= max, dist.items())))
-            femb, fvocab = filter_by_vocab(emb, vocab, filter_vocab)
+        for fqrange, fqvocab in fqvocabs.items():
+            fmin, fmax = fqrange.split()
+            femb, fvocab = filter_by_vocab(emb, vocab, fqvocab)
             fembs[f'{min} {max}'] = {'label': label, 'vecs': femb, 'vocab': fvocab}
 
             # Save embeddings and vocabs for freq range
-            new_label = f'{datadir}/{label}_fqrng_{min}-{max}'
+            new_label = f'{datadir}/{label}_fqrng_{fmin}-{fmax}'
             with open(f'{new_label}.vocab', 'w') as f:
                 f.write('\n'.join(fvocab))
             np.save(f'{new_label}.npy', femb)
@@ -296,20 +310,38 @@ def filter_for_freqranges(datadir, vecs_names, distribution_file, freq_ranges):
     return fembs
 
 
-def freq_ranges(s):
-    try:
-        min, max = map(int, s.split('-'))
-        return min, max
-    except:
-        raise argparse.ArgumentTypeError("Frequency ranges must be min-max")
+def divide_vocab_by_freqranges(distribution_file, num_groups=3):
+    with open(distribution_file, 'r') as f:
+        dist = json.load(f)
+    sorted_dist = sorted(dist.items(), key=lambda item: item[1])    # sort words by frequency
+    sum_mass = sum(dist.values())
+    group_mass = sum_mass // num_groups
+    fqvocabs = {}
+    group_sum = 0
+    fqvocab = []
+    fmin = sorted_dist[0][1]
+    vocablen = len(sorted_dist)
+    for i in tqdm(range(vocablen)):
+        w, c = sorted_dist[i]
+        fqvocab.append(w)
+        group_sum += c
+        if group_sum > group_mass:
+            fqvocabs[f'{fmin} {sorted_dist[i-1][1]}'] = fqvocab[:-1]
+            # Save embeddings and vocabs for freq range
+            new_label = f'{os.path.splitext(distribution_file)[0]}_fqrng_{fmin}-{sorted_dist[i-1][1]}'
+            with open(f'{new_label}.vocab', 'w') as f:
+                f.write('\n'.join(fqvocab))
+            fqvocab = [w]
+            fmin = c
+            group_sum = c
+        if i == vocablen - 1:
+            fqvocabs[f'{fmin} {sorted_dist[i][1]}'] = fqvocab
+            new_label = f'{os.path.splitext(distribution_file)[0]}_fqrng_{fmin}-{sorted_dist[i][1]}'
+            with open(f'{new_label}.vocab', 'w') as f:
+                f.write('\n'.join(fqvocab))
 
-
-@arg('--fqrngs', help="Frequency ranges", dest="freq_ranges", type=freq_ranges, nargs='+')
-def filter_files_for_freqranges(datadir, file_pattern, distribution_file, freq_ranges=[]):
-    """Filter embedding files with the given file pattern."""
-    vecs_names = [get_file_name(path) for path in glob(os.path.join(datadir, f'*{file_pattern}*.npy'))]
-    filter_for_freqranges(datadir, vecs_names, distribution_file, freq_ranges)
+    return fqvocabs
 
 
 if __name__ == '__main__':
-    argh.dispatch_commands([serialize2npy, filter_files_for_freqranges])
+    argh.dispatch_commands([serialize2npy, filter_for_freqranges, divide_vocab_by_freqranges])
