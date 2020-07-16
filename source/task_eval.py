@@ -606,6 +606,62 @@ def tuple_list(arg):
                                          "separated by |. eg. embs1 embs2 | embs2 embs3 embs4")
 
 
+def compute_scores(actions, embeddings, scores, datasets, pairs, brain_scores=None, pre_score_files: str = None,
+                   ling_vecs_names=[], vecs_names=[], mm_lingvis=False, mm_embs_of: List[Tuple[str]] = None,
+                   mm_padding=False, common_subset=False):
+    print(actions)
+    embs = embeddings.embeddings
+    vocabs = embeddings.vocabs
+    names = embeddings.vecs_names
+
+    # Create multi-modal embeddings if ligvis or specific embedding pairs are given
+    if mm_lingvis or mm_embs_of:
+        if mm_lingvis:  # TODO: test
+            mm_labels = list(product(ling_vecs_names, vecs_names))
+            emb_tuples = [(embs[names.index(ln)], embs[names.index(vn)]) for ln, vn in mm_labels]
+            vocab_tuples = [(vocabs[names.index(ln)], vocabs[names.index(vn)]) for ln, vn in mm_labels]
+        elif mm_embs_of:  # Create MM Embeddings based on the given embedding labels
+            emb_tuples = [tuple(embs[names.index(l)] for l in t) for t in mm_embs_of]
+            vocab_tuples = [tuple(vocabs[names.index(l)] for l in t) for t in mm_embs_of]
+            mm_labels = [tuple(l for l in t) for t in mm_embs_of]
+
+        mm_embeddings, mm_vocabs, mm_labels = mid_fusion(emb_tuples, vocab_tuples, mm_labels, mm_padding)
+        embs += mm_embeddings
+        vocabs += mm_vocabs
+        names += mm_labels
+
+    if 'compscores' in actions:  # SemSim scores
+        for name, dataset in datasets.datasets.items():
+            dscores, dpairs = eval_dataset(dataset, name, embs, vocabs, names)
+            scores[name] = dscores
+            pairs[name] = dpairs
+
+        if pre_score_files:  # Load previously saved score files and add the new scores.
+            print(f'Load {pre_score_files} and join with new scores...')
+            for name, dataset in datasets.datasets.items():
+                pre_scores = np.load(f'{pre_score_files}_{name}.npy', allow_pickle=True)
+                scores[name] = utils.join_struct_arrays([pre_scores, scores[name]])
+
+    if 'compbrain' in actions:  # Brain scores
+        if common_subset:  # Intersection of all vocabs for two_vs_two and it filters out the common subset
+            vocabs = [list(set.intersection(*map(set, vocabs))) for v in vocabs]
+        for emb, vocab, name in zip(embs, vocabs, names):
+            fMRI_scores, MEG_scores, length, fMRI_scores_avg, MEG_scores_avg, \
+            fMRI_word_scores, MEG_word_scores = two_vs_two.run_test(embedding=emb, vocab=vocab)
+            brain_scores[name] = {'fMRI': fMRI_scores, 'MEG': MEG_scores,
+                                  'fMRI Avg': fMRI_scores_avg, 'MEG Avg': MEG_scores_avg,
+                                  'length': length,
+                                  'fMRI words': fMRI_word_scores, 'MEG words': MEG_word_scores}
+
+        if pre_score_files:  # Load previously saved score files and add the new scores.
+            with open(f'{pre_score_files}_brain.json', 'r') as f:
+                pre_brain_scores = json.load(f)
+                for pname, pbscores in pre_brain_scores.items():
+                    brain_scores[name] = pbscores
+
+    return scores, brain_scores, pairs
+
+
 # TODO: Nicer parameter handling, with exception messages
 @arg('-a', '--actions', nargs='+',
      choices=['printcorr', 'plotscores', 'concreteness', 'coverage', 'compscores', 'compbrain',
@@ -683,55 +739,10 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
         embeddings = Embeddings(embdir, vecs_names, ling_vecs_names)
 
     if 'compscores' in actions or 'compbrain' in actions:
-        print(actions)
-        embs = embeddings.embeddings
-        vocabs = embeddings.vocabs
-        names = embeddings.vecs_names
-
-        # Create multi-modal embeddings if ligvis or specific embedding pairs are given
-        if mm_lingvis or mm_embs_of:
-            if mm_lingvis:  # TODO: test
-                mm_labels = list(product(ling_vecs_names, vecs_names))
-                emb_tuples = [(embs[names.index(ln)], embs[names.index(vn)]) for ln, vn in mm_labels]
-                vocab_tuples = [(vocabs[names.index(ln)], vocabs[names.index(vn)]) for ln, vn in mm_labels]
-            elif mm_embs_of:  # Create MM Embeddings based on the given embedding labels
-                emb_tuples = [tuple(embs[names.index(l)] for l in t) for t in mm_embs_of]
-                vocab_tuples = [tuple(vocabs[names.index(l)] for l in t) for t in mm_embs_of]
-                mm_labels = [tuple(l for l in t) for t in mm_embs_of]
-
-            mm_embeddings, mm_vocabs, mm_labels = mid_fusion(emb_tuples, vocab_tuples, mm_labels, mm_padding)
-            embs += mm_embeddings
-            vocabs += mm_vocabs
-            names += mm_labels
-
-        if 'compscores' in actions:  # SemSim scores
-            for name, dataset in datasets.datasets.items():
-                dscores, dpairs = eval_dataset(dataset, name, embs, vocabs, names)
-                scores[name] = dscores
-                pairs[name] = dpairs
-
-            if pre_score_files:  # Load previously saved score files and add the new scores.
-                print(f'Load {pre_score_files} and join with new scores...')
-                for name, dataset in datasets.datasets.items():
-                    pre_scores = np.load(f'{pre_score_files}_{name}.npy', allow_pickle=True)
-                    scores[name] = utils.join_struct_arrays([pre_scores, scores[name]])
-
-        if 'compbrain' in actions:  # Brain scores
-            if common_subset:  # Intersection of all vocabs for two_vs_two and it filters out the common subset
-                vocabs = [list(set.intersection(*map(set, vocabs))) for v in vocabs]
-            for emb, vocab, name in zip(embs, vocabs, names):
-                fMRI_scores, MEG_scores, length, fMRI_scores_avg, MEG_scores_avg, \
-                fMRI_word_scores, MEG_word_scores = two_vs_two.run_test(embedding=emb, vocab=vocab)
-                brain_scores[name] = {'fMRI': fMRI_scores, 'MEG': MEG_scores,
-                                      'fMRI Avg': fMRI_scores_avg, 'MEG Avg': MEG_scores_avg,
-                                      'length': length,
-                                      'fMRI words': fMRI_word_scores, 'MEG words': MEG_word_scores}
-
-            if pre_score_files:  # Load previously saved score files and add the new scores.
-                with open(f'{pre_score_files}_brain.json', 'r') as f:
-                    pre_brain_scores = json.load(f)
-                    for pname, pbscores in pre_brain_scores.items():
-                        brain_scores[name] = pbscores
+        scores, brain_scores, pairs = compute_scores(
+            actions, embeddings, scores, datasets, pairs, brain_scores=brain_scores,
+            pre_score_files=pre_score_files, ling_vecs_names=ling_vecs_names, vecs_names=vecs_names,
+            mm_lingvis=mm_lingvis, mm_embs_of=mm_embs_of, mm_padding=mm_padding, common_subset=common_subset)
 
     if 'plotscores' in actions:
         for name in list(scores.keys()):
