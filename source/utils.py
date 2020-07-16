@@ -14,6 +14,10 @@ def create_dir(directory):
         print('Error: Creating directory. ' + directory)
 
 
+def get_file_name(path):
+    return os.path.splitext(os.path.basename(path))[0]
+
+
 def read_jl(path):
     articles = []
     for line in open(path, "r"):

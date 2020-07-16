@@ -19,7 +19,7 @@ def test_filter_for_freqrange():
         dist = {"a": 1, "b": 10, "c": 20, "d": 40}
     """
     fq_ranges = [(0, 15), (30, 100), (50, 60), (1, 40)]
-    fembs = filter_for_freqrange(data_dir, ['test_model'], data_dir + '/dist.json', fq_ranges)
+    fembs = filter_for_freqranges(data_dir, ['test_model'], data_dir + '/dist.json', fq_ranges)
 
     assert (fembs[f'{0} {15}']['vecs'] == np.array([[1, 1, 1],
                                                     [2, 2, 2]])).all()

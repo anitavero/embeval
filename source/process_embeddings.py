@@ -3,13 +3,17 @@ import pickle
 import json
 import numpy as np
 from tqdm import tqdm
-import argh
 from itertools import combinations
 from typing import List, Tuple
 from gensim.models import Word2Vec
 import re
 import io
 from copy import deepcopy
+from glob import glob
+import argparse, argh
+from argh import arg
+
+from source.utils import get_file_name
 
 
 class Embeddings:
@@ -270,7 +274,7 @@ def filter_by_vocab(vecs, vocab, filter_vocab):
     return fvecs, fvocab
 
 
-def filter_for_freqrange(datadir, vecs_names, distribution_file, freq_ranges):
+def filter_for_freqranges(datadir, vecs_names, distribution_file, freq_ranges):
     print('Load embeddings and distribution file')
     embs = Embeddings(datadir, vecs_names)
     with open(distribution_file, 'r') as f:
@@ -292,5 +296,20 @@ def filter_for_freqrange(datadir, vecs_names, distribution_file, freq_ranges):
     return fembs
 
 
+def freq_ranges(s):
+    try:
+        min, max = map(int, s.split('-'))
+        return min, max
+    except:
+        raise argparse.ArgumentTypeError("Frequency ranges must be min-max")
+
+
+@arg('--fqrngs', help="Frequency ranges", dest="freq_ranges", type=freq_ranges, nargs='+')
+def filter_files_for_freqranges(datadir, file_pattern, distribution_file, freq_ranges=[]):
+    """Filter embedding files with the given file pattern."""
+    vecs_names = [get_file_name(path) for path in glob(os.path.join(datadir, f'*{file_pattern}*.npy'))]
+    filter_for_freqranges(datadir, vecs_names, distribution_file, freq_ranges)
+
+
 if __name__ == '__main__':
-    argh.dispatch_commands([serialize2npy, filter_for_freqrange])
+    argh.dispatch_commands([serialize2npy, filter_files_for_freqranges])
