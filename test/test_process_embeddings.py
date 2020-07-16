@@ -53,7 +53,7 @@ def test_filter_by_vocab():
     filter_vocab = []
     femb, fvocab = filter_by_vocab(emb, vocab, filter_vocab)
     assert fvocab == []
-    assert (femb == np.empty((0, 3))).all()
+    assert femb == []
 
     filter_vocab = ['b', 'd']
     femb, fvocab = filter_by_vocab(emb, vocab, filter_vocab)

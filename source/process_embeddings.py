@@ -265,14 +265,17 @@ def mid_fusion(embeddings, vocabs, labels,
 def filter_by_vocab(vecs, vocab, filter_vocab):
     """Filter numpy array and corresponding vocab, so they contain words and vectors for
         words in filter_vocab."""
-    fvocab = []
-    idx = []
-    for w in tqdm(filter_vocab):
-        if w in vocab:
-            fvocab.append(w)
-            idx.append(int(np.where(vocab == w)[0][0]))
+    # fvocab = []
+    if filter_vocab == []:
+        return [], []
+    vidx = {x: i for i, x in enumerate(vocab)}
+    idx, fvocab = zip(*[(vidx[w], w) for w in vocab if w in filter_vocab])
+    # for w in tqdm(filter_vocab):
+    #     if w in vocab:
+    #         fvocab.append(w)
+    #         idx.append(int(np.where(vocab == w)[0][0]))
     fvecs = vecs[np.array(idx, dtype=int), :]
-    return fvecs, fvocab
+    return fvecs, list(fvocab)
 
 
 def filter_for_freqranges(datadir, file_pattern, distribution_file, num_groups=3, load_fqvocabs=False):
@@ -291,6 +294,7 @@ def filter_for_freqranges(datadir, file_pattern, distribution_file, num_groups=3
         for fqrange, fqvocab in fqvocabs.items():
             fmin, fmax = fqrange.split()
             print(f'{label}, Freq: {fmin} - {fmax}')
+            # TODO: Parallelize. Filter for all freq range in one filter_by_vocab
             femb, fvocab = filter_by_vocab(emb, vocab, fqvocab)
             fembs[f'{fmin} {fmax}'] = {'label': label, 'vecs': femb, 'vocab': fvocab}
 
