@@ -278,22 +278,12 @@ def filter_for_freqranges(datadir, file_pattern, distribution_file, num_groups=3
     """Filter embedding files with the given file pattern.
         :param num_groups: int, number of frequency groups. The groups have approximately equal frequency mass.
     """
-    # if load_fqvocabs:
-    #     fqv_files = glob(datadir + f'{os.path.split(distribution_file)[0]}/fqrng_*')
-    #     fqvocabs = []
-    #     for fqf in fqv_files:
-    #         fqf1, fqf2 = fqf.split('_')
-    #         fmin, fmax = int(fqf1[-1]), int(fqf2[0])
-    #         fqvocabs[]
-
     print(f'Divide vocab to {num_groups} splits with approx. equal mass')
     fqvocabs = divide_vocab_by_freqranges(distribution_file, num_groups)
 
     vecs_names = [get_file_name(path) for path in glob(os.path.join(datadir, f'*{file_pattern}*.npy'))]
-    print('Load embeddings and distribution file')
+    print('Load embeddings')
     embs = Embeddings(datadir, vecs_names)
-    with open(distribution_file, 'r') as f:
-        dist = json.load(f)
     fembs = {}
     print('Filter embeddings for freq ranges')
     for emb, vocab, label in tqdm(zip(embs.embeddings, embs.vocabs, embs.vecs_labels)):
