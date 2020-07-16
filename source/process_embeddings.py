@@ -269,7 +269,7 @@ def filter_by_vocab(vecs, vocab, filter_vocab):
     if filter_vocab == []:
         return [], []
     vidx = {x: i for i, x in tqdm(enumerate(vocab), desc='Vocab index')}
-    idx, fvocab = zip(*[(vidx[w], w) for w in vocab if w in tqdm(filter_vocab, desc='Filter index')])
+    idx, fvocab = zip(*[(vidx[w], w) for w in tqdm(vocab, desc='Filter index') if w in filter_vocab])
     # for w in tqdm(filter_vocab):
     #     if w in vocab:
     #         fvocab.append(w)
