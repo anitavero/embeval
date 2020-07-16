@@ -278,7 +278,7 @@ def filter_by_vocab(vecs, vocab, filter_vocab):
     return fvecs, list(fvocab)
 
 
-def filter_for_freqranges(datadir, file_pattern, distribution_file, num_groups=3, load_fqvocabs=False):
+def filter_for_freqranges(datadir, file_pattern, distribution_file, num_groups=3):
     """Filter embedding files with the given file pattern.
         :param num_groups: int, number of frequency groups. The groups have approximately equal frequency mass.
     """
