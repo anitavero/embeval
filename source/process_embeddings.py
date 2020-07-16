@@ -267,7 +267,7 @@ def filter_by_vocab(vecs, vocab, filter_vocab):
         words in filter_vocab."""
     fvocab = []
     idx = []
-    for w in filter_vocab:
+    for w in tqdm(filter_vocab):
         if w in vocab:
             fvocab.append(w)
             idx.append(int(np.where(vocab == w)[0][0]))
@@ -287,11 +287,12 @@ def filter_for_freqranges(datadir, file_pattern, distribution_file, num_groups=3
     embs = Embeddings(datadir, vecs_names)
     fembs = {}
     print('Filter embeddings for freq ranges')
-    for emb, vocab, label in tqdm(zip(embs.embeddings, embs.vocabs, embs.vecs_labels)):
+    for emb, vocab, label in zip(embs.embeddings, embs.vocabs, embs.vecs_labels):
         for fqrange, fqvocab in fqvocabs.items():
             fmin, fmax = fqrange.split()
+            print(f'{label}, Freq: {fmin} - {fmax}')
             femb, fvocab = filter_by_vocab(emb, vocab, fqvocab)
-            fembs[f'{min} {max}'] = {'label': label, 'vecs': femb, 'vocab': fvocab}
+            fembs[f'{fmin} {fmax}'] = {'label': label, 'vecs': femb, 'vocab': fvocab}
 
             # Save embeddings and vocabs for freq range
             new_label = f'{datadir}/{label}_fqrng_{fmin}-{fmax}'
