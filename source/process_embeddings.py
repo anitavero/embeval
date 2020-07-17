@@ -268,7 +268,11 @@ def filter_by_vocab(vecs, vocab, filter_vocab):
     if filter_vocab == []:
         return [], []
     vidx = {x: i for i, x in tqdm(enumerate(vocab), desc='Vocab index')}
-    idx, fvocab = zip(*[(vidx[w], w) for w in tqdm(vocab, desc='Filter index') if w in filter_vocab])
+    print('Computing intersection of vocab and filter vocab.')
+    intersect = set(vocab).intersection(set(filter_vocab))
+    idx = sorted([vidx[w] for w in tqdm(intersect, desc='Emb index and filtered vocab')])
+    print('Filter embedding and vocab')
+    fvocab = vocab[idx]
     fvecs = vecs[np.array(idx, dtype=int), :]
     return fvecs, list(fvocab)
 
@@ -289,7 +293,9 @@ def filter_for_freqranges(datadir, file_pattern, distribution_file, num_groups=3
         for fqrange, fqvocab in fqvocabs.items():
             fmin, fmax = fqrange.split()
             print(f'{label}, Freq: {fmin} - {fmax}')
-            # TODO: Parallelize. Filter for all freq range in one filter_by_vocab
+            # TODO      Parallelize.
+            # TODO      Filter for all freq range in one filter_by_vocab
+            # TODO      Filter by eval task vocab too?
             femb, fvocab = filter_by_vocab(emb, vocab, fqvocab)
             fembs[f'{fmin} {fmax}'] = {'label': label, 'vecs': femb, 'vocab': fvocab}
 
