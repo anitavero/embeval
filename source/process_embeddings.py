@@ -293,9 +293,6 @@ def filter_for_freqranges(datadir, file_pattern, distribution_file, num_groups=3
         for fqrange, fqvocab in fqvocabs.items():
             fmin, fmax = fqrange.split()
             print(f'{label}, Freq: {fmin} - {fmax}')
-            # TODO      Parallelize.
-            # TODO      Filter for all freq range in one filter_by_vocab
-            # TODO      Filter by eval task vocab too?
             femb, fvocab = filter_by_vocab(emb, vocab, fqvocab)
             fembs[f'{fmin} {fmax}'] = {'label': label, 'vecs': femb, 'vocab': fvocab}
 
