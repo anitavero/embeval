@@ -489,6 +489,14 @@ def plot_scores(scores: np.ndarray, gt_divisor=10, vecs_names=None, labels=None,
     return ax
 
 
+def plot_for_quantities(scores: np.ndarray):
+    pass
+
+
+def plot_for_freqranges(scores: np.ndarray):
+    pass
+
+
 def wn_concreteness(word, similarity_fn=wn.path_similarity):
     """WordNet distance of a word from its root hypernym."""
     syns = wn.synsets(word)
@@ -665,7 +673,7 @@ def compute_scores(actions, embeddings, scores, datasets, pairs, brain_scores=No
 # TODO: Nicer parameter handling, with exception messages
 @arg('-a', '--actions', nargs='+',
      choices=['printcorr', 'plotscores', 'concreteness', 'coverage', 'compscores', 'compbrain',
-              'brainwords', 'printbraincorr'], default='printcorr')
+              'brainwords', 'printbraincorr', 'plot_quantity', 'plot_freqrange'], default='printcorr')
 @arg('-lvns', '--ling_vecs_names', nargs='+', type=str,
      choices=['w2v13', 'wikinews', 'wikinews_sub', 'crawl', 'crawl_sub'], default=[])
 @arg('-vns', '--vecs_names', nargs='+', type=str)
@@ -743,6 +751,12 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
             actions, embeddings, scores, datasets, pairs, brain_scores=brain_scores,
             pre_score_files=pre_score_files, ling_vecs_names=ling_vecs_names, vecs_names=vecs_names,
             mm_lingvis=mm_lingvis, mm_embs_of=mm_embs_of, mm_padding=mm_padding, common_subset=common_subset)
+
+    if 'plot_quantity':
+        plot_for_quantities(scores)
+
+    if 'plot_freqrange':
+        plot_for_freqranges(scores)
 
     if 'plotscores' in actions:
         for name in list(scores.keys()):
