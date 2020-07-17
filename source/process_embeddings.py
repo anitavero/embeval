@@ -268,9 +268,9 @@ def filter_by_vocab(vecs, vocab, filter_vocab):
     if filter_vocab == []:
         return [], []
     vidx = {x: i for i, x in tqdm(enumerate(vocab), desc='Vocab index')}
-    print('Computing intersection of vocab and filter vocab.')
+    print('Computing intersection of vocab and filter vocab')
     intersect = set(vocab).intersection(set(filter_vocab))
-    idx = sorted([vidx[w] for w in tqdm(intersect, desc='Emb index and filtered vocab')])
+    idx = sorted([vidx[w] for w in tqdm(intersect, desc='Filter index')])
     print('Filter embedding and vocab')
     fvocab = vocab[idx]
     fvecs = vecs[np.array(idx, dtype=int), :]
