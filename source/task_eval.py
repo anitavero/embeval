@@ -489,8 +489,25 @@ def plot_scores(scores: np.ndarray, gt_divisor=10, vecs_names=None, labels=None,
     return ax
 
 
-def plot_for_quantities(scores: np.ndarray):
-    pass
+def plot_for_quantities(scores: np.ndarray, gt_divisor, common_subset=False):
+    names = [n for n in scores.dtype.names if 'fqrng' not in n and 'ground_truth' not in n]
+    quantities = sorted(list(set([int(n.split('_')[1][1:]) for n in names])))
+    quantities = quantities[1:] + [quantities[0]]    # -1: max train file num
+    scs = scores[names + ['ground_truth']]
+    scs['ground_truth'] /= gt_divisor
+    correlations = compute_correlations(scs, name_pairs='gt', common_subset=common_subset)
+
+    # Plot data with error bars
+    means, errs = [], []
+    for q in quantities:
+        print(q)
+        qnames = [n for n in names if f'n{q}_' in n]
+        qcorrs, qpvals, qcoverages = zip(*[correlations['ground_truth | ' + n] for n in qnames])
+        q_mean, q_std = np.mean(qcorrs), np.std(qcorrs)
+        means.append(q_mean)
+        errs.append(q_std)
+    plt.errorbar(quantities[:-1] + [1363], means, errs)
+    plt.show()
 
 
 def plot_for_freqranges(scores: np.ndarray):
@@ -753,7 +770,9 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
             mm_lingvis=mm_lingvis, mm_embs_of=mm_embs_of, mm_padding=mm_padding, common_subset=common_subset)
 
     if 'plot_quantity':
-        plot_for_quantities(scores)
+        for name in list(scores.keys()):
+            scrs = deepcopy(scores[name])
+            plot_for_quantities(scrs, gt_divisor=datasets.normalizers[name], common_subset=common_subset)
 
     if 'plot_freqrange':
         plot_for_freqranges(scores)
