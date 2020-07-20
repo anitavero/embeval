@@ -67,6 +67,10 @@ def train(contexts_file, save_dir, w2v_dir, filename_suffix='', min_count=10, si
         f.write('\nTrain:\n')
         f.write(output.stdout.decode('utf-8'))
 
+    # Remove the huge concatenated context file after training
+    print(f'Removing {contexts_file}')
+    os.remove(contexts_file)
+
     # 4. Convert the embeddings to numpy-readable format.
     print('Convert the embeddings to numpy-readable format')
     vecs2nps.main(modelfn, modelfn)

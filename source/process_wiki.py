@@ -147,7 +147,7 @@ def w2v_for_quantity(data_dir, save_dir, w2v_dir, num, size=300, min_count=10, w
     print('Training')
     train_word2vecf.train(cont_file, save_dir, w2v_dir, filename_suffix=f'_n{num}_{filename_suffix}',
                           min_count=min_count, size=size, negative=negative, threads=workers)
-    os.remove(cont_file)    # Remove the huge concatenated context file after training
+    # os.remove(cont_file)    # Remove the huge concatenated context file after training
 
 
 @arg('trfile-num', type=int)
