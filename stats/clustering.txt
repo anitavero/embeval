@@ -1,0 +1,23 @@
+Metrics for random Embedding of size 70000 x 300
+Kmeans, #clusters = 3
++------------------------+----------+
+|         Metric         |  Score   |
++------------------------+----------+
+|    Silhouette Score    |  0.0021  |
+| Calinski Harabaz Score | 145.0166 |
+|  Davies Bouldin Score  |  17.96   |
++------------------------+----------+
+
+
+Embedding = [[1, 1, 1],
+             [2, 2, 2],
+             [3, 3, 3],
+             [4, 4, 4]]
+Kmeans, #clusters = 3
++------------------------+--------+
+|         Metric         | Score  |
++------------------------+--------+
+|    Silhouette Score    | 0.125  |
+| Calinski Harabaz Score |  4.5   |
+|  Davies Bouldin Score  | 0.2889 |
++------------------------+--------+
