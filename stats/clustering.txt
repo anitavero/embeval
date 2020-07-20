@@ -14,10 +14,12 @@ Embedding = [[1, 1, 1],
              [3, 3, 3],
              [4, 4, 4]]
 Kmeans, #clusters = 3
-+------------------------+--------+
-|         Metric         | Score  |
-+------------------------+--------+
-|    Silhouette Score    | 0.125  |
-| Calinski Harabaz Score |  4.5   |
-|  Davies Bouldin Score  | 0.2889 |
-+------------------------+--------+
++---------------------------+--------+
+|         Metric            | Score  |
++---------------------------+--------+
+|    Silhouette Score       | 0.125  |
+| Silhouette Score (cosine) |  0.0   |
+| Calinski Harabaz Score    |  4.5   |
+|  Davies Bouldin Score     | 0.2889 |
++---------------------------+--------+
+

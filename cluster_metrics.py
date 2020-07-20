@@ -33,7 +33,10 @@ def cluster_eval(vectors, labels):
     def safe_metric(metric):
         name = re.sub('_', ' ', metric.__name__).title()
         try:
-            t.add_row([name, round(metric(vectors, labels), 4)])
+            if metric == metrics.silhouette_score:
+                t.add_row([name, round(metric(vectors, labels, metric='cosine'), 4)])
+            else:
+                t.add_row([name, round(metric(vectors, labels), 4)])
         except ValueError as e:
             print("[{0}] {1}".format(name, e))
 
