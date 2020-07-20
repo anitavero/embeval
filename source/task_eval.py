@@ -500,7 +500,6 @@ def plot_for_quantities(scores: np.ndarray, gt_divisor, common_subset=False):
     # Plot data with error bars
     means, errs = [], []
     for q in quantities:
-        print(q)
         qnames = [n for n in names if f'n{q}_' in n]
         qcorrs, qpvals, qcoverages = zip(*[correlations['ground_truth | ' + n] for n in qnames])
         q_mean, q_std = np.mean(qcorrs), np.std(qcorrs)
@@ -510,8 +509,29 @@ def plot_for_quantities(scores: np.ndarray, gt_divisor, common_subset=False):
     plt.show()
 
 
-def plot_for_freqranges(scores: np.ndarray):
-    pass
+def plot_for_freqranges(scores: np.ndarray, gt_divisor, quantity=-1, common_subset=False):
+    names = [n for n in scores.dtype.names if 'fqrng' in n and f'n{quantity}' in n and 'ground_truth' not in n]
+    freq_ranges = sorted(list(set([tuple(map(int, n.split('_')[-1].split('-'))) for n in names])))[:-1]
+    scs = scores[names + ['ground_truth']]
+    scs['ground_truth'] /= gt_divisor
+    correlations = compute_correlations(scs, name_pairs='gt', common_subset=common_subset)
+
+    # Plot data with error bars
+    means, errs = [], []
+    for fmin, fmax in freq_ranges:
+        fnames = [n for n in names if f'fqrng_{fmin}-{fmax}' in n]
+        fcorrs, fpvals, fcoverages = zip(*[correlations['ground_truth | ' + n] for n in fnames])
+        f_mean, f_std = np.mean(fcorrs), np.std(fcorrs)
+        means.append(f_mean)
+        errs.append(f_std)
+    fig, ax = plt.subplots()
+    xpos = range(len(freq_ranges))
+    print(errs)
+    ax.bar(xpos, means, yerr=errs)
+    ax.set_xticks(xpos)
+    ax.set_xticklabels(['LOW', 'MEDIUM', 'HIGH'])
+    plt.show()
+
 
 
 def wn_concreteness(word, similarity_fn=wn.path_similarity):
@@ -702,7 +722,7 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
          actions=['plotcorr'], plot_orders=['ground_truth'], plot_vecs=[],
          ling_vecs_names=[], pre_score_files: str = None, mm_embs_of: List[Tuple[str]] = None,
          mm_lingvis=False, mm_padding=False, print_corr_for=None, common_subset=False,
-         tablefmt: str = "simple", concrete_num=100, pair_score_agg='sum'):
+         tablefmt: str = "simple", concrete_num=100, pair_score_agg='sum', quantity=-1):
     """
     :param pair_score_agg:
     :param mm_lingvis:
@@ -769,13 +789,16 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
             pre_score_files=pre_score_files, ling_vecs_names=ling_vecs_names, vecs_names=vecs_names,
             mm_lingvis=mm_lingvis, mm_embs_of=mm_embs_of, mm_padding=mm_padding, common_subset=common_subset)
 
-    if 'plot_quantity':
+    if 'plot_quantity' in actions:
         for name in list(scores.keys()):
             scrs = deepcopy(scores[name])
             plot_for_quantities(scrs, gt_divisor=datasets.normalizers[name], common_subset=common_subset)
 
-    if 'plot_freqrange':
-        plot_for_freqranges(scores)
+    if 'plot_freqrange' in actions:
+        for name in list(scores.keys()):
+            scrs = deepcopy(scores[name])
+            plot_for_freqranges(scrs, gt_divisor=datasets.normalizers[name], common_subset=common_subset,
+                                quantity=quantity)
 
     if 'plotscores' in actions:
         for name in list(scores.keys()):
