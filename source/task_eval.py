@@ -505,7 +505,12 @@ def plot_for_quantities(scores: np.ndarray, gt_divisor, common_subset=False):
         q_mean, q_std = np.mean(qcorrs), np.std(qcorrs)
         means.append(q_mean)
         errs.append(q_std)
-    plt.errorbar(quantities[:-1] + [1363], means, errs)
+    fig, ax = plt.subplots()
+    xpos = range(len(quantities))
+    print(errs)
+    ax.bar(xpos, means, yerr=errs)
+    ax.set_xticks(xpos)
+    ax.set_xticklabels(quantities[:-1] + [1363])
     plt.show()
 
 
@@ -531,7 +536,6 @@ def plot_for_freqranges(scores: np.ndarray, gt_divisor, quantity=-1, common_subs
     ax.set_xticks(xpos)
     ax.set_xticklabels(['LOW', 'MEDIUM', 'HIGH'])
     plt.show()
-
 
 
 def wn_concreteness(word, similarity_fn=wn.path_similarity):
