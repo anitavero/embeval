@@ -510,7 +510,7 @@ def plot_for_quantities(scores: np.ndarray, gt_divisor, common_subset=False):
     print(errs)
     ax.bar(xpos, means, yerr=errs)
     ax.set_xticks(xpos)
-    ax.set_xticklabels(quantities[:-1] + [1363])
+    ax.set_xticklabels(['8M', '1G', '2G', '5G', '13G'])
     plt.show()
 
 
