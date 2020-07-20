@@ -6,8 +6,8 @@ from prettytable import PrettyTable
 from sklearn import metrics
 
 
-def dbscan_clustering(model, eps=0.5, min_samples=90):
-    db = DBSCAN(eps=eps, min_samples=min_samples, metric='cosine').fit(model)
+def dbscan_clustering(model, eps=0.5, min_samples=90, n_jobs=4):
+    db = DBSCAN(eps=eps, min_samples=min_samples, metric='cosine', n_jobs=n_jobs).fit(model)
     labels = db.labels_
 
     # Number of clusters in labels, ignoring noise if present.
@@ -20,8 +20,9 @@ def dbscan_clustering(model, eps=0.5, min_samples=90):
     return labels
 
 
-def kmeans(model, n_clusters=3, random_state=1):
-    kmeans_model = KMeans(n_clusters=n_clusters, random_state=random_state).fit(model)
+def kmeans(model, n_clusters=3, random_state=1, n_jobs=4):
+    kmeans_model = KMeans(n_clusters=n_clusters, random_state=random_state, verbose=True,
+                          n_jobs=n_jobs).fit(model)
     labels = kmeans_model.labels_
     return labels
 
@@ -46,16 +47,17 @@ def cluster_eval(vectors, labels):
 cluster_methods = {'dbscan': dbscan_clustering, 'kmeans': kmeans}
 
 
-def run_clustering(model_file, cluster_method, n_clusters=3, random_state=1, eps=0.5, min_samples=90):
+def run_clustering(model_file, cluster_method, n_clusters=3, random_state=1, eps=0.5, min_samples=90,
+                   workers=4):
     if model_file == 'random':
         model = np.random.random(size=(70000, 300))
     else:
         model = np.load(model_file)
 
     if cluster_method == 'dbscan':
-        labels = dbscan_clustering(model, eps=eps, min_samples=min_samples)
+        labels = dbscan_clustering(model, eps=eps, min_samples=min_samples, n_jobs=workers)
     elif cluster_method == 'kmeans':
-        labels = kmeans(model, n_clusters=n_clusters, random_state=random_state)
+        labels = kmeans(model, n_clusters=n_clusters, random_state=random_state, n_jobs=workers)
     cluster_eval(model, labels)
 
 
