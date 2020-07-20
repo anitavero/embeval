@@ -44,9 +44,6 @@ def cluster_eval(vectors, labels):
     print(t)
 
 
-cluster_methods = {'dbscan': dbscan_clustering, 'kmeans': kmeans}
-
-
 def run_clustering(model_file, cluster_method, n_clusters=3, random_state=1, eps=0.5, min_samples=90,
                    workers=4):
     if model_file == 'random':
