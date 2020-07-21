@@ -14,21 +14,21 @@ def test_n_nearest_neighbors():
                   [0.5, 1]])
 
 
-    NN = n_nearest_neighbors(words, E, vocab, n=1)
+    NN = get_n_nearest_neighbors(words, E, vocab, n=1)
     assert (NN[0, :] == words).all()
     assert (NN[1:, 0] == np.array(['d'])).all()
     assert (NN[1:, 1] == np.array(['d'])).all()
 
-    NN = n_nearest_neighbors(words, E, vocab, n=3)
+    NN = get_n_nearest_neighbors(words, E, vocab, n=3)
     assert (NN[0, :] == words).all()
     assert (NN[1:, 0] == np.array(['d', 'c', 'e'])).all()
     assert (NN[1:, 1] == np.array(['d', 'e', 'a'])).all()
 
     words = np.array(['b'])
-    NN = n_nearest_neighbors(words, E, vocab, n=3)
+    NN = get_n_nearest_neighbors(words, E, vocab, n=3)
     assert (NN[0, :] == words).all()
     assert (NN[1:, 0] == np.array(['e', 'c', 'd'])).all()
 
     words = np.array([])
-    NN = n_nearest_neighbors(words, E, vocab, n=3)
+    NN = get_n_nearest_neighbors(words, E, vocab, n=3)
     assert NN.size == 0

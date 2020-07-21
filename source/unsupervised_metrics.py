@@ -15,12 +15,12 @@ from source.process_embeddings import Embeddings
 
 def get_n_nearest_neighbors(words: np.ndarray, E: np.ndarray, vocab: np.ndarray, n: int = 10):
     """n nearest neighbors for words based on cosine distance in Embedding E."""
+    w_idx = np.where(np.in1d(vocab, np.array(words)))[0]   # Words indices in Vocab and Embedding E
     C = cosine_distances(E)
     np.fill_diagonal(C, np.inf)
-    nNN = np.argpartition(C, range(n), axis=0)[:n]         # Every column j contains the indices of NNs of word_j
-    w_idx = np.where(np.in1d(vocab, np.array(words)))[0]   # Words indices in Vocab and Embedding E
-    w_nNN = nNN[:, w_idx]                                  # Filter columns for words
-    return np.vstack([words, vocab[w_nNN]])                # 1st row: words, rows 1...n: nearest neighbors
+    w_C = C[:, w_idx]                                      # Filter columns for words
+    nNN = np.argpartition(w_C, range(n), axis=0)[:n]       # Every column j contains the indices of NNs of word_j
+    return np.vstack([words, vocab[nNN]])                  # 1st row: words, rows 1...n: nearest neighbors
 
 
 @arg('-w', '--words', nargs='+', type=str)
@@ -90,4 +90,17 @@ def run_clustering(model_file, cluster_method, n_clusters=3, random_state=1, eps
 
 
 if __name__ == '__main__':
-    argh.dispatch_commands([run_clustering, n_nearest_neighbors])
+    # argh.dispatch_commands([run_clustering, n_nearest_neighbors])
+    vocab = np.array(['a', 'b', 'c', 'd', 'e'])
+    words = np.array(['a', 'c', 'e'])
+    E = np.array([[1, 0],
+                  [0, 1],
+                  [1, 1],
+                  [1, 0.5],
+                  [0.5, 1]])
+
+
+    NN = get_n_nearest_neighbors(words, E, vocab, n=1)
+    assert (NN[0, :] == words).all()
+    assert (NN[1:, 0] == np.array(['d'])).all()
+    assert (NN[1:, 1] == np.array(['d'])).all()
