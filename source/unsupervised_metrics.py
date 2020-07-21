@@ -10,9 +10,13 @@ from sklearn.metrics.pairwise import cosine_distances, cosine_similarity
 ################# Nearest Neigbor metrics #################
 
 
-def n_nearest_neighbors(E, vocab, n=10):
+def n_nearest_neighbors(words, E, vocab, n=10):
     C = cosine_distances(E)
-    nnn = np.argpartition(C, -n, axis=0)[-n:]
+    np.fill_diagonal(C, np.inf)
+    nNN = np.argpartition(C, range(n), axis=0)[:n]         # Every column j contains the indices of NNs of word_j
+    w_idx = np.where(np.in1d(vocab, np.array(words)))[0]   # Words indices in Vocab and Embedding E
+    w_nNN = nNN[:, w_idx]                                  # Filter columns for words
+    return np.vstack([words, vocab[w_nNN]])                # 1st row: words, rows 1...n: nearest neighbors
 
 
 ################# Clusterization metrics #################
