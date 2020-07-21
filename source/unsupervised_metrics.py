@@ -10,7 +10,8 @@ from sklearn.metrics.pairwise import cosine_distances, cosine_similarity
 ################# Nearest Neigbor metrics #################
 
 
-def n_nearest_neighbors(words, E, vocab, n=10):
+def n_nearest_neighbors(words: np.ndarray, E: np.ndarray, vocab: np.ndarray, n: int = 10):
+    """n nearest neighbors for words based on cosine distance in Embedding E"""
     C = cosine_distances(E)
     np.fill_diagonal(C, np.inf)
     nNN = np.argpartition(C, range(n), axis=0)[:n]         # Every column j contains the indices of NNs of word_j
