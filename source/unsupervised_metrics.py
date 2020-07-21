@@ -1,4 +1,5 @@
 import argh
+from argh import arg
 import re
 import numpy as np
 from sklearn.cluster import DBSCAN, KMeans
@@ -22,9 +23,10 @@ def get_n_nearest_neighbors(words: np.ndarray, E: np.ndarray, vocab: np.ndarray,
     return np.vstack([words, vocab[w_nNN]])                # 1st row: words, rows 1...n: nearest neighbors
 
 
-def n_nearest_neighbors(data_dir, vecs_names, words, n: int = 10):
+@arg('-w', '--words', nargs='+', type=str)
+def n_nearest_neighbors(data_dir, model_name, words, n: int = 10):
     """n nearest neighbors for words based on model <vecs_names>."""
-    embs = Embeddings(data_dir, vecs_names)
+    embs = Embeddings(data_dir, model_name)
     E, vocab = embs.embeddings[0], embs.vocabs[0]
     return get_n_nearest_neighbors(np.array(words), E, vocab, n).transpose()
 
