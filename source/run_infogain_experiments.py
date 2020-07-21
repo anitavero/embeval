@@ -12,7 +12,7 @@ def main(exp_name, pre_score_files=None):
   #  ######## END Test #######
 
     datadir = '/local/filespace/alv34/Datasets/'
-    embdir = '/local/filespace/alv34/wikidump/extracted/models/'
+    embdir = '/anfs/bigdisc/alv34/wikidump/extracted/models/'
     savedir = embdir + '/results/'
 
     if 'quantity' in exp_name.split('_'):
