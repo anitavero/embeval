@@ -4,20 +4,29 @@ import numpy as np
 from sklearn.cluster import DBSCAN, KMeans
 from prettytable import PrettyTable
 from sklearn import metrics
-from sklearn.metrics.pairwise import cosine_distances, cosine_similarity
+from sklearn.metrics.pairwise import cosine_distances
+
+from source.process_embeddings import Embeddings
 
 
 ################# Nearest Neigbor metrics #################
 
 
-def n_nearest_neighbors(words: np.ndarray, E: np.ndarray, vocab: np.ndarray, n: int = 10):
-    """n nearest neighbors for words based on cosine distance in Embedding E"""
+def get_n_nearest_neighbors(words: np.ndarray, E: np.ndarray, vocab: np.ndarray, n: int = 10):
+    """n nearest neighbors for words based on cosine distance in Embedding E."""
     C = cosine_distances(E)
     np.fill_diagonal(C, np.inf)
     nNN = np.argpartition(C, range(n), axis=0)[:n]         # Every column j contains the indices of NNs of word_j
     w_idx = np.where(np.in1d(vocab, np.array(words)))[0]   # Words indices in Vocab and Embedding E
     w_nNN = nNN[:, w_idx]                                  # Filter columns for words
     return np.vstack([words, vocab[w_nNN]])                # 1st row: words, rows 1...n: nearest neighbors
+
+
+def n_nearest_neighbors(data_dir, vecs_names, words, n: int = 10):
+    """n nearest neighbors for words based on model <vecs_names>."""
+    embs = Embeddings(data_dir, vecs_names)
+    E, vocab = embs.embeddings[0], embs.vocabs[0]
+    return get_n_nearest_neighbors(np.array(words), E, vocab, n).transpose()
 
 
 ################# Clusterization metrics #################
@@ -79,4 +88,4 @@ def run_clustering(model_file, cluster_method, n_clusters=3, random_state=1, eps
 
 
 if __name__ == '__main__':
-    argh.dispatch_command(run_clustering)
+    argh.dispatch_commands([run_clustering, n_nearest_neighbors])
