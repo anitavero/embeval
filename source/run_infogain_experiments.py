@@ -4,7 +4,7 @@ import argh
 from glob import glob
 
 
-def main(exp_name):
+def main(exp_name, pre_score_files=None):
   #  ######## Test #######
   #  datadir = '/Users/anitavero/projects/data'
   #  embdir = '/Users/anitavero/projects/data/wikidump/models/'
@@ -24,7 +24,8 @@ def main(exp_name):
                        ling_vecs_names=[],
                        mm_lingvis=False,
                        mm_padding=False,
-                       savepath=savedir + exp_name)
+                       savepath=savedir + exp_name,
+                       pre_score_files=pre_score_files)
 
 
 if __name__ == '__main__':
