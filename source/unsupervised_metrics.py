@@ -4,6 +4,18 @@ import numpy as np
 from sklearn.cluster import DBSCAN, KMeans
 from prettytable import PrettyTable
 from sklearn import metrics
+from sklearn.metrics.pairwise import cosine_distances, cosine_similarity
+
+
+################# Nearest Neigbor metrics #################
+
+
+def n_nearest_neighbors(E, vocab, n=10):
+    C = cosine_distances(E)
+    nnn = np.argpartition(C, -n, axis=0)[-n:]
+
+
+################# Clusterization metrics #################
 
 
 def dbscan_clustering(model, eps=0.5, min_samples=90, n_jobs=4):
