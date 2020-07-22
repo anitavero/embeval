@@ -516,8 +516,9 @@ def plot_for_quantities(scores: np.ndarray, gt_divisor, common_subset=False):
 
 def plot_for_freqranges(scores: np.ndarray, gt_divisor, quantity=-1, common_subset=False):
     names = [n for n in scores.dtype.names if 'fqrng' in n and f'n{quantity}' in n and 'ground_truth' not in n]
+    mixed = [n for n in scores.dtype.names if 'n-1' in n and 'fqrng' not in n and 'ground_truth' not in n]
     freq_ranges = sorted(list(set([tuple(map(int, n.split('_')[-1].split('-'))) for n in names])))[:-1]
-    scs = scores[names + ['ground_truth']]
+    scs = scores[names + ['ground_truth'] + mixed]
     scs['ground_truth'] /= gt_divisor
     correlations = compute_correlations(scs, name_pairs='gt', common_subset=common_subset)
 
@@ -529,12 +530,17 @@ def plot_for_freqranges(scores: np.ndarray, gt_divisor, quantity=-1, common_subs
         f_mean, f_std = np.mean(fcorrs), np.std(fcorrs)
         means.append(f_mean)
         errs.append(f_std)
+    # MIXED: Full data
+    mcorrs, mpvals, mcoverages = zip(*[correlations['ground_truth | ' + n] for n in mixed])
+    m_mean, m_std = np.mean(mcorrs), np.std(mcorrs)
+    means.append(m_mean)
+    errs.append(m_std)
+
     fig, ax = plt.subplots()
-    xpos = range(len(freq_ranges))
-    print(errs)
+    xpos = range(len(freq_ranges) + 1)
     ax.bar(xpos, means, yerr=errs)
     ax.set_xticks(xpos)
-    ax.set_xticklabels(['LOW', 'MEDIUM', 'HIGH'])
+    ax.set_xticklabels(['LOW', 'MEDIUM', 'HIGH', 'MIXED'])
     plt.show()
 
 
