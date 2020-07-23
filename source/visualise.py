@@ -55,10 +55,12 @@ def tensorboard_emb(data_dir, model_name, output_path, tn_label='optics_cl', lab
     # The name of the tensor will be suffixed by `/.ATTRIBUTES/VARIABLE_VALUE`
     embedding.tensor_name = "embedding/.ATTRIBUTES/VARIABLE_VALUE"
     embedding.metadata_path = meta_file
-    projector.visualize_embeddings(output_path, config)
 
+
+def visualise(output_path, config):
+    projector.visualize_embeddings(output_path, config)
     print('Run `tensorboard --logdir={0}` to run visualize result on tensorboard'.format(output_path))
 
 
 if __name__ == '__main__':
-    argh.dispatch_command(tensorboard_emb)
+    argh.dispatch_commands([tensorboard_emb, visualise])
