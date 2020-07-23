@@ -43,8 +43,6 @@ def tensorboard_emb(data_dir, model_name, output_path, tn_label='optics_cl', lab
                 file_metadata.write(
                     "{0}\t{1}".format(word, labeler(word)).encode('utf-8') + b'\n')
 
-    if tf.__version__ == '1.13':
-        tf.enable_eager_execution()
     weights = tf.Variable(placeholder, trainable=False, name=file_name)
     checkpoint = tf.train.Checkpoint(embedding=weights)
     checkpoint.save(os.path.join(output_path, "embedding.ckpt"))
@@ -55,12 +53,10 @@ def tensorboard_emb(data_dir, model_name, output_path, tn_label='optics_cl', lab
     # The name of the tensor will be suffixed by `/.ATTRIBUTES/VARIABLE_VALUE`
     embedding.tensor_name = "embedding/.ATTRIBUTES/VARIABLE_VALUE"
     embedding.metadata_path = meta_file
-
-
-def visualise(output_path, config):
     projector.visualize_embeddings(output_path, config)
+
     print('Run `tensorboard --logdir={0}` to run visualize result on tensorboard'.format(output_path))
 
 
 if __name__ == '__main__':
-    argh.dispatch_commands([tensorboard_emb, visualise])
+    argh.dispatch_command(tensorboard_emb)
