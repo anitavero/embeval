@@ -43,7 +43,8 @@ def tensorboard_emb(data_dir, model_name, output_path, tn_label='optics_cl', lab
                 file_metadata.write(
                     "{0}\t{1}".format(word, labeler(word)).encode('utf-8') + b'\n')
 
-
+    if tf.__version__ == '1.13':
+        tf.enable_eager_execution()
     weights = tf.Variable(placeholder, trainable=False, name=file_name)
     checkpoint = tf.train.Checkpoint(embedding=weights)
     checkpoint.save(os.path.join(output_path, "embedding.ckpt"))
