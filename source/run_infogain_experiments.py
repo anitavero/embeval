@@ -20,9 +20,9 @@ def main(exp_name, pre_score_files=None):
         quantity_models = [os.path.split(m)[1].split('.')[0] for m in quantity_models]
 
         task_eval.main(datadir, actions=['compscores'], embdir=embdir,
-                       vecs_names=quantity_models,
-                       ling_vecs_names=[],
-                       mm_lingvis=False,
+                       vecs_names=['vecs3lem1', 'google_resnet152'],
+                       ling_vecs_names=quantity_models,
+                       mm_lingvis=True,
                        mm_padding=False,
                        savepath=savedir + exp_name,
                        pre_score_files=pre_score_files)
