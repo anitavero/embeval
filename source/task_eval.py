@@ -490,28 +490,51 @@ def plot_scores(scores: np.ndarray, gt_divisor=10, vecs_names=None, labels=None,
 
 
 def plot_for_quantities(scores: np.ndarray, gt_divisor, common_subset=False, title=''):
-    names = [n for n in scores.dtype.names if 'fqrng' not in n and 'ground_truth' not in n]
-    quantities = sorted(list(set([int(n.split('_')[1][1:]) for n in names])))
+    ling_names = [n for n in scores.dtype.names if 'fqrng' not in n and 'ground_truth' not in n and 'model' in n
+                  and '+' not in n]
+    vis_names = [n for n in scores.dtype.names if 'fqrng' not in n and 'ground_truth' not in n and 'model' not in n
+                 and '+' not in n]
+    mm_names = [n for n in scores.dtype.names if 'fqrng' not in n and 'ground_truth' not in n and '+' in n]
+    names = ling_names + vis_names + mm_names
+    quantities = sorted(list(set([int(n.split('_')[1][1:]) for n in ling_names])))
     quantities = quantities[1:] + [quantities[0]]    # -1: max train file num
     scs = scores[names + ['ground_truth']]
     scs['ground_truth'] /= gt_divisor
     correlations = compute_correlations(scs, name_pairs='gt', common_subset=common_subset)
 
     # Plot data with error bars
-    means, errs = [], []
-    for q in quantities:
-        qnames = [n for n in names if f'n{q}_' in n]
-        qcorrs, qpvals, qcoverages = zip(*[correlations['ground_truth | ' + n] for n in qnames])
-        q_mean, q_std = np.mean(qcorrs), np.std(qcorrs)
-        means.append(q_mean)
-        errs.append(q_std)
+    def bar_data(nms, vis=False):
+        means, errs = [], []
+        for q in quantities:
+            if vis:
+                qnames = vis_names
+            else:
+                qnames = [n for n in nms if f'n{q}_' in n]
+            qcorrs, qpvals, qcoverages = zip(*[correlations['ground_truth | ' + n] for n in qnames])
+            q_mean, q_std = np.mean(qcorrs), np.std(qcorrs)
+            means.append(q_mean)
+            errs.append(q_std)
+        return means, errs
+
+
+    ling_means, ling_errs = bar_data(ling_names)
+    # vis_means, vis_errs = bar_data(vis_names, vis=True)
+    mm_means, mm_errs = bar_data(mm_names)
     fig, ax = plt.subplots()
     xpos = range(len(quantities))
-    ax.bar(xpos, means, yerr=errs)
+    bar_width = 0.2
+    ax.bar(np.array(xpos), ling_means, yerr=ling_errs, width=bar_width, label='Linguistic')
+    pi = 1
+    for vn in vis_names:
+        vcorr, vpval, vcoverage = correlations['ground_truth | ' + vn]
+        ax.bar(np.array(xpos) + pi * bar_width, [vcorr for i in xpos], yerr=[0 for i in xpos], width=bar_width, label=vn)
+        pi += 1
+    # ax.bar(np.array(xpos) + pi * bar_width, vis_means, yerr=vis_errs, width=bar_width, label='Visual')
+    ax.bar(np.array(xpos) + pi * bar_width, mm_means, yerr=mm_errs, width=bar_width, label='Multi-modal')
     ax.set_xticks(xpos)
     ax.set_xticklabels(['8M', '1G', '2G', '5G', '13G'])
     ax.set_ylabel('Spearman correlation')
-    ax.set_title(title)
+    ax.legend(loc=9, edgecolor='inherit', ncol=4, borderaxespad=-0.2, numpoints=1, fontsize='xx-small')
 
 
 def plot_for_freqranges(scores: np.ndarray, gt_divisor, quantity=-1, common_subset=False, title=''):
