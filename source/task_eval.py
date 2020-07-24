@@ -489,7 +489,7 @@ def plot_scores(scores: np.ndarray, gt_divisor=10, vecs_names=None, labels=None,
     return ax
 
 
-def plot_for_quantities(scores: np.ndarray, gt_divisor, common_subset=False):
+def plot_for_quantities(scores: np.ndarray, gt_divisor, common_subset=False, title=''):
     names = [n for n in scores.dtype.names if 'fqrng' not in n and 'ground_truth' not in n]
     quantities = sorted(list(set([int(n.split('_')[1][1:]) for n in names])))
     quantities = quantities[1:] + [quantities[0]]    # -1: max train file num
@@ -507,14 +507,14 @@ def plot_for_quantities(scores: np.ndarray, gt_divisor, common_subset=False):
         errs.append(q_std)
     fig, ax = plt.subplots()
     xpos = range(len(quantities))
-    print(errs)
     ax.bar(xpos, means, yerr=errs)
     ax.set_xticks(xpos)
     ax.set_xticklabels(['8M', '1G', '2G', '5G', '13G'])
-    plt.show()
+    ax.set_ylabel('Spearman correlation')
+    ax.set_title(title)
 
 
-def plot_for_freqranges(scores: np.ndarray, gt_divisor, quantity=-1, common_subset=False):
+def plot_for_freqranges(scores: np.ndarray, gt_divisor, quantity=-1, common_subset=False, title=''):
     names = [n for n in scores.dtype.names if 'fqrng' in n and f'n{quantity}' in n and 'ground_truth' not in n]
     mixed = [n for n in scores.dtype.names if 'n-1' in n and 'fqrng' not in n and 'ground_truth' not in n]
     freq_ranges = sorted(list(set([tuple(map(int, n.split('_')[-1].split('-'))) for n in names])))[:-1]
@@ -541,7 +541,8 @@ def plot_for_freqranges(scores: np.ndarray, gt_divisor, quantity=-1, common_subs
     ax.bar(xpos, means, yerr=errs)
     ax.set_xticks(xpos)
     ax.set_xticklabels(['LOW', 'MEDIUM', 'HIGH', 'MIXED'])
-    plt.show()
+    ax.set_ylabel('Spearman correlation')
+    ax.set_title(title)
 
 
 def wn_concreteness(word, similarity_fn=wn.path_similarity):
@@ -802,13 +803,16 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
     if 'plot_quantity' in actions:
         for name in list(scores.keys()):
             scrs = deepcopy(scores[name])
-            plot_for_quantities(scrs, gt_divisor=datasets.normalizers[name], common_subset=common_subset)
+            plot_for_quantities(scrs, gt_divisor=datasets.normalizers[name], common_subset=common_subset,
+                                title=f'Spearman correlation distribution on {name}')
+            plt.savefig('../figs/quantities_' + name + '.png', bbox_inches='tight')
 
     if 'plot_freqrange' in actions:
         for name in list(scores.keys()):
             scrs = deepcopy(scores[name])
             plot_for_freqranges(scrs, gt_divisor=datasets.normalizers[name], common_subset=common_subset,
-                                quantity=quantity)
+                                quantity=quantity, title=f'Spearman correlation distribution on {name}')
+            plt.savefig('../figs/freqranges_' + name + '.png', bbox_inches='tight')
 
     if 'plotscores' in actions:
         for name in list(scores.keys()):
