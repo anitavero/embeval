@@ -48,6 +48,11 @@ class Embeddings:
                     w2v.update(w2v_simrel)
                     self.embeddings.append(np.array(list(w2v.values())))
                     self.vocabs.append(np.array(list(w2v.keys())))
+                elif 'model' in lvn:
+                    for vecs_name in vecs_names:
+                        vecs, vocab = self.load_vecs(vecs_name, datadir)
+                        self.embeddings.append(vecs)
+                        self.vocabs.append(vocab)
                 else:
                     print(f'Loading FastText - {lvn}...')
                     fasttext_vecs, fasttext_vocab = self.load_fasttext(datadir + self.fasttext_vss[lvn])
