@@ -506,19 +506,15 @@ def plot_for_quantities(scores: np.ndarray, gt_divisor, common_subset=False, tit
     correlations = compute_correlations(scs, name_pairs='gt', common_subset=common_subset)
 
     # Plot data with error bars
-    def bar_data(nms, vis=False):
+    def bar_data(nms):
         means, errs = [], []
         for q in quantities:
-            if vis:
-                qnames = vis_names
-            else:
-                qnames = [n for n in nms if f'n{q}_' in n]
+            qnames = [n for n in nms if f'n{q}_' in n]
             qcorrs, qpvals, qcoverages = zip(*[correlations['ground_truth | ' + n] for n in qnames])
             q_mean, q_std = np.mean(qcorrs), np.std(qcorrs)
             means.append(q_mean)
             errs.append(q_std)
         return means, errs
-
 
     ling_means, ling_errs = bar_data(ling_names)
 
