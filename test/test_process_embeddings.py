@@ -17,9 +17,16 @@ def test_divide_vocab_by_freqranges():
                                [4, 4, 4]])
         test_vocab = ['a', 'b', 'c', 'd']
         dist = {"a": 1, "b": 10, "c": 20, "d": 40}
+        dist_shuffled = {"d": 40, ,"b": 10,"a": 1, "c": 20}
         dist1 = {"a": 1, "b": 5, "c": 10, "d": 15, "e": 21, "f": 25}
     """
     fqvocabs = divide_vocab_by_freqranges(data_dir + '/dist.json', num_groups=3)
+    assert list(fqvocabs.keys()) == ['1 10', '20 20', '40 40']
+    assert fqvocabs['1 10'] == ['a', 'b']
+    assert fqvocabs['20 20'] == ['c']
+    assert fqvocabs['40 40'] == ['d']
+
+    fqvocabs = divide_vocab_by_freqranges(data_dir + '/dist_shuffled.json', num_groups=3)
     assert list(fqvocabs.keys()) == ['1 10', '20 20', '40 40']
     assert fqvocabs['1 10'] == ['a', 'b']
     assert fqvocabs['20 20'] == ['c']
