@@ -489,7 +489,7 @@ def plot_scores(scores: np.ndarray, gt_divisor=10, vecs_names=None, labels=None,
     return ax
 
 
-def plot_for_quantities(scores: np.ndarray, gt_divisor, common_subset=False, title=''):
+def plot_for_quantities(scores: np.ndarray, gt_divisor, common_subset=False, legend=False):
     ling_names = [n for n in scores.dtype.names if 'fqrng' not in n and 'ground_truth' not in n and 'model' in n
                   and '+' not in n]
     vis_names = [n for n in scores.dtype.names if 'fqrng' not in n and 'ground_truth' not in n and 'model' not in n
@@ -538,7 +538,8 @@ def plot_for_quantities(scores: np.ndarray, gt_divisor, common_subset=False, tit
     ax.set_xticks(xpos)
     ax.set_xticklabels(['8M', '1G', '2G', '5G', '13G'])
     ax.set_ylabel('Spearman correlation')
-    ax.legend(loc=9, edgecolor='inherit', ncol=4, borderaxespad=-0.2, numpoints=1, fontsize='xx-small')
+    if legend:
+        ax.legend(loc='best', fontsize='x-small')
 
 
 def plot_for_freqranges(scores: np.ndarray, gt_divisor, quantity=-1, common_subset=False, title=''):
@@ -831,7 +832,7 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
         for name in list(scores.keys()):
             scrs = deepcopy(scores[name])
             plot_for_quantities(scrs, gt_divisor=datasets.normalizers[name], common_subset=common_subset,
-                                title=f'Spearman correlation distribution on {name}')
+                                legend=True if name == 'MEN' else False)
             plt.savefig('../figs/quantities_' + name + '.png', bbox_inches='tight')
 
     if 'plot_freqrange' in actions:
