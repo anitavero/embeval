@@ -16,7 +16,7 @@ from matplotlib.lines import Line2D
 import matplotlib
 
 matplotlib.style.use('fivethirtyeight')
-from itertools import combinations, product
+from itertools import combinations, product, chain
 from tabulate import tabulate, LATEX_ESCAPE_RULES
 from copy import deepcopy
 from collections import defaultdict
@@ -494,8 +494,11 @@ def plot_for_quantities(scores: np.ndarray, gt_divisor, common_subset=False, tit
                   and '+' not in n]
     vis_names = [n for n in scores.dtype.names if 'fqrng' not in n and 'ground_truth' not in n and 'model' not in n
                  and '+' not in n]
-    mm_names = [n for n in scores.dtype.names if 'fqrng' not in n and 'ground_truth' not in n and '+' in n]
-    names = ling_names + vis_names + mm_names
+    mm_names = []
+    for vn in vis_names:
+        mm_names.append([n for n in scores.dtype.names if 'fqrng' not in n and 'ground_truth' not in n and '+' in n
+                        and vn in n])
+    names = ling_names + vis_names + list(chain.from_iterable(mm_names))
     quantities = sorted(list(set([int(n.split('_')[1][1:]) for n in ling_names])))
     quantities = quantities[1:] + [quantities[0]]    # -1: max train file num
     scs = scores[names + ['ground_truth']]
@@ -518,19 +521,24 @@ def plot_for_quantities(scores: np.ndarray, gt_divisor, common_subset=False, tit
 
 
     ling_means, ling_errs = bar_data(ling_names)
-    # vis_means, vis_errs = bar_data(vis_names, vis=True)
-    mm_means, mm_errs = bar_data(mm_names)
+
     fig, ax = plt.subplots()
-    xpos = range(len(quantities))
     bar_width = 0.2
+    xpos = np.linspace(1, 2 + 2 * len(vis_names), len(quantities))
+
     ax.bar(np.array(xpos), ling_means, yerr=ling_errs, width=bar_width, label='Linguistic')
     pi = 1
     for vn in vis_names:
         vcorr, vpval, vcoverage = correlations['ground_truth | ' + vn]
         ax.bar(np.array(xpos) + pi * bar_width, [vcorr for i in xpos], yerr=[0 for i in xpos], width=bar_width, label=vn)
         pi += 1
-    # ax.bar(np.array(xpos) + pi * bar_width, vis_means, yerr=vis_errs, width=bar_width, label='Visual')
-    ax.bar(np.array(xpos) + pi * bar_width, mm_means, yerr=mm_errs, width=bar_width, label='Multi-modal')
+    # separate MM for vis_names too
+    for mmn, vn in zip(mm_names, vis_names):
+        mmlabel = 'MM - ' + vn
+        mmn_means, mmn_errs = bar_data(mmn)
+        ax.bar(np.array(xpos) + pi * bar_width, mmn_means, yerr=mmn_errs, width=bar_width, label=mmlabel)
+        pi += 1
+
     ax.set_xticks(xpos)
     ax.set_xticklabels(['8M', '1G', '2G', '5G', '13G'])
     ax.set_ylabel('Spearman correlation')
