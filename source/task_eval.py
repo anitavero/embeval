@@ -545,32 +545,58 @@ def plot_for_quantities(scores: np.ndarray, gt_divisor, common_subset=False, leg
 def plot_for_freqranges(scores: np.ndarray, gt_divisor, quantity=-1, common_subset=False, title=''):
     names = [n for n in scores.dtype.names if 'fqrng' in n and f'n{quantity}' in n and 'ground_truth' not in n]
     mixed = [n for n in scores.dtype.names if 'n-1' in n and 'fqrng' not in n and 'ground_truth' not in n]
-    freq_ranges = sorted(list(set([tuple(map(int, n.split('_')[-1].split('-'))) for n in names])))[:-1]
+    ling_names = [n for n in names if 'model' in n and '+' not in n]
+    vis_names = [n for n in scores.dtype.names if 'fqrng' not in n and 'ground_truth' not in n and 'model' not in n
+                 and '+' not in n]
+    mm_names = []
+    for vn in vis_names:
+        mm_names.append([n for n in names if 'model' in n and '+' in n and vn in n])
+
+    names = ling_names + vis_names + list(chain.from_iterable(mm_names))
     scs = scores[names + ['ground_truth'] + mixed]
     scs['ground_truth'] /= gt_divisor
     correlations = compute_correlations(scs, name_pairs='gt', common_subset=common_subset)
 
+    freq_ranges = sorted(list(set([tuple(map(int, n.split('_')[-1].split('-'))) for n in ling_names])))
+
     # Plot data with error bars
-    means, errs = [], []
-    for fmin, fmax in freq_ranges:
-        fnames = [n for n in names if f'fqrng_{fmin}-{fmax}' in n]
-        fcorrs, fpvals, fcoverages = zip(*[correlations['ground_truth | ' + n] for n in fnames])
-        f_mean, f_std = np.mean(fcorrs), np.std(fcorrs)
-        means.append(f_mean)
-        errs.append(f_std)
-    # MIXED: Full data
-    mcorrs, mpvals, mcoverages = zip(*[correlations['ground_truth | ' + n] for n in mixed])
-    m_mean, m_std = np.mean(mcorrs), np.std(mcorrs)
-    means.append(m_mean)
-    errs.append(m_std)
+    def bar_data(nms):
+        means, errs = [], []
+        for fmin, fmax in freq_ranges:
+            fnames = [n for n in nms if f'fqrng_{fmin}-{fmax}' in n]
+            fcorrs, fpvals, fcoverages = zip(*[correlations['ground_truth | ' + n] for n in fnames])
+            f_mean, f_std = np.mean(fcorrs), np.std(fcorrs)
+            means.append(f_mean)
+            errs.append(f_std)
+        # MIXED: Full data
+        mcorrs, mpvals, mcoverages = zip(*[correlations['ground_truth | ' + n] for n in mixed])
+        m_mean, m_std = np.mean(mcorrs), np.std(mcorrs)
+        means.append(m_mean)
+        errs.append(m_std)
+        return means, errs
+
+    ling_means, ling_errs = bar_data(ling_names)
 
     fig, ax = plt.subplots()
-    xpos = range(len(freq_ranges) + 1)
-    ax.bar(xpos, means, yerr=errs)
+    bar_width = 0.2
+    xpos = np.linspace(1, 2 + 2 * len(vis_names), len(freq_ranges) + 1)
+
+    ax.bar(np.array(xpos), ling_means, yerr=ling_errs, width=bar_width, label='Linguistic')
+    pi = 1
+    for vn in vis_names:
+        vcorr, vpval, vcoverage = correlations['ground_truth | ' + vn]
+        ax.bar(np.array(xpos) + pi * bar_width, [vcorr for i in xpos], yerr=[0 for i in xpos], width=bar_width, label=vn)
+        pi += 1
+    # separate MM for vis_names too
+    for mmn, vn in zip(mm_names, vis_names):
+        mmlabel = 'MM - ' + vn
+        mmn_means, mmn_errs = bar_data(mmn)
+        ax.bar(np.array(xpos) + pi * bar_width, mmn_means, yerr=mmn_errs, width=bar_width, label=mmlabel)
+        pi += 1
+
     ax.set_xticks(xpos)
     ax.set_xticklabels(['LOW', 'MEDIUM', 'HIGH', 'MIXED'])
     ax.set_ylabel('Spearman correlation')
-    ax.set_title(title)
 
 
 def wn_concreteness(word, similarity_fn=wn.path_similarity):
@@ -839,7 +865,7 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
         for name in list(scores.keys()):
             scrs = deepcopy(scores[name])
             plot_for_freqranges(scrs, gt_divisor=datasets.normalizers[name], common_subset=common_subset,
-                                quantity=quantity, title=f'Spearman correlation distribution on {name}')
+                                quantity=quantity)
             plt.savefig('../figs/freqranges_' + name + '.png', bbox_inches='tight')
 
     if 'plotscores' in actions:
