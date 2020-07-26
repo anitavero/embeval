@@ -5,10 +5,10 @@
 Aanalytical vs estimated value is illustrated for normal random variables.
 
 """
-
 from numpy.random import rand, multivariate_normal
 from numpy import arange, zeros, dot, ones
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 from ite.cost.x_factory import co_factory
 from ite.cost.x_analytical_values import analytical_value_d_kullback_leibler
@@ -16,7 +16,7 @@ from ite.cost.x_analytical_values import analytical_value_d_kullback_leibler
 
 def main():
     # parameters:
-    dim = 1  # dimension of the distribution
+    dim = 10  # dimension of the distribution
     num_of_samples_v = arange(1000, 10 * 1000 + 1, 1000)
     cost_name = 'BDKL_KnnK'  # dim >= 1
     # cost_name = 'BDKL_KnnKiTi'  # dim >= 1
@@ -58,10 +58,10 @@ def main():
     d = analytical_value_d_kullback_leibler(distr, distr, par1, par2)
 
     # estimation:
-    for (tk, num_of_samples) in enumerate(num_of_samples_v):
+    for (tk, num_of_samples) in tqdm(enumerate(num_of_samples_v)):
         d_hat_v[tk] = co.estimation(y1[0:num_of_samples],
                                     y2[0:num_of_samples])  # broadcast
-        print("tk={0}/{1}".format(tk + 1, length))
+        # print("tk={0}/{1}".format(tk+1, length))
 
     # plot:
     plt.plot(num_of_samples_v, d_hat_v, num_of_samples_v, ones(length) * d)
