@@ -60,11 +60,8 @@ def run_benchmark(dim, k):
     d = analytical_value_d_kullback_leibler(distr, distr, par1, par2)
 
     # estimation:
-    for (tk, num_of_samples) in tqdm(enumerate(num_of_samples_v)):
-        d_hat_v[tk] = co.estimation(y1[0:num_of_samples],
-                                    y2[0:num_of_samples])  # broadcast
-
-    relative_err = abs(d_hat_v[-1] - d) / d
+    d_hat_v = co.estimation(y1, y2)  # broadcast
+    relative_err = abs(d_hat_v - d) / d
     return relative_err
 
 
@@ -74,7 +71,7 @@ def benchmark(dim, sample_num):
     mean_rel_errs = {}
     for k in tqdm([3, 5, 10]):
         sum_rel_errs = 0
-        for i in range(sample_num):
+        for i in tqdm(range(sample_num)):
             sum_rel_errs += run_benchmark(dim, k)
         mean_rel_errs[k] = sum_rel_errs / sample_num
     for k, rerr in mean_rel_errs.items():
