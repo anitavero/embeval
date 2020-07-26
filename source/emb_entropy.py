@@ -10,6 +10,7 @@ from numpy import arange, zeros, dot, ones
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import argh
+from argh import arg
 
 from ite.cost.x_factory import co_factory
 from ite.cost.x_analytical_values import analytical_value_d_kullback_leibler
@@ -78,6 +79,8 @@ def run_benchmark(dim, k):
     return relative_err
 
 
+@arg('dim', type=int)
+@arg('sample_num', type=int)
 def benchmark(dim, sample_num):
     mean_rel_errs = {}
     for k in tqdm([3, 5, 10]):
