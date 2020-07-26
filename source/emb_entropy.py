@@ -9,14 +9,15 @@ from numpy.random import rand, multivariate_normal
 from numpy import arange, zeros, dot, ones
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+import argh
 
 from ite.cost.x_factory import co_factory
 from ite.cost.x_analytical_values import analytical_value_d_kullback_leibler
 
 
-def main():
+def run_benchmark(dim, k):
     # parameters:
-    dim = 10  # dimension of the distribution
+    # dim = 10  # dimension of the distribution
     num_of_samples_v = arange(1000, 10 * 1000 + 1, 1000)
     cost_name = 'BDKL_KnnK'  # dim >= 1
     # cost_name = 'BDKL_KnnKiTi'  # dim >= 1
@@ -26,7 +27,7 @@ def main():
     distr = 'normal'  # fixed
     num_of_samples_max = num_of_samples_v[-1]
     length = len(num_of_samples_v)
-    co = co_factory(cost_name, mult=True)  # cost object
+    co = co_factory(cost_name, mult=True, k=k)  # cost object
     d_hat_v = zeros(length)  # vector of estimated divergence values
 
     # distr, dim -> samples (y1,y2), distribution parameters (par1,par2),
@@ -61,16 +62,32 @@ def main():
     for (tk, num_of_samples) in tqdm(enumerate(num_of_samples_v)):
         d_hat_v[tk] = co.estimation(y1[0:num_of_samples],
                                     y2[0:num_of_samples])  # broadcast
-        # print("tk={0}/{1}".format(tk+1, length))
 
     # plot:
-    plt.plot(num_of_samples_v, d_hat_v, num_of_samples_v, ones(length) * d)
-    plt.xlabel('Number of samples')
-    plt.ylabel('Kullback-Leibler divergence')
-    plt.legend(('estimation', 'analytical value'), loc='best')
-    plt.title("Estimator: " + cost_name)
-    plt.show()
+    # plt.plot(num_of_samples_v, d_hat_v, num_of_samples_v, ones(length) * d)
+    # plt.xlabel('Number of samples')
+    # plt.ylabel('Kullback-Leibler divergence')
+    # plt.legend(('estimation', 'analytical value'), loc='best')
+    # plt.title("Estimator: " + cost_name)
+    # plt.show()
+    # print('Estimation:', d_hat_v)
+    # print('Analytical value:', d)
+    relative_err = abs(d_hat_v[-1] - d) / d
+    # print('Relative error:', relative_err)
+
+    return relative_err
+
+
+def benchmark(dim, sample_num):
+    mean_rel_errs = {}
+    for k in tqdm([3, 5, 10]):
+        sum_rel_errs = 0
+        for i in range(sample_num):
+            sum_rel_errs += run_benchmark(dim, k)
+        mean_rel_errs[k] = sum_rel_errs / sample_num
+    for k, rerr in mean_rel_errs.items():
+        print('k:', k, ', Mean Relative Error:', rerr)
 
 
 if __name__ == "__main__":
-    main()
+    argh.dispatch_command(benchmark)
