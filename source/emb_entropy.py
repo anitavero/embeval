@@ -64,18 +64,7 @@ def run_benchmark(dim, k):
         d_hat_v[tk] = co.estimation(y1[0:num_of_samples],
                                     y2[0:num_of_samples])  # broadcast
 
-    # plot:
-    # plt.plot(num_of_samples_v, d_hat_v, num_of_samples_v, ones(length) * d)
-    # plt.xlabel('Number of samples')
-    # plt.ylabel('Kullback-Leibler divergence')
-    # plt.legend(('estimation', 'analytical value'), loc='best')
-    # plt.title("Estimator: " + cost_name)
-    # plt.show()
-    # print('Estimation:', d_hat_v)
-    # print('Analytical value:', d)
     relative_err = abs(d_hat_v[-1] - d) / d
-    # print('Relative error:', relative_err)
-
     return relative_err
 
 
