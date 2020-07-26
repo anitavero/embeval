@@ -17,8 +17,10 @@ from ite.cost.x_analytical_values import analytical_value_d_kullback_leibler
 
 
 def run_benchmark(dim, k):
-    # parameters:
-    # dim = 10  # dimension of the distribution
+    """"
+    :param dim: dimension of the distribution
+    :param k: number of nearest neighbours
+    """
     num_of_samples_v = arange(1000, 10 * 1000 + 1, 1000)
     cost_name = 'BDKL_KnnK'  # dim >= 1
     # cost_name = 'BDKL_KnnKiTi'  # dim >= 1
@@ -27,9 +29,7 @@ def run_benchmark(dim, k):
     # initialization:
     distr = 'normal'  # fixed
     num_of_samples_max = num_of_samples_v[-1]
-    length = len(num_of_samples_v)
     co = co_factory(cost_name, mult=True, k=k)  # cost object
-    d_hat_v = zeros(length)  # vector of estimated divergence values
 
     # distr, dim -> samples (y1,y2), distribution parameters (par1,par2),
     # analytical value (d):
@@ -60,7 +60,7 @@ def run_benchmark(dim, k):
     d = analytical_value_d_kullback_leibler(distr, distr, par1, par2)
 
     # estimation:
-    d_hat_v = co.estimation(y1, y2)  # broadcast
+    d_hat_v = co.estimation(y1, y2)
     relative_err = abs(d_hat_v - d) / d
     return relative_err
 
