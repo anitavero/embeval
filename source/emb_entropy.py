@@ -16,19 +16,18 @@ from ite.cost.x_factory import co_factory
 from ite.cost.x_analytical_values import analytical_value_d_kullback_leibler
 
 
-def run_benchmark(dim, k):
+def run_benchmark(dim, k, num_of_samples=10000):
     """"
     :param dim: dimension of the distribution
     :param k: number of nearest neighbours
+    :param num_of_samples: number of data points
     """
-    num_of_samples_v = arange(1000, 10 * 1000 + 1, 1000)
     cost_name = 'BDKL_KnnK'  # dim >= 1
     # cost_name = 'BDKL_KnnKiTi'  # dim >= 1
     # cost_name = 'MDKL_HSCE'  # dim >= 1
 
     # initialization:
     distr = 'normal'  # fixed
-    num_of_samples_max = num_of_samples_v[-1]
     co = co_factory(cost_name, mult=True, k=k)  # cost object
 
     # distr, dim -> samples (y1,y2), distribution parameters (par1,par2),
@@ -49,8 +48,8 @@ def run_benchmark(dim, k):
         c2 = dot(l2, l2.T)
 
         # generate samples (y1~N(m1,c1), y2~N(m2,c2)):
-        y1 = multivariate_normal(m1, c1, num_of_samples_max)
-        y2 = multivariate_normal(m2, c2, num_of_samples_max)
+        y1 = multivariate_normal(m1, c1, num_of_samples)
+        y2 = multivariate_normal(m2, c2, num_of_samples)
 
         par1 = {"mean": m1, "cov": c1}
         par2 = {"mean": m2, "cov": c2}
@@ -66,14 +65,14 @@ def run_benchmark(dim, k):
 
 
 @arg('dim', type=int)
-@arg('sample_num', type=int)
-def benchmark(dim, sample_num):
+@arg('round_num', type=int)
+def benchmark(dim, round_num, num_of_samples=10000):
     mean_rel_errs = {}
     for k in tqdm([3, 5, 10]):
         sum_rel_errs = 0
-        for i in tqdm(range(sample_num)):
-            sum_rel_errs += run_benchmark(dim, k)
-        mean_rel_errs[k] = sum_rel_errs / sample_num
+        for i in tqdm(range(round_num)):
+            sum_rel_errs += run_benchmark(dim, k, num_of_samples)
+        mean_rel_errs[k] = sum_rel_errs / round_num
     for k, rerr in mean_rel_errs.items():
         print('k:', k, ', Mean Relative Error:', rerr)
 
