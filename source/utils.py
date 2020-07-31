@@ -6,6 +6,14 @@ import json
 import os
 
 
+def hr_time(time, round_n=2):
+    """Human readable time."""
+    hours = time // 3600 % 24
+    minutes = time // 60 % 60
+    seconds = round(time % 60, round_n)
+    return f'{hours}h {minutes}m {seconds}s'
+
+
 def create_dir(directory):
     try:
         if not os.path.exists(directory):
