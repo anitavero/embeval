@@ -4,6 +4,22 @@ import re
 import pickle
 import json
 import os
+import argparse
+
+
+def tuple_list(arg):
+    """List[Tuple[str]] argument type.
+        format: whitespace separated str lists, separated by |. eg. 'embs1 embs2 | embs2 embs3 embs4'
+    """
+    try:
+        if '|' in arg:
+            tplist = [tuple(t.split()) for t in arg.split('|')]
+        else:
+            tplist = [tuple(arg.split())]
+        return tplist
+    except:
+        raise argparse.ArgumentTypeError("Tuple list must be whitespace separated str lists, " +
+                                         "separated by |. eg. embs1 embs2 | embs2 embs3 embs4")
 
 
 def hr_time(time, round_n=2):

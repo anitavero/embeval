@@ -24,7 +24,8 @@ import warnings
 
 from source.process_embeddings import mid_fusion, MM_TOKEN, Embeddings
 import source.utils as utils
-from utils import get_vec, pfont, PrintFont, LaTeXFont, latex_table_post_process, latex_table_wrapper, dict2struct_array
+from source.utils import get_vec, pfont, PrintFont, LaTeXFont, latex_table_post_process, latex_table_wrapper, \
+                         dict2struct_array, tuple_list
 
 sys.path.append('../2v2_software_privatefork/')
 import two_vs_two
@@ -699,21 +700,6 @@ def eval_concreteness(scores: np.ndarray, word_pairs, num=100, gt_divisor=10, ve
     # plots both for median concreteness of synsets and for the most concrete synset of words
     print_conc('median', 'Median synset concreteness')
     print_conc('most_conc', 'Most concrete synsets')
-
-
-def tuple_list(arg):
-    """List[Tuple[str]] argument type.
-        format: whitespace separated str lists, separated by |. eg. 'embs1 embs2 | embs2 embs3 embs4'
-    """
-    try:
-        if '|' in arg:
-            tplist = [tuple(t.split()) for t in arg.split('|')]
-        else:
-            tplist = [tuple(arg.split())]
-        return tplist
-    except:
-        raise argparse.ArgumentTypeError("Tuple list must be whitespace separated str lists, " +
-                                         "separated by |. eg. embs1 embs2 | embs2 embs3 embs4")
 
 
 def compute_scores(actions, embeddings, scores, datasets, pairs, brain_scores=None, pre_score_files: str = None,

@@ -21,8 +21,8 @@ from typing import List
 from ite.cost.x_factory import co_factory
 from ite.cost.x_analytical_values import analytical_value_i_shannon
 
-from source.utils import hr_time
-from source.process_embeddings import Embeddings
+from source.utils import hr_time, tuple_list
+from source.process_embeddings import Embeddings, mid_fusion
 
 
 def benchmark(dim=10, cost_name='MIShannon_DKL', num_of_samples=-1, max_num_of_samples=10000):
@@ -111,13 +111,26 @@ def estimate_mi(matrices: List[np.ndarray], cost_name: str):
     return co.estimation(ms_stacked, ds)
 
 
+@arg('-mmembs', '--mm_embs_of', type=tuple_list)
 @arg('-vns', '--vecs_names', nargs='+', type=str, required=True)
-def estimate_embeddings_mi(datadir: str, vecs_names=[], cost_name='MIShannon_DKL'):
+def estimate_embeddings_mi(datadir: str, vecs_names=[], mm_embs_of=[], cost_name='MIShannon_DKL'):
     """Return estimated Mutual Information for a Embeddings with vecs_names in datadir.
         :param cost_name: MI estimation algorithm, e.g, 'BIHSIC_IChol', 'MIShannon_DKL', 'MIShannon_HS' (for more see ite.cost)
     """
     embs = Embeddings(datadir, vecs_names)
-    return estimate_mi(embs.embeddings, cost_name)
+    emb_tuples = [tuple(embs.embeddings[vecs_names.index(l)] for l in t) for t in mm_embs_of]
+    vocab_tuples = [tuple(embs.vocabs[vecs_names.index(l)] for l in t) for t in mm_embs_of]
+    mm_labels = [tuple(l for l in t) for t in mm_embs_of]
+    mm_embeddings, mm_vocabs, mm_labels = mid_fusion(emb_tuples, vocab_tuples, mm_labels, padding=False)
+
+    # Compute estimates MI for all multi-modal embeddings
+    eMIs = {}
+    for mme, mml in zip(mm_embeddings, mm_embs_of):
+        co = co_factory(cost_name, mult=True)  # cost object
+        ds = [embs.embeddings[vecs_names.index(l)].shape[1] for l in mml]
+        eMIs['-'.join(mml)] = co.estimation(mme, ds)
+
+    return eMIs
 
 
 if __name__ == "__main__":
