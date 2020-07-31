@@ -124,8 +124,10 @@ def estimate_embeddings_mi(datadir: str, vecs_names=[], mm_embs_of=[], cost_name
     mm_embeddings, mm_vocabs, mm_labels = mid_fusion(emb_tuples, vocab_tuples, mm_labels, padding=False)
 
     # Compute estimates MI for all multi-modal embeddings
+    print('Compute Mutual Information...')
     eMIs = {}
     for mme, mml in zip(mm_embeddings, mm_embs_of):
+        print(mml)
         co = co_factory(cost_name, mult=True)  # cost object
         ds = [embs.embeddings[vecs_names.index(l)].shape[1] for l in mml]
         eMIs['-'.join(mml)] = co.estimation(mme, ds)
