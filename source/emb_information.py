@@ -5,9 +5,12 @@
 Analytical vs estimated value is illustrated for normal random variables.
 
 """
-
+import os
 from numpy.random import rand, multivariate_normal
 from numpy import array, arange, zeros, dot, ones, sum
+import matplotlib
+if os.environ.get('DISPLAY') is None:
+    matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from time import time
 import argh
@@ -74,7 +77,7 @@ def main(dim=10, cost_name='MIShannon_DKL'):
     ax.legend(('estimation', 'analytical value'), loc='best')
     ax.set_title("Estimator: " + cost_name)
     fig_title = f'Estimator-{cost_name}_dims_{",".join(map(str, ds))}'
-    plt.savefig('../figs/' + fig_title)
+    plt.savefig(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'figs', fig_title))
 
     # Plot time
     fig, ax = plt.subplots()
@@ -83,7 +86,8 @@ def main(dim=10, cost_name='MIShannon_DKL'):
     ax.set_ylabel('Run time')
     ax.set_title("Time of Estimator: " + cost_name)
     fig_title = f'Time_Estimator-{cost_name}_dims_{",".join(map(str, ds))}'
-    plt.savefig('../figs/' + fig_title)
+    plt.savefig(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'figs', fig_title))
+
 
 
 if __name__ == "__main__":
