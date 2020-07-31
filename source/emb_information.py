@@ -18,12 +18,12 @@ from ite.cost.x_analytical_values import analytical_value_i_shannon
 from source.utils import hr_time
 
 
-def main(dim=10):
+def main(dim=10, cost_name='MIShannon_DKL'):
     # parameters:
     ds = array([dim, dim])  # subspace dimensions: ds[0], ..., ds[M-1]
     num_of_samples_v = arange(1000, 10 * 1000 + 1, 1000)
 
-    cost_name = 'BIHSIC_IChol'  # d_m >= 1, M >= 2
+    # cost_name = 'BIHSIC_IChol'  # d_m >= 1, M >= 2
     # cost_name = 'MIShannon_DKL'  # d_m >= 1, M >= 2
     # cost_name = 'MIShannon_HS'  # d_m >= 1, M >= 2
 
