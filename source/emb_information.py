@@ -21,14 +21,20 @@ from ite.cost.x_analytical_values import analytical_value_i_shannon
 from source.utils import hr_time
 
 
-def main(dim=10, cost_name='MIShannon_DKL'):
-    # parameters:
+def benchmark(dim=10, cost_name='MIShannon_DKL', num_of_samples=-1, max_num_of_samples=10000):
+    """
+    Plot estimated vs analytical Mutual Information for random matrices.
+    :param dim: Data dimension (number of columns of the matrices)
+    :param cost_name: MI estimation algorithm, e.g, 'BIHSIC_IChol', 'MIShannon_DKL', 'MIShannon_HS' (for more see ite.cost)
+    :param num_of_samples: if -1 increases the number of data points by 1000 until max_num_of_samples,
+                           if >-1 it prints running time for this number of data points (matrix row num)
+    :param max_num_of_samples: maximum data point number in case of plotting for a series of sample nums.
+    """
     ds = array([dim, dim])  # subspace dimensions: ds[0], ..., ds[M-1]
-    num_of_samples_v = arange(1000, 10 * 1000 + 1, 1000)
-
-    # cost_name = 'BIHSIC_IChol'  # d_m >= 1, M >= 2
-    # cost_name = 'MIShannon_DKL'  # d_m >= 1, M >= 2
-    # cost_name = 'MIShannon_HS'  # d_m >= 1, M >= 2
+    if num_of_samples == -1:
+        num_of_samples_v = arange(1000, max_num_of_samples + 1, 1000)
+    else:
+        num_of_samples_v = [num_of_samples]
 
     # initialization:
     distr = 'normal'  # distribution; fixed
@@ -69,26 +75,27 @@ def main(dim=10, cost_name='MIShannon_DKL'):
         times.append(etime)
     print('Total time:', hr_time(total_time))
 
-    # Plot estimation vs analytical
-    fig, ax = plt.subplots()
-    ax.plot(num_of_samples_v, i_hat_v, num_of_samples_v, ones(length) * i)
-    ax.set_xlabel('Number of samples')
-    ax.set_ylabel('Shannon mutual information')
-    ax.legend(('estimation', 'analytical value'), loc='best')
-    ax.set_title("Estimator: " + cost_name)
-    fig_title = f'Estimator-{cost_name}_dims_{",".join(map(str, ds))}'
-    plt.savefig(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'figs', fig_title))
+    if len(num_of_samples_v) > 1:
+        # Plot estimation vs analytical
+        fig, ax = plt.subplots()
+        ax.plot(num_of_samples_v, i_hat_v, num_of_samples_v, ones(length) * i)
+        ax.set_xlabel('Number of samples')
+        ax.set_ylabel('Shannon mutual information')
+        ax.legend(('estimation', 'analytical value'), loc='best')
+        ax.set_title("Estimator: " + cost_name)
+        fig_title = f'Estimator-{cost_name}_dims_{",".join(map(str, ds))}'
+        plt.savefig(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'figs', fig_title))
 
-    # Plot time
-    fig, ax = plt.subplots()
-    ax.plot(num_of_samples_v, times)
-    ax.set_xlabel('Number of samples')
-    ax.set_ylabel('Run time')
-    ax.set_title("Time of Estimator: " + cost_name)
-    fig_title = f'Time_Estimator-{cost_name}_dims_{",".join(map(str, ds))}'
-    plt.savefig(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'figs', fig_title))
+        # Plot time
+        fig, ax = plt.subplots()
+        ax.plot(num_of_samples_v, times)
+        ax.set_xlabel('Number of samples')
+        ax.set_ylabel('Run time')
+        ax.set_title("Time of Estimator: " + cost_name)
+        fig_title = f'Time_Estimator-{cost_name}_dims_{",".join(map(str, ds))}'
+        plt.savefig(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'figs', fig_title))
 
 
 
 if __name__ == "__main__":
-    argh.dispatch_command(main)
+    argh.dispatch_commands([benchmark])
