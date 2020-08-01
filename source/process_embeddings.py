@@ -248,15 +248,15 @@ def mid_fusion(embeddings, vocabs, labels,
             mm_embedding = np.zeros((len(mm_vocab), shape1 + shape2))
 
             print('Creating index...')
-            idx = {x: i for i, x in enumerate(mm_vocab)}
+            idx = range(len(mm_vocab))
             idx_v1 = {x: i for i, x in enumerate(vocab1)}
             idx_v2 = {x: i for i, x in enumerate(vocab2)}
-            idx1, idx_emb1 = zip(*[(idx[w], idx_v1[w]) for w in mm_vocab])
-            idx2, idx_emb2 = zip(*[(idx[w], idx_v2[w]) for w in mm_vocab])
+            idx_emb1 = [idx_v1[w] for w in mm_vocab]
+            idx_emb2 = [idx_v2[w] for w in mm_vocab]
 
             print('Creating MM Embeddings...')
-            mm_embedding[idx1, :shape1] = emb1[idx_emb1, :]
-            mm_embedding[idx2, shape1:] = emb2[idx_emb2, :]
+            mm_embedding[idx, :shape1] = emb1[idx_emb1, :]
+            mm_embedding[idx, shape1:] = emb2[idx_emb2, :]
 
         mm_embeddings.append(mm_embedding)
         mm_vocabs.append(np.array(mm_vocab))
