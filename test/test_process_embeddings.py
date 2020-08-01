@@ -130,3 +130,18 @@ def test_mid_fusion():
     assert (mm_embs_np[0][np.argwhere(mm_vocabs_np[0] == 'a')[0][0]] == np.array([1, 1, 22, 22])).all()
     assert (mm_embs_np[0][np.argwhere(mm_vocabs_np[0] == 'b')[0][0]] == np.array([2, 2, 33, 33])).all()
     assert (mm_embs_np[0][np.argwhere(mm_vocabs_np[0] == 'c')[0][0]] == np.array([3, 3, 11, 11])).all()
+
+
+    emb1 = np.array([[1, 1],
+                     [2, 2],
+                     [3, 3]])
+    emb2 = np.array([[11, 11],
+                     [33, 33]])
+    vocab1 = np.array(['a', 'b', 'c'])
+    vocab2 = np.array(['a', 'c'])
+    labels = np.array(['one', 'two'])
+
+    mm_embs_np, mm_vocabs_np, mm_labels_np = mid_fusion((emb1, emb2), (vocab1, vocab2), labels, padding=False)
+    assert set(mm_vocabs_np[0]) == {'a', 'c'}
+    assert (mm_embs_np[0][np.argwhere(mm_vocabs_np[0] == 'a')[0][0]] == np.array([1, 1, 11, 11])).all()
+    assert (mm_embs_np[0][np.argwhere(mm_vocabs_np[0] == 'c')[0][0]] == np.array([3, 3, 33, 33])).all()
