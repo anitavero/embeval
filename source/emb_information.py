@@ -9,6 +9,7 @@ import os
 from numpy.random import rand, multivariate_normal
 from numpy import array, arange, zeros, dot, ones, sum
 import matplotlib
+matplotlib.rcParams["savefig.dpi"] = 300
 if os.environ.get('DISPLAY') is None:
     matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -17,12 +18,16 @@ import argh
 from argh import arg
 from glob import glob
 import json
+import numpy as np
 
 from ite.cost.x_factory import co_factory
 from ite.cost.x_analytical_values import analytical_value_i_shannon
 
 from source.utils import hr_time, tuple_list
 from source.process_embeddings import Embeddings, mid_fusion, MM_TOKEN
+
+
+FIG_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'figs')
 
 
 def benchmark(dim=10, cost_name='MIShannon_DKL', num_of_samples=-1, max_num_of_samples=10000):
@@ -88,7 +93,7 @@ def benchmark(dim=10, cost_name='MIShannon_DKL', num_of_samples=-1, max_num_of_s
         ax.legend(('estimation', 'analytical value'), loc='best')
         ax.set_title("Estimator: " + cost_name)
         fig_title = f'Estimator-{cost_name}_dims_{",".join(map(str, ds))}'
-        plt.savefig(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'figs', fig_title))
+        plt.savefig(os.path.join(FIG_DIR, fig_title))
 
         # Plot time
         fig, ax = plt.subplots()
@@ -97,7 +102,7 @@ def benchmark(dim=10, cost_name='MIShannon_DKL', num_of_samples=-1, max_num_of_s
         ax.set_ylabel('Run time')
         ax.set_title("Time of Estimator: " + cost_name)
         fig_title = f'Time_Estimator-{cost_name}_dims_{",".join(map(str, ds))}'
-        plt.savefig(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'figs', fig_title))
+        plt.savefig(os.path.join(FIG_DIR, fig_title))
 
 
 @arg('-mmembs', '--mm_embs_of', type=tuple_list)
@@ -146,5 +151,40 @@ def run_mi_experiments(exp_names='quantity'):
             json.dump(MIs, f)
 
 
+def plot_for_quantities(file_path, vis_names=['vecs3lem1', 'google_resnet152'], legend=True):
+    with open(file_path, 'r') as f:
+        MIs = json.load(f)
+    quantities = sorted(list(set([int(n.split('_')[1][1:]) for n in MIs.keys()])))
+    quantities = quantities[1:] + [quantities[0]]  # -1: max train file num
+
+    # Plot data with error bars
+    def bar_data(nms):
+        means, errs = [], []
+        for q in quantities:
+            qnames = [n for n in nms if f'n{q}_' in n]
+            qMIs = [v for k, v in MIs.items() if k in qnames]
+            q_mean, q_std = np.mean(qMIs), np.std(qMIs)
+            means.append(q_mean)
+            errs.append(q_std)
+        return means, errs
+
+    fig, ax = plt.subplots()
+    bar_width = 0.2
+    xpos = np.linspace(1, 2 + 2 * len(vis_names), len(quantities))
+
+    for i, vn in enumerate(vis_names):
+        vnms = [k for k in MIs.keys() if vn in k]
+        means, errs = bar_data(vnms)
+        ax.bar(np.array(xpos) + i * bar_width, means, yerr=errs, width=bar_width, label=Embeddings.get_label(vn))
+
+    ax.set_xticks(xpos)
+    ax.set_xticklabels(['8M', '1G', '2G', '5G', '13G'])
+    ax.set_ylabel('Mutual Information')
+    if legend:
+        ax.legend(loc='best', fontsize='x-small')
+    plt.savefig(os.path.join(FIG_DIR, 'MI_Ling-Vis_for_quantities'))
+
+
+
 if __name__ == "__main__":
-    argh.dispatch_commands([benchmark, estimate_embeddings_mi, run_mi_experiments])
+    argh.dispatch_commands([benchmark, estimate_embeddings_mi, run_mi_experiments, plot_for_quantities])
