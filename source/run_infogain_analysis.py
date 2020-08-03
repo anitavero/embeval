@@ -27,7 +27,7 @@ def main(actions='printcorr', name='', tablefmt='simple'):
                        loadpath=embdir + name,
                        print_corr_for='gt',
                        tablefmt=tablefmt,
-                       quantity=500)
+                       quantity=-1)
 
 
 if __name__ == '__main__':
