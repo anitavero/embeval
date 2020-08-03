@@ -139,16 +139,27 @@ def run_mi_experiments(exp_names='quantity'):
     embdir = '/anfs/bigdisc/alv34/wikidump/extracted/models/'
     savedir = embdir + '/results/'
 
+    vis_names = ['vecs3lem1', 'google_resnet152']
+    models = glob(embdir + '*model*npy*')
+
     if 'quantity' in exp_names:
-        models = glob(embdir + '*model*npy*')
         ling_names = [os.path.split(m)[1].split('.')[0] for m in models if 'fqrng' not in m]
-        vis_names = ['vecs3lem1', 'google_resnet152']
         mm_embs = [(l, v) for l in ling_names for v in vis_names]
         MIs = estimate_embeddings_mi(embdir, vecs_names=ling_names + vis_names,
                                      mm_embs_of=mm_embs, cost_name='MIShannon_DKL')
 
         with open(os.path.join(savedir, 'MM_MI_for_quantities.json'), 'w') as f:
             json.dump(MIs, f)
+
+    if 'freqranges' in exp_names:
+        ling_names = [os.path.split(m)[1].split('.')[0] for m in models if 'fqrng' in m]
+        mm_embs = [(l, v) for l in ling_names for v in vis_names]
+        MIs = estimate_embeddings_mi(embdir, vecs_names=ling_names + vis_names,
+                                     mm_embs_of=mm_embs, cost_name='MIShannon_DKL')
+
+        with open(os.path.join(savedir, 'MM_MI_for_freqranges.json'), 'w') as f:
+            json.dump(MIs, f)
+
 
 
 def plot_for_quantities(file_path, vis_names=['vecs3lem1', 'google_resnet152'], legend=True):
