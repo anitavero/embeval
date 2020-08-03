@@ -124,7 +124,7 @@ def estimate_embeddings_mi(datadir: str, vecs_names=[], mm_embs_of=[], cost_name
         co = co_factory(cost_name, mult=True)  # cost object
         ds = [embs.embeddings[vecs_names.index(l)].shape[1] for l in mml]
         eMIs[MM_TOKEN.join(mml)] = co.estimation(mme, ds)
-        print(eMIs['-'.join(mml)])
+        print(eMIs[MM_TOKEN.join(mml)])
 
     return eMIs
 
