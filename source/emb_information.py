@@ -130,7 +130,7 @@ def estimate_embeddings_mi(datadir: str, vecs_names=[], mm_embs_of=[], cost_name
 
 
 @arg('-exp', '--exp_names', nargs='+', type=str, required=True)
-def run_mi_experiments(exp_names):
+def run_mi_experiments(exp_names='quantity'):
     embdir = '/anfs/bigdisc/alv34/wikidump/extracted/models/'
     savedir = embdir + '/results/'
 
