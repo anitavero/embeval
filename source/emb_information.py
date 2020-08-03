@@ -152,7 +152,7 @@ def run_mi_experiments(exp_names='quantity'):
             json.dump(MIs, f)
 
     if 'freqranges' in exp_names:
-        ling_names = [os.path.split(m)[1].split('.')[0] for m in models if 'fqrng' in m]
+        ling_names = [os.path.split(m)[1].split('.')[0] for m in models if 'fqrng' in m or 'n-1' in m]
         mm_embs = [(l, v) for l in ling_names for v in vis_names]
         MIs = estimate_embeddings_mi(embdir, vecs_names=ling_names + vis_names,
                                      mm_embs_of=mm_embs, cost_name='MIShannon_DKL')
@@ -194,6 +194,40 @@ def plot_for_quantities(file_path, vis_names=['vecs3lem1', 'google_resnet152'], 
     if legend:
         ax.legend(loc='best', fontsize='x-small')
     plt.savefig(os.path.join(FIG_DIR, 'MI_Ling-Vis_for_quantities'))
+
+
+def plot_for_freqranges(file_path, vis_names=['vecs3lem1', 'google_resnet152'], quantity=-1, legend=True):
+    with open(file_path, 'r') as f:
+        MIs = json.load(f)
+    freq_ranges = sorted(list(set([tuple(map(int, n.split('_')[-1].split('-'))) for n in MIs.keys()
+                                   if f'n{quantity}' in n])))
+
+    # Plot data with error bars
+    def bar_data(nms):
+        means, errs = [], []
+        for fmin, fmax in freq_ranges:
+            fnames = [n for n in nms if f'fqrng_{fmin}-{fmax}' in n]
+            fMIs = [v for k, v in MIs.items() if k in fnames]
+            f_mean, f_std = np.mean(fMIs), np.std(fMIs)
+            means.append(f_mean)
+            errs.append(f_std)
+        return means, errs
+
+    fig, ax = plt.subplots()
+    bar_width = 0.2
+    xpos = np.linspace(1, 2 + 2 * len(vis_names), len(freq_ranges) + 1)
+
+    for i, vn in enumerate(vis_names):
+        vnms = [k for k in MIs.keys() if vn in k]
+        means, errs = bar_data(vnms)
+        ax.bar(np.array(xpos) + i * bar_width, means, yerr=errs, width=bar_width, label=Embeddings.get_label(vn))
+
+    ax.set_xticks(xpos)
+    ax.set_xticklabels(['LOW', 'MEDIUM', 'HIGH', 'MIXED'])
+    ax.set_ylabel('Mutual Information')
+    if legend:
+        ax.legend(loc='best', fontsize='x-small')
+    plt.savefig(os.path.join(FIG_DIR, 'MI_Ling-Vis_for_freqranges'))
 
 
 
