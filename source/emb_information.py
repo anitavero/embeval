@@ -15,6 +15,8 @@ import matplotlib.pyplot as plt
 from time import time
 import argh
 from argh import arg
+from glob import glob
+import json
 
 from ite.cost.x_factory import co_factory
 from ite.cost.x_analytical_values import analytical_value_i_shannon
@@ -127,5 +129,22 @@ def estimate_embeddings_mi(datadir: str, vecs_names=[], mm_embs_of=[], cost_name
     return eMIs
 
 
+@arg('-exp', '--exp_names', nargs='+', type=str, required=True)
+def run_mi_experiments(exp_names):
+    embdir = '/anfs/bigdisc/alv34/wikidump/extracted/models/'
+    savedir = embdir + '/results/'
+
+    if 'quantity' in exp_names:
+        models = glob(embdir + '*model*npy*')
+        ling_names = [os.path.split(m)[1].split('.')[0] for m in models if 'fqrng' not in m]
+        vis_names = ['vecs3lem1', 'google_resnet152']
+        mm_embs = [(l, v) for l in ling_names for v in vis_names]
+        MIs = estimate_embeddings_mi(embdir, vecs_names=ling_names + vis_names,
+                                     mm_embs_of=mm_embs, cost_name='MIShannon_DKL')
+
+        with open(os.path.join(savedir, 'MM_MI_for_quantities.json'), 'w') as f:
+            json.dump(MIs, f)
+
+
 if __name__ == "__main__":
-    argh.dispatch_commands([benchmark, estimate_embeddings_mi])
+    argh.dispatch_commands([benchmark, estimate_embeddings_mi, run_mi_experiments])
