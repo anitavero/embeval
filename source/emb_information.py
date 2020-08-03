@@ -199,8 +199,9 @@ def plot_for_quantities(file_path, vis_names=['vecs3lem1', 'google_resnet152'], 
 def plot_for_freqranges(file_path, vis_names=['vecs3lem1', 'google_resnet152'], quantity=-1, legend=True):
     with open(file_path, 'r') as f:
         MIs = json.load(f)
-    freq_ranges = sorted(list(set([tuple(map(int, n.split('_')[-1].split('-'))) for n in MIs.keys()
-                                   if f'n{quantity}' in n])))
+    freq_ranges = sorted(list(set([tuple(map(int, n.split('_')[-1].split(MM_TOKEN)[0].split('-'))) for n in MIs.keys()
+                                   if f'n{quantity}' in n and 'fqrng' in n and 'vecs3lem1' in n])))
+    mixed_names = [n for n in MIs.keys() if 'fqrng' not in n and 'n-1' in n]
 
     # Plot data with error bars
     def bar_data(nms):
@@ -211,6 +212,10 @@ def plot_for_freqranges(file_path, vis_names=['vecs3lem1', 'google_resnet152'], 
             f_mean, f_std = np.mean(fMIs), np.std(fMIs)
             means.append(f_mean)
             errs.append(f_std)
+        mMIs = [v for k, v in MIs.items() if k in mixed_names]
+        m_mean, m_std = np.mean(mMIs), np.std(mMIs)
+        means.append(m_mean)
+        errs.append(m_std)
         return means, errs
 
     fig, ax = plt.subplots()
@@ -218,7 +223,7 @@ def plot_for_freqranges(file_path, vis_names=['vecs3lem1', 'google_resnet152'], 
     xpos = np.linspace(1, 2 + 2 * len(vis_names), len(freq_ranges) + 1)
 
     for i, vn in enumerate(vis_names):
-        vnms = [k for k in MIs.keys() if vn in k]
+        vnms = [k for k in MIs.keys() if vn in k and f'n{quantity}' in k]
         means, errs = bar_data(vnms)
         ax.bar(np.array(xpos) + i * bar_width, means, yerr=errs, width=bar_width, label=Embeddings.get_label(vn))
 
@@ -232,4 +237,5 @@ def plot_for_freqranges(file_path, vis_names=['vecs3lem1', 'google_resnet152'], 
 
 
 if __name__ == "__main__":
-    argh.dispatch_commands([benchmark, estimate_embeddings_mi, run_mi_experiments, plot_for_quantities])
+    argh.dispatch_commands([benchmark, estimate_embeddings_mi, run_mi_experiments, plot_for_quantities,
+                            plot_for_freqranges])
