@@ -22,7 +22,7 @@ from ite.cost.x_factory import co_factory
 from ite.cost.x_analytical_values import analytical_value_i_shannon
 
 from source.utils import hr_time, tuple_list
-from source.process_embeddings import Embeddings, mid_fusion
+from source.process_embeddings import Embeddings, mid_fusion, MM_TOKEN
 
 
 def benchmark(dim=10, cost_name='MIShannon_DKL', num_of_samples=-1, max_num_of_samples=10000):
@@ -123,7 +123,7 @@ def estimate_embeddings_mi(datadir: str, vecs_names=[], mm_embs_of=[], cost_name
         print(mml)
         co = co_factory(cost_name, mult=True)  # cost object
         ds = [embs.embeddings[vecs_names.index(l)].shape[1] for l in mml]
-        eMIs['-'.join(mml)] = co.estimation(mme, ds)
+        eMIs[MM_TOKEN.join(mml)] = co.estimation(mme, ds)
         print(eMIs['-'.join(mml)])
 
     return eMIs
