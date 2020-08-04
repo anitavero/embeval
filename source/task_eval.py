@@ -11,11 +11,13 @@ import argh
 from argh import arg
 import argparse
 from typing import List, Tuple
+
+import matplotlib
+matplotlib.rcParams["savefig.dpi"] = 300
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
-import matplotlib
-
 matplotlib.style.use('fivethirtyeight')
+
 from itertools import combinations, product, chain
 from tabulate import tabulate, LATEX_ESCAPE_RULES
 from copy import deepcopy

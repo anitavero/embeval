@@ -13,6 +13,7 @@ matplotlib.rcParams["savefig.dpi"] = 300
 if os.environ.get('DISPLAY') is None:
     matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+matplotlib.style.use('fivethirtyeight')
 from time import time
 import argh
 from argh import arg
@@ -197,7 +198,7 @@ def plot_for_quantities(file_path, vis_names=['vecs3lem1', 'google_resnet152'], 
     ax.set_ylabel('Mutual Information')
     if legend:
         ax.legend(loc='best', fontsize='x-small')
-    plt.savefig(os.path.join(FIG_DIR, 'MI_Ling-Vis_for_quantities'))
+    plt.savefig(os.path.join(FIG_DIR, 'MI_Ling-Vis_for_quantities'), bbox_inches='tight')
 
 
 def plot_for_freqranges(file_path, vis_names=['vecs3lem1', 'google_resnet152'], quantity=-1, legend=True):
@@ -236,7 +237,7 @@ def plot_for_freqranges(file_path, vis_names=['vecs3lem1', 'google_resnet152'], 
     ax.set_ylabel('Mutual Information')
     if legend:
         ax.legend(loc='best', fontsize='x-small')
-    plt.savefig(os.path.join(FIG_DIR, 'MI_Ling-Vis_for_freqranges'))
+    plt.savefig(os.path.join(FIG_DIR, 'MI_Ling-Vis_for_freqranges'), bbox_inches='tight')
 
 
 
