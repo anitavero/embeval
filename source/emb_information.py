@@ -135,7 +135,11 @@ def estimate_embeddings_mi(datadir: str, vecs_names=[], mm_embs_of=[], cost_name
 
 
 @arg('-exp', '--exp_names', nargs='+', type=str, required=True)
-def run_mi_experiments(exp_names='quantity'):
+def run_mi_experiments(exp_names='quantity', cost_name='MIShannon_DKL'):
+    """
+    :param cost_name: MI estimation algorithm, e.g, HSIC kernel method: 'BIHSIC_IChol',
+                                                    KNN based linear:   'MIShannon_DKL'
+    """
     embdir = '/anfs/bigdisc/alv34/wikidump/extracted/models/'
     savedir = embdir + '/results/'
 
@@ -146,18 +150,18 @@ def run_mi_experiments(exp_names='quantity'):
         ling_names = [os.path.split(m)[1].split('.')[0] for m in models if 'fqrng' not in m]
         mm_embs = [(l, v) for l in ling_names for v in vis_names]
         MIs = estimate_embeddings_mi(embdir, vecs_names=ling_names + vis_names,
-                                     mm_embs_of=mm_embs, cost_name='MIShannon_DKL')
+                                     mm_embs_of=mm_embs, cost_name=cost_name)
 
-        with open(os.path.join(savedir, 'MM_MI_for_quantities.json'), 'w') as f:
+        with open(os.path.join(savedir, f'MM_MI_{cost_name}_for_quantities.json'), 'w') as f:
             json.dump(MIs, f)
 
     if 'freqranges' in exp_names:
         ling_names = [os.path.split(m)[1].split('.')[0] for m in models if 'fqrng' in m or 'n-1' in m]
         mm_embs = [(l, v) for l in ling_names for v in vis_names]
         MIs = estimate_embeddings_mi(embdir, vecs_names=ling_names + vis_names,
-                                     mm_embs_of=mm_embs, cost_name='MIShannon_DKL')
+                                     mm_embs_of=mm_embs, cost_name=cost_name)
 
-        with open(os.path.join(savedir, 'MM_MI_for_freqranges.json'), 'w') as f:
+        with open(os.path.join(savedir, f'MM_MI_{cost_name}_for_freqranges.json'), 'w') as f:
             json.dump(MIs, f)
 
 
