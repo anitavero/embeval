@@ -529,11 +529,11 @@ def plot_for_quantities(scores: np.ndarray, gt_divisor, common_subset=False, leg
     pi = 1
     for vn in vis_names:
         vcorr, vpval, vcoverage = correlations['ground_truth | ' + vn]
-        ax.bar(np.array(xpos) + pi * bar_width, [vcorr for i in xpos], yerr=[0 for i in xpos], width=bar_width, label=vn)
+        ax.bar(np.array(xpos) + pi * bar_width, [vcorr for i in xpos], yerr=[0 for i in xpos], width=bar_width, label=Embeddings.get_label(vn))
         pi += 1
     # separate MM for vis_names too
     for mmn, vn in zip(mm_names, vis_names):
-        mmlabel = 'MM - ' + vn
+        mmlabel = 'MM - ' + Embeddings.get_label(vn)
         mmn_means, mmn_errs = bar_data(mmn)
         ax.bar(np.array(xpos) + pi * bar_width, mmn_means, yerr=mmn_errs, width=bar_width, label=mmlabel)
         pi += 1
@@ -588,11 +588,11 @@ def plot_for_freqranges(scores: np.ndarray, gt_divisor, quantity=-1, common_subs
     pi = 1
     for vn in vis_names:
         vcorr, vpval, vcoverage = correlations['ground_truth | ' + vn]
-        ax.bar(np.array(xpos) + pi * bar_width, [vcorr for i in xpos], yerr=[0 for i in xpos], width=bar_width, label=vn)
+        ax.bar(np.array(xpos) + pi * bar_width, [vcorr for i in xpos], yerr=[0 for i in xpos], width=bar_width, label=Embeddings.get_label(vn))
         pi += 1
     # separate MM for vis_names too
     for mmn, vn in zip(mm_names, vis_names):
-        mmlabel = 'MM - ' + vn
+        mmlabel = 'MM - ' + Embeddings.get_label(vn)
         mmn_means, mmn_errs = bar_data(mmn)
         ax.bar(np.array(xpos) + pi * bar_width, mmn_means, yerr=mmn_errs, width=bar_width, label=mmlabel)
         pi += 1
