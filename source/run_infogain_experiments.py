@@ -15,17 +15,16 @@ def main(exp_name, pre_score_files=None):
     embdir = '/anfs/bigdisc/alv34/wikidump/extracted/models/'
     savedir = embdir + '/results/'
 
-    if 'quantity' in exp_name.split('_'):
-        quantity_models = glob(embdir + '*model*npy*')
-        quantity_models = [os.path.split(m)[1].split('.')[0] for m in quantity_models]
+    quantity_models = glob(embdir + '*model*npy*')
+    quantity_models = [os.path.split(m)[1].split('.')[0] for m in quantity_models]
 
-        task_eval.main(datadir, actions=['compscores'], embdir=embdir,
-                       vecs_names=['vecs3lem1', 'google_resnet152'],
-                       ling_vecs_names=quantity_models,
-                       mm_lingvis=True,
-                       mm_padding=False,
-                       savepath=savedir + exp_name,
-                       pre_score_files=pre_score_files)
+    task_eval.main(datadir, actions=['compscores'], embdir=embdir,
+                   vecs_names=['vecs3lem1', 'google_resnet152'],
+                   ling_vecs_names=quantity_models,
+                   mm_lingvis=True,
+                   mm_padding=False,
+                   savepath=savedir + exp_name,
+                   pre_score_files=pre_score_files)
 
 
 if __name__ == '__main__':
