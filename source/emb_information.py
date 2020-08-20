@@ -195,7 +195,7 @@ def run_mi_experiments(exp_names='quantity', cost_name='MIShannon_DKL', pca_n_co
         with open(os.path.join(savedir, f'MM_MI_{cost_name}_for_freqranges{exp_suffix}.json'), 'w') as f:
             json.dump(MIs, f)
         if var_ratios != {}:
-            with open(os.path.join(savedir, f'MM_MI_{cost_name}_for_quantities{exp_suffix}_var-ratios.json'), 'w') as f:
+            with open(os.path.join(savedir, f'MM_MI_{cost_name}_for_freqranges{exp_suffix}_var-ratios.json'), 'w') as f:
                 json.dump(var_ratios, f)
 
 
