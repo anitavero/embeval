@@ -110,7 +110,7 @@ def benchmark(dim=10, cost_name='MIShannon_DKL', num_of_samples=-1, max_num_of_s
 
 
 @arg('-mmembs', '--mm_embs_of', type=tuple_list)
-@arg('-n_pca', '--pca_n_components', type=int)
+@arg('-n-pca', '--pca_n_components', type=int)
 @arg('-vns', '--vecs_names', nargs='+', type=str, required=True)
 def estimate_embeddings_mi(datadir: str, vecs_names=[], mm_embs_of=[], cost_name='MIShannon_DKL',
                            pca_n_components=None):
@@ -122,26 +122,26 @@ def estimate_embeddings_mi(datadir: str, vecs_names=[], mm_embs_of=[], cost_name
         :param cost_name: MI estimation algorithm, e.g, 'BIHSIC_IChol', 'MIShannon_DKL', 'MIShannon_HS' (for more see ite.cost)
     """
     embs = Embeddings(datadir, vecs_names)
+
+    var_ratios = {}
+    if pca_n_components:
+        small_embs = []
+        print(f'Reduce dimension to {pca_n_components} with PCA...')
+        for e, nm in tqdm(zip(embs.embeddings, embs.vecs_names)):
+            e_small, var_ratio = run_pca(e, pca_n_components)
+            small_embs.append(e_small)
+            var_ratios[nm] = var_ratio
+        embs.embeddings = small_embs
+
     emb_tuples = [tuple(embs.embeddings[vecs_names.index(l)] for l in t) for t in mm_embs_of]
     vocab_tuples = [tuple(embs.vocabs[vecs_names.index(l)] for l in t) for t in mm_embs_of]
     mm_labels = [tuple(l for l in t) for t in mm_embs_of]
     mm_embeddings, mm_vocabs, mm_labels = mid_fusion(emb_tuples, vocab_tuples, mm_labels, padding=False)
 
-    var_ratios = {}
-    if pca_n_components:
-        mm_embs = []
-        print(f'Reduce dimension to {pca_n_components} with PCA...')
-        for mme, mml in tqdm(zip(mm_embeddings, mm_embs_of)):
-            mme_small, var_ratio = run_pca(mme, pca_n_components)
-            mm_embs.append(mme_small)
-            var_ratios[mml] = var_ratio
-    else:
-        mm_embs = mm_embeddings
-
     # Compute estimates MI for all multi-modal embeddings
     print('Compute Mutual Information...')
     eMIs = {}
-    for mme, mml in zip(mm_embs, mm_embs_of):
+    for mme, mml in zip(mm_embeddings, mm_embs_of):
         print(mml)
         k = Kernel({'name': 'RBF', 'sigma': 'median'})
         co = co_factory(cost_name, mult=True, kernel=k)  # cost object
