@@ -7,7 +7,7 @@ capabilities.
 
 from scipy.spatial.distance import pdist, cdist, squareform
 from numpy import sum, sqrt, exp, dot, ones, array, zeros, argmax, \
-                  hstack, newaxis, copy, argsort, mean
+                  hstack, newaxis, copy, argsort, median
 
 
 class Kernel(object):
@@ -126,7 +126,7 @@ class Kernel(object):
             sigma = self.sigma
             g = squareform(pdist(y))
             if self.sigma == 'mean':
-                self.sigma = mean(g)
+                self.sigma = median(g)
             g = exp(-g ** 2 / (2 * sigma ** 2))
         elif self.name == 'exponential':
             sigma = self.sigma
