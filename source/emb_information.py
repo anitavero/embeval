@@ -110,6 +110,7 @@ def benchmark(dim=10, cost_name='MIShannon_DKL', num_of_samples=-1, max_num_of_s
 
 
 @arg('-mmembs', '--mm_embs_of', type=tuple_list)
+@arg('-n_pca', '--pca_n_components', type=int)
 @arg('-vns', '--vecs_names', nargs='+', type=str, required=True)
 def estimate_embeddings_mi(datadir: str, vecs_names=[], mm_embs_of=[], cost_name='MIShannon_DKL',
                            pca_n_components=None):
