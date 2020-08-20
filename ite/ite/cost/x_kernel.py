@@ -125,7 +125,7 @@ class Kernel(object):
         if self.name == 'RBF':
             sigma = self.sigma
             g = squareform(pdist(y))
-            if self.sigma == 'mean':
+            if self.sigma == 'median':
                 self.sigma = median(g)
             g = exp(-g ** 2 / (2 * sigma ** 2))
         elif self.name == 'exponential':
@@ -190,6 +190,8 @@ class Kernel(object):
         if self.name == 'RBF':
             sigma = self.sigma
             g = cdist(y1, y2)  # alternative: g = cdist_large_dim(y1,y2)
+            if self.sigma == 'median':
+                self.sigma = median(g)
             g = exp(-g ** 2 / (2 * sigma ** 2))
         elif self.name == 'exponential':
             sigma = self.sigma
