@@ -172,7 +172,7 @@ def run_mi_experiments(exp_names='quantity', cost_name='MIShannon_DKL', pca_n_co
         MIs = estimate_embeddings_mi(embdir, vecs_names=ling_names + vis_names,
                                      mm_embs_of=mm_embs, cost_name=cost_name, pca_n_components=pca_n_components)
 
-        with open(os.path.join(savedir, f'MM_MI_{cost_name}_for_quantities.json'), 'w') as f:
+        with open(os.path.join(savedir, f'MM_MI_{cost_name}_for_quantities{exp_suffix}.json'), 'w') as f:
             json.dump(MIs, f)
 
     if 'freqranges' in exp_names:
