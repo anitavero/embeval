@@ -126,11 +126,14 @@ def estimate_embeddings_mi(datadir: str, vecs_names=[], mm_embs_of=[], cost_name
     mm_labels = [tuple(l for l in t) for t in mm_embs_of]
     mm_embeddings, mm_vocabs, mm_labels = mid_fusion(emb_tuples, vocab_tuples, mm_labels, padding=False)
 
+    var_ratios = {}
     if pca_n_components:
         mm_embs = []
         print(f'Reduce dimension to {pca_n_components} with PCA...')
-        for mme in tqdm(mm_embeddings):
-            mm_embs.append(run_pca(mme, pca_n_components))
+        for mme, mml in tqdm(zip(mm_embeddings, mm_embs_of)):
+            mme_small, var_ratio = run_pca(mme, pca_n_components)
+            mm_embs.append(mme_small)
+            var_ratios[mml] = var_ratio
     else:
         mm_embs = mm_embeddings
 
@@ -145,7 +148,7 @@ def estimate_embeddings_mi(datadir: str, vecs_names=[], mm_embs_of=[], cost_name
         eMIs[MM_TOKEN.join(mml)] = co.estimation(mme, ds)
         print(eMIs[MM_TOKEN.join(mml)])
 
-    return eMIs
+    return eMIs, var_ratios
 
 
 def run_pca(X, n_components):
@@ -166,25 +169,32 @@ def run_mi_experiments(exp_names='quantity', cost_name='MIShannon_DKL', pca_n_co
     vis_names = ['vecs3lem1', 'google_resnet152']
     models = glob(embdir + '*model*npy*')
 
+    if exp_suffix != '' and exp_suffix[0] != '_':
+        exp_suffix = '_' + exp_suffix
+
     if 'quantity' in exp_names:
         ling_names = [os.path.split(m)[1].split('.')[0] for m in models if 'fqrng' not in m]
         mm_embs = [(l, v) for l in ling_names for v in vis_names]
-        MIs = estimate_embeddings_mi(embdir, vecs_names=ling_names + vis_names,
+        MIs, var_ratios = estimate_embeddings_mi(embdir, vecs_names=ling_names + vis_names,
                                      mm_embs_of=mm_embs, cost_name=cost_name, pca_n_components=pca_n_components)
 
         with open(os.path.join(savedir, f'MM_MI_{cost_name}_for_quantities{exp_suffix}.json'), 'w') as f:
             json.dump(MIs, f)
+        if var_ratios != {}:
+            with open(os.path.join(savedir, f'MM_MI_{cost_name}_for_quantities{exp_suffix}_var-ratios.json'), 'w') as f:
+                json.dump(var_ratios, f)
 
     if 'freqranges' in exp_names:
         ling_names = [os.path.split(m)[1].split('.')[0] for m in models if 'fqrng' in m or 'n-1' in m]
         mm_embs = [(l, v) for l in ling_names for v in vis_names]
-        MIs = estimate_embeddings_mi(embdir, vecs_names=ling_names + vis_names,
+        MIs, var_ratios = estimate_embeddings_mi(embdir, vecs_names=ling_names + vis_names,
                                      mm_embs_of=mm_embs, cost_name=cost_name, pca_n_components=pca_n_components)
 
-        if exp_suffix != '' and exp_suffix[0] != '_':
-            exp_suffix = '_' + exp_suffix
         with open(os.path.join(savedir, f'MM_MI_{cost_name}_for_freqranges{exp_suffix}.json'), 'w') as f:
             json.dump(MIs, f)
+        if var_ratios != {}:
+            with open(os.path.join(savedir, f'MM_MI_{cost_name}_for_quantities{exp_suffix}_var-ratios.json'), 'w') as f:
+                json.dump(var_ratios, f)
 
 
 
