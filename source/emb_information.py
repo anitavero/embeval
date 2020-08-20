@@ -17,12 +17,15 @@ matplotlib.style.use('fivethirtyeight')
 from time import time
 import argh
 from argh import arg
+from tqdm import tqdm
 from glob import glob
 import json
 import numpy as np
+from sklearn.decomposition import PCA
 
 from ite.cost.x_factory import co_factory
 from ite.cost.x_analytical_values import analytical_value_i_shannon
+from ite.cost.x_kernel import Kernel
 
 from source.utils import hr_time, tuple_list
 from source.process_embeddings import Embeddings, mid_fusion, MM_TOKEN
@@ -108,7 +111,8 @@ def benchmark(dim=10, cost_name='MIShannon_DKL', num_of_samples=-1, max_num_of_s
 
 @arg('-mmembs', '--mm_embs_of', type=tuple_list)
 @arg('-vns', '--vecs_names', nargs='+', type=str, required=True)
-def estimate_embeddings_mi(datadir: str, vecs_names=[], mm_embs_of=[], cost_name='MIShannon_DKL'):
+def estimate_embeddings_mi(datadir: str, vecs_names=[], mm_embs_of=[], cost_name='MIShannon_DKL',
+                           pca_n_components=None):
     """Return estimated Mutual Information for a Embeddings with vecs_names in datadir.
         :param datadir: Path to directory which contains embedding data.
         :param vecs_names: List[str] Names of embeddings
@@ -122,12 +126,21 @@ def estimate_embeddings_mi(datadir: str, vecs_names=[], mm_embs_of=[], cost_name
     mm_labels = [tuple(l for l in t) for t in mm_embs_of]
     mm_embeddings, mm_vocabs, mm_labels = mid_fusion(emb_tuples, vocab_tuples, mm_labels, padding=False)
 
+    if pca_n_components:
+        mm_embs = []
+        print(f'Reduce dimension to {pca_n_components} with PCA...')
+        for mme in tqdm(mm_embeddings):
+            mm_embs.append(run_pca(mme, pca_n_components))
+    else:
+        mm_embs = mm_embeddings
+
     # Compute estimates MI for all multi-modal embeddings
     print('Compute Mutual Information...')
     eMIs = {}
-    for mme, mml in zip(mm_embeddings, mm_embs_of):
+    for mme, mml in zip(mm_embs, mm_embs_of):
         print(mml)
-        co = co_factory(cost_name, mult=True)  # cost object
+        k = Kernel({'name': 'RBF', 'sigma': 'mean'})
+        co = co_factory(cost_name, mult=True, kernel=k)  # cost object
         ds = [embs.embeddings[vecs_names.index(l)].shape[1] for l in mml]
         eMIs[MM_TOKEN.join(mml)] = co.estimation(mme, ds)
         print(eMIs[MM_TOKEN.join(mml)])
@@ -135,8 +148,14 @@ def estimate_embeddings_mi(datadir: str, vecs_names=[], mm_embs_of=[], cost_name
     return eMIs
 
 
+def run_pca(X, n_components):
+    pca = PCA(n_components=n_components)
+    X_small = pca.fit_transform(X)
+    return X_small, pca.explained_variance_ratio_
+
+
 @arg('-exp', '--exp_names', nargs='+', type=str, required=True)
-def run_mi_experiments(exp_names='quantity', cost_name='MIShannon_DKL'):
+def run_mi_experiments(exp_names='quantity', cost_name='MIShannon_DKL', pca_n_components=None):
     """
     :param cost_name: MI estimation algorithm, e.g, HSIC kernel method: 'BIHSIC_IChol',
                                                     KNN based linear:   'MIShannon_DKL'
@@ -151,7 +170,7 @@ def run_mi_experiments(exp_names='quantity', cost_name='MIShannon_DKL'):
         ling_names = [os.path.split(m)[1].split('.')[0] for m in models if 'fqrng' not in m]
         mm_embs = [(l, v) for l in ling_names for v in vis_names]
         MIs = estimate_embeddings_mi(embdir, vecs_names=ling_names + vis_names,
-                                     mm_embs_of=mm_embs, cost_name=cost_name)
+                                     mm_embs_of=mm_embs, cost_name=cost_name, pca_n_components=pca_n_components)
 
         with open(os.path.join(savedir, f'MM_MI_{cost_name}_for_quantities.json'), 'w') as f:
             json.dump(MIs, f)
@@ -160,7 +179,7 @@ def run_mi_experiments(exp_names='quantity', cost_name='MIShannon_DKL'):
         ling_names = [os.path.split(m)[1].split('.')[0] for m in models if 'fqrng' in m or 'n-1' in m]
         mm_embs = [(l, v) for l in ling_names for v in vis_names]
         MIs = estimate_embeddings_mi(embdir, vecs_names=ling_names + vis_names,
-                                     mm_embs_of=mm_embs, cost_name=cost_name)
+                                     mm_embs_of=mm_embs, cost_name=cost_name, pca_n_components=pca_n_components)
 
         with open(os.path.join(savedir, f'MM_MI_{cost_name}_for_freqranges.json'), 'w') as f:
             json.dump(MIs, f)

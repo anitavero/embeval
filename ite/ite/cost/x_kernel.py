@@ -7,7 +7,7 @@ capabilities.
 
 from scipy.spatial.distance import pdist, cdist, squareform
 from numpy import sum, sqrt, exp, dot, ones, array, zeros, argmax, \
-                  hstack, newaxis, copy, argsort
+                  hstack, newaxis, copy, argsort, mean
 
 
 class Kernel(object):
@@ -125,6 +125,8 @@ class Kernel(object):
         if self.name == 'RBF':
             sigma = self.sigma
             g = squareform(pdist(y))
+            if self.sigma == 'mean':
+                self.sigma = mean(g)
             g = exp(-g ** 2 / (2 * sigma ** 2))
         elif self.name == 'exponential':
             sigma = self.sigma
