@@ -155,7 +155,7 @@ def run_pca(X, n_components):
 
 
 @arg('-exp', '--exp_names', nargs='+', type=str, required=True)
-def run_mi_experiments(exp_names='quantity', cost_name='MIShannon_DKL', pca_n_components=None):
+def run_mi_experiments(exp_names='quantity', cost_name='MIShannon_DKL', pca_n_components=None, exp_suffix=''):
     """
     :param cost_name: MI estimation algorithm, e.g, HSIC kernel method: 'BIHSIC_IChol',
                                                     KNN based linear:   'MIShannon_DKL'
@@ -181,7 +181,9 @@ def run_mi_experiments(exp_names='quantity', cost_name='MIShannon_DKL', pca_n_co
         MIs = estimate_embeddings_mi(embdir, vecs_names=ling_names + vis_names,
                                      mm_embs_of=mm_embs, cost_name=cost_name, pca_n_components=pca_n_components)
 
-        with open(os.path.join(savedir, f'MM_MI_{cost_name}_for_freqranges.json'), 'w') as f:
+        if exp_suffix != '' and exp_suffix[0] != '_':
+            exp_suffix = '_' + exp_suffix
+        with open(os.path.join(savedir, f'MM_MI_{cost_name}_for_freqranges{exp_suffix}.json'), 'w') as f:
             json.dump(MIs, f)
 
 
