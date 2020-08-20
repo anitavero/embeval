@@ -159,6 +159,7 @@ def run_pca(X, n_components):
 
 
 @arg('-exp', '--exp_names', nargs='+', type=str, required=True)
+@arg('-n-pca', '--pca_n_components', type=int)
 def run_mi_experiments(exp_names='quantity', cost_name='MIShannon_DKL', pca_n_components=None, exp_suffix=''):
     """
     :param cost_name: MI estimation algorithm, e.g, HSIC kernel method: 'BIHSIC_IChol',
