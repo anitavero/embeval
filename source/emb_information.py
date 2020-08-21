@@ -130,7 +130,7 @@ def estimate_embeddings_mi(datadir: str, vecs_names=[], mm_embs_of=[], cost_name
         for e, nm in tqdm(zip(embs.embeddings, embs.vecs_names)):
             e_small, var_ratio = run_pca(e, pca_n_components)
             small_embs.append(e_small)
-            var_ratios[nm] = var_ratio
+            var_ratios[nm] = list(var_ratio)
         embs.embeddings = small_embs
 
     emb_tuples = [tuple(embs.embeddings[vecs_names.index(l)] for l in t) for t in mm_embs_of]
