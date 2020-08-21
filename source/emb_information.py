@@ -200,7 +200,7 @@ def run_mi_experiments(exp_names='quantity', cost_name='MIShannon_DKL', pca_n_co
 
 
 
-def plot_for_quantities(file_path, vis_names=['vecs3lem1', 'google_resnet152'], legend=True, method=''):
+def plot_for_quantities(file_path, vis_names=['vecs3lem1', 'google_resnet152'], legend=True, method='', suffix=''):
     with open(file_path, 'r') as f:
         MIs = json.load(f)
     quantities = sorted(list(set([int(n.split('_')[1][1:]) for n in MIs.keys()])))
@@ -231,10 +231,12 @@ def plot_for_quantities(file_path, vis_names=['vecs3lem1', 'google_resnet152'], 
     ax.set_ylabel('Mutual Information')
     if legend:
         ax.legend(loc='best', fontsize='x-small')
-    plt.savefig(os.path.join(FIG_DIR, f'MI_{method}_Ling-Vis_for_quantities'), bbox_inches='tight')
+    if suffix != '' and suffix[0] != '_': suffix = '_' + suffix
+    plt.savefig(os.path.join(FIG_DIR, f'MI_{method}_Ling-Vis_for_quantities{suffix}'), bbox_inches='tight')
 
 
-def plot_for_freqranges(file_path, vis_names=['vecs3lem1', 'google_resnet152'], quantity=-1, legend=True, method=''):
+def plot_for_freqranges(file_path, vis_names=['vecs3lem1', 'google_resnet152'], quantity=-1, legend=True, method='',
+                        suffix=''):
     with open(file_path, 'r') as f:
         MIs = json.load(f)
     freq_ranges = sorted(list(set([tuple(map(int, n.split('_')[-1].split(MM_TOKEN)[0].split('-'))) for n in MIs.keys()
@@ -270,7 +272,8 @@ def plot_for_freqranges(file_path, vis_names=['vecs3lem1', 'google_resnet152'], 
     ax.set_ylabel('Mutual Information')
     if legend:
         ax.legend(loc='best', fontsize='x-small')
-    plt.savefig(os.path.join(FIG_DIR, f'MI_{method}_Ling-Vis_for_freqranges'), bbox_inches='tight')
+    if suffix != '' and suffix[0] != '_': suffix = '_' + suffix
+    plt.savefig(os.path.join(FIG_DIR, f'MI_{method}_Ling-Vis_for_freqranges{suffix}'), bbox_inches='tight')
 
 
 
