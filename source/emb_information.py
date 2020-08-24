@@ -276,7 +276,19 @@ def plot_for_freqranges(file_path, vis_names=['vecs3lem1', 'google_resnet152'], 
     plt.savefig(os.path.join(FIG_DIR, f'MI_{method}_Ling-Vis_for_freqranges{suffix}'), bbox_inches='tight')
 
 
+def plots(file_pattern, vis_names=['vecs3lem1', 'google_resnet152'], fqrng_quantity=-1, legend=True, method='', suffix=''):
+    files = glob(file_pattern)
+    qfiles = [f for f in files if 'quantities' in f]
+    ffiles = [f for f in files if 'freqranges' in f]
+
+    for f in qfiles:
+        print(f)
+        plot_for_quantities(f, vis_names=vis_names, legend=legend, method=method, suffix=suffix)
+    for f in ffiles:
+        print(f)
+        plot_for_freqranges(f, vis_names=vis_names, legend=legend, method=method, suffix=suffix, quantity=fqrng_quantity)
+
 
 if __name__ == "__main__":
     argh.dispatch_commands([benchmark, estimate_embeddings_mi, run_mi_experiments, plot_for_quantities,
-                            plot_for_freqranges])
+                            plot_for_freqranges, plots])
