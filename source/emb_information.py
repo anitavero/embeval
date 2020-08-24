@@ -252,7 +252,7 @@ def plot_for_freqranges(file_path, vis_names=['vecs3lem1', 'google_resnet152'], 
             f_mean, f_std = np.mean(fMIs), np.std(fMIs)
             means.append(f_mean)
             errs.append(f_std)
-        mMIs = [v for k, v in MIs.items() if k in mixed_names]
+        mMIs = [v for k, v in MIs.items() if k in mixed_names and k in nms]
         m_mean, m_std = np.mean(mMIs), np.std(mMIs)
         means.append(m_mean)
         errs.append(m_std)
