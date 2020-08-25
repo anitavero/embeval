@@ -160,11 +160,15 @@ def run_pca(X, n_components):
 
 @arg('-exp', '--exp_names', nargs='+', type=str, required=True)
 @arg('-n-pca', '--pca_n_components', type=int)
-def run_mi_experiments(exp_names='quantity', cost_name='MIShannon_DKL', pca_n_components=None, exp_suffix=''):
+def run_mi_experiments(exp_names='quantity', cost_name='MIShannon_DKL', pca_n_components=None, exp_suffix='',
+                       blas_n_threads=None):
     """
     :param cost_name: MI estimation algorithm, e.g, HSIC kernel method: 'BIHSIC_IChol',
                                                     KNN based linear:   'MIShannon_DKL'
     """
+    if blas_n_threads:
+        os.environ["OPENBLAS_NUM_THREADS"] = blas_n_threads
+
     embdir = '/anfs/bigdisc/alv34/wikidump/extracted/models/'
     savedir = embdir + '/results/'
 
