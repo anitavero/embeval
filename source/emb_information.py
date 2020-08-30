@@ -202,9 +202,10 @@ def run_mi_experiments(exp_names='quantity', cost_name='MIShannon_DKL', pca_n_co
             with open(os.path.join(savedir, f'MM_MI_{cost_name}_for_freqranges{exp_suffix}_var-ratios.json'), 'w') as f:
                 json.dump(var_ratios, f)
 
+# plt.rc('text', usetex=True)
+LABELS = {'vecs3lem1': r'$E_S$', 'google_resnet152': r'$E_V$'}
 
-
-def plot_for_quantities(file_path, vis_names=['vecs3lem1', 'google_resnet152'], legend=True, method='', suffix=''):
+def plot_for_quantities(file_path, vis_names=['vecs3lem1', 'google_resnet152'], legend=True, fname='', suffix=''):
     with open(file_path, 'r') as f:
         MIs = json.load(f)
     quantities = sorted(list(set([int(n.split('_')[1][1:]) for n in MIs.keys()])))
@@ -228,18 +229,18 @@ def plot_for_quantities(file_path, vis_names=['vecs3lem1', 'google_resnet152'], 
     for i, vn in enumerate(vis_names):
         vnms = [k for k in MIs.keys() if vn in k]
         means, errs = bar_data(vnms)
-        ax.bar(np.array(xpos) + i * bar_width, means, yerr=errs, width=bar_width, label=Embeddings.get_label(vn))
+        ax.bar(np.array(xpos) + i * bar_width, means, yerr=errs, width=bar_width, label=LABELS[vn])
 
     ax.set_xticks(xpos)
     ax.set_xticklabels(['8M', '1G', '2G', '5G', '13G'])
     ax.set_ylabel('Mutual Information')
     if legend:
-        ax.legend(loc='best', fontsize='x-small')
+        ax.legend(loc='best')
     if suffix != '' and suffix[0] != '_': suffix = '_' + suffix
-    plt.savefig(os.path.join(FIG_DIR, f'MI_{method}_Ling-Vis_for_quantities{suffix}'), bbox_inches='tight')
+    plt.savefig(os.path.join(FIG_DIR, f'{fname}{suffix}'), bbox_inches='tight')
 
 
-def plot_for_freqranges(file_path, vis_names=['vecs3lem1', 'google_resnet152'], quantity=-1, legend=True, method='',
+def plot_for_freqranges(file_path, vis_names=['vecs3lem1', 'google_resnet152'], quantity=-1, legend=True, fname='',
                         suffix=''):
     with open(file_path, 'r') as f:
         MIs = json.load(f)
@@ -269,28 +270,30 @@ def plot_for_freqranges(file_path, vis_names=['vecs3lem1', 'google_resnet152'], 
     for i, vn in enumerate(vis_names):
         vnms = [k for k in MIs.keys() if vn in k and f'n{quantity}' in k]
         means, errs = bar_data(vnms)
-        ax.bar(np.array(xpos) + i * bar_width, means, yerr=errs, width=bar_width, label=Embeddings.get_label(vn))
+        ax.bar(np.array(xpos) + i * bar_width, means, yerr=errs, width=bar_width, label=LABELS[vn])
 
     ax.set_xticks(xpos)
     ax.set_xticklabels(['LOW', 'MEDIUM', 'HIGH', 'MIXED'])
     ax.set_ylabel('Mutual Information')
     if legend:
-        ax.legend(loc='best', fontsize='x-small')
+        ax.legend(loc='best')
     if suffix != '' and suffix[0] != '_': suffix = '_' + suffix
-    plt.savefig(os.path.join(FIG_DIR, f'MI_{method}_Ling-Vis_for_freqranges{suffix}'), bbox_inches='tight')
+    plt.savefig(os.path.join(FIG_DIR, f'{fname}{suffix}'), bbox_inches='tight')
 
 
-def plots(file_pattern, vis_names=['vecs3lem1', 'google_resnet152'], fqrng_quantity=-1, legend=True, method='', suffix=''):
+def plots(file_pattern, vis_names=['vecs3lem1', 'google_resnet152'], fqrng_quantity=-1, legend=True, suffix=''):
     files = glob(file_pattern)
     qfiles = [f for f in files if 'quantities' in f]
     ffiles = [f for f in files if 'freqranges' in f]
 
     for f in qfiles:
         print(f)
-        plot_for_quantities(f, vis_names=vis_names, legend=legend, method=method, suffix=suffix)
+        fname = os.path.basename(f).split('.')[0]
+        plot_for_quantities(f, vis_names=vis_names, legend=legend, fname=fname, suffix=suffix)
     for f in ffiles:
         print(f)
-        plot_for_freqranges(f, vis_names=vis_names, legend=legend, method=method, suffix=suffix, quantity=fqrng_quantity)
+        fname = os.path.basename(f).split('.')[0]
+        plot_for_freqranges(f, vis_names=vis_names, legend=legend, fname=fname, suffix=suffix, quantity=fqrng_quantity)
 
 
 if __name__ == "__main__":
