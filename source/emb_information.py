@@ -202,8 +202,8 @@ def run_mi_experiments(exp_names='quantity', cost_name='MIShannon_DKL', pca_n_co
             with open(os.path.join(savedir, f'MM_MI_{cost_name}_for_freqranges{exp_suffix}_var-ratios.json'), 'w') as f:
                 json.dump(var_ratios, f)
 
-# plt.rc('text', usetex=True)
-LABELS = {'vecs3lem1': r'$E_S$', 'google_resnet152': r'$E_V$'}
+
+LABELS = {'vecs3lem1': r'I($E_L,E_S$)', 'google_resnet152': r'I($E_L,E_V$)'}
 
 def plot_for_quantities(file_path, vis_names=['vecs3lem1', 'google_resnet152'], legend=True, fname='', suffix=''):
     with open(file_path, 'r') as f:
