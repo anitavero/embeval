@@ -563,7 +563,7 @@ def plot_for_freqranges(scores: np.ndarray, gt_divisor, quantity=-1, common_subs
     freq_ranges = sorted(list(set([tuple(map(int, n.split('_')[-1].split('-'))) for n in ling_names])))
 
     # Plot data with error bars
-    def bar_data(nms):
+    def bar_data(nms, mixed_pattern):
         means, errs = [], []
         for fmin, fmax in freq_ranges:
             fnames = [n for n in nms if f'fqrng_{fmin}-{fmax}' in n]
@@ -572,13 +572,14 @@ def plot_for_freqranges(scores: np.ndarray, gt_divisor, quantity=-1, common_subs
             means.append(f_mean)
             errs.append(f_std)
         # MIXED: Full data
-        mcorrs, mpvals, mcoverages = zip(*[correlations['ground_truth | ' + n] for n in mixed])
+        mcorrs, mpvals, mcoverages = zip(*[correlations['ground_truth | ' + n] for n in mixed
+                                                                        if mixed_pattern(n)])
         m_mean, m_std = np.mean(mcorrs), np.std(mcorrs)
         means.append(m_mean)
         errs.append(m_std)
         return means, errs
 
-    ling_means, ling_errs = bar_data(ling_names)
+    ling_means, ling_errs = bar_data(ling_names, lambda x: '+' not in x)
 
     fig, ax = plt.subplots()
     bar_width = 0.2
@@ -588,12 +589,13 @@ def plot_for_freqranges(scores: np.ndarray, gt_divisor, quantity=-1, common_subs
     pi = 1
     for vn in vis_names:
         vcorr, vpval, vcoverage = correlations['ground_truth | ' + vn]
-        ax.bar(np.array(xpos) + pi * bar_width, [vcorr for i in xpos], yerr=[0 for i in xpos], width=bar_width, label=Embeddings.get_label(vn))
+        ax.bar(np.array(xpos) + pi * bar_width, [vcorr for i in xpos], yerr=[0 for i in xpos], width=bar_width,
+               label=Embeddings.get_label(vn))
         pi += 1
     # separate MM for vis_names too
     for mmn, vn in zip(mm_names, vis_names):
         mmlabel = 'MM - ' + Embeddings.get_label(vn)
-        mmn_means, mmn_errs = bar_data(mmn)
+        mmn_means, mmn_errs = bar_data(mmn, lambda x: vn in x)
         ax.bar(np.array(xpos) + pi * bar_width, mmn_means, yerr=mmn_errs, width=bar_width, label=mmlabel)
         pi += 1
 
