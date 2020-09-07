@@ -1,3 +1,4 @@
+import os
 import argh
 from argh import arg
 import re
@@ -91,6 +92,13 @@ def run_clustering(model_file, cluster_method, n_clusters=3, random_state=1, eps
     cluster_eval(model, labels)
 
 
+def run_clustering_experiments(data_dir, model_names, cluster_method, n_clusters=3, random_state=1,
+                               eps=0.5, min_samples=90, workers=4):
+    for m in model_names:
+        run_clustering(os.path.join(data_dir, m), cluster_method, n_clusters, random_state,
+                       eps, min_samples, workers)
+
+
 def wn_category(word):
     """Map a word to categories based on WordNet closures."""
     cats = ['transport', 'food', 'building', 'animal', 'appliance', 'action', 'clothes', 'utensil', 'body', 'color',
@@ -108,17 +116,17 @@ def wn_category(word):
 
 
 if __name__ == '__main__':
-    # argh.dispatch_commands([run_clustering, n_nearest_neighbors])
-    vocab = np.array(['a', 'b', 'c', 'd', 'e'])
-    words = np.array(['a', 'c', 'e'])
-    E = np.array([[1, 0],
-                  [0, 1],
-                  [1, 1],
-                  [1, 0.5],
-                  [0.5, 1]])
-
-
-    NN = get_n_nearest_neighbors(words, E, vocab, n=1)
-    assert (NN[0, :] == words).all()
-    assert (NN[1:, 0] == np.array(['d'])).all()
-    assert (NN[1:, 1] == np.array(['d'])).all()
+    argh.dispatch_commands([run_clustering, run_clustering_experiments, n_nearest_neighbors])
+    # vocab = np.array(['a', 'b', 'c', 'd', 'e'])
+    # words = np.array(['a', 'c', 'e'])
+    # E = np.array([[1, 0],
+    #               [0, 1],
+    #               [1, 1],
+    #               [1, 0.5],
+    #               [0.5, 1]])
+    #
+    #
+    # NN = get_n_nearest_neighbors(words, E, vocab, n=1)
+    # assert (NN[0, :] == words).all()
+    # assert (NN[1:, 0] == np.array(['d'])).all()
+    # assert (NN[1:, 1] == np.array(['d'])).all()
