@@ -94,7 +94,7 @@ def run_clustering(model_file, cluster_method, n_clusters=3, random_state=1, eps
 
 
 @arg('-mns', '--model_names', nargs='+', type=str, required=True)
-def run_clustering_experiments(data_dir, model_names, cluster_method, n_clusters=3, random_state=1,
+def run_clustering_experiments(data_dir, model_names=[], cluster_method='dbscan', n_clusters=3, random_state=1,
                                eps=0.5, min_samples=90, workers=4):
     for m in tqdm(model_names):
         print(m)
