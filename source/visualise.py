@@ -6,6 +6,7 @@ import tensorflow as tf
 from tensorboard.plugins import projector
 
 from source.process_embeddings import Embeddings
+from source.unsupervised_metrics import wn_category
 
 
 @arg('--tn-label', choices=['frequency',
@@ -25,7 +26,7 @@ def tensorboard_emb(data_dir, model_name, output_path, tn_label='optics_cl', lab
     if tn_label == 'frequency':
         pass
     elif tn_label == 'optics_cl':
-        labeler = lambda w: w[0]
+        labeler = lambda w: wn_category(w)
 
     file_name = "{}_metadata".format(model_name)
     meta_file = "{}.tsv".format(file_name)

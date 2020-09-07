@@ -6,6 +6,8 @@ from sklearn.cluster import DBSCAN, KMeans
 from prettytable import PrettyTable
 from sklearn import metrics
 from sklearn.metrics.pairwise import cosine_distances
+from nltk.corpus import wordnet as wn
+from itertools import chain
 
 from source.process_embeddings import Embeddings
 
@@ -87,6 +89,22 @@ def run_clustering(model_file, cluster_method, n_clusters=3, random_state=1, eps
     elif cluster_method == 'kmeans':
         labels = kmeans(model, n_clusters=n_clusters, random_state=random_state, n_jobs=workers)
     cluster_eval(model, labels)
+
+
+def wn_category(word):
+    """Map a word to categories based on WordNet closures."""
+    cats = ['transport', 'food', 'building', 'animal', 'appliance', 'action', 'clothes', 'utensil', 'body', 'color',
+            'electronics', 'number', 'human']
+    cat_synsets = dict(zip(cats, map(wn.synsets, cats)))
+    hyper = lambda s: s.hypernyms()
+    synsets = wn.synsets(word)
+    closures = list(chain.from_iterable([list(sns.closure(hyper, depth=3)) for sns in synsets])) + synsets
+    max_overlap = 0
+    category = None
+    for cat, csns in cat_synsets.items():
+        if len(set(closures).intersection(set(csns))) > max_overlap:
+            category = cat
+    return category
 
 
 if __name__ == '__main__':
