@@ -11,7 +11,7 @@ from source.unsupervised_metrics import wn_category
 
 @arg('--tn-label', choices=['frequency',
                             'optics_cl'])
-def tensorboard_emb(data_dir, model_name, output_path, tn_label='optics_cl', label_name='optics_cl'):
+def tensorboard_emb(data_dir, model_name, output_path, tn_label='clusters', label_name='clusters'):
     """
     Visualise embeddings using TensorBoard.
     Code from: https://gist.github.com/BrikerMan/7bd4e4bd0a00ac9076986148afc06507
@@ -25,7 +25,7 @@ def tensorboard_emb(data_dir, model_name, output_path, tn_label='optics_cl', lab
     model, vocab = embs.embeddings[0], embs.vocabs[0]
     if tn_label == 'frequency':
         pass
-    elif tn_label == 'optics_cl':
+    elif tn_label == 'clusters':
         labeler = lambda w: wn_category(w)
 
     file_name = "{}_metadata".format(model_name)
