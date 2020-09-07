@@ -9,6 +9,7 @@ from sklearn import metrics
 from sklearn.metrics.pairwise import cosine_distances
 from nltk.corpus import wordnet as wn
 from itertools import chain
+from tqdm import tqdm
 
 from source.process_embeddings import Embeddings
 
@@ -94,7 +95,7 @@ def run_clustering(model_file, cluster_method, n_clusters=3, random_state=1, eps
 
 def run_clustering_experiments(data_dir, model_names, cluster_method, n_clusters=3, random_state=1,
                                eps=0.5, min_samples=90, workers=4):
-    for m in model_names:
+    for m in tqdm(model_names):
         run_clustering(os.path.join(data_dir, m), cluster_method, n_clusters, random_state,
                        eps, min_samples, workers)
 
