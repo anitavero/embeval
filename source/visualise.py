@@ -35,14 +35,17 @@ def tensorboard_emb(data_dir, model_name, output_path, tn_label='clusters', labe
     with open(os.path.join(output_path, meta_file), 'wb') as file_metadata:
         file_metadata.write("Word\t{}".format(label_name).encode('utf-8') + b'\n')
         for i, word in enumerate(vocab):
-            placeholder[i] = model[i, :]
-            # temporary solution for https://github.com/tensorflow/tensorflow/issues/9094
-            if word == '':
-                print("Emply Line, should replecaed by any thing else, or will cause a bug of tensorboard")
-                file_metadata.write("{0}".format('<Empty Line>').encode('utf-8') + b'\n')
-            else:
-                file_metadata.write(
-                    "{0}\t{1}".format(word, labeler(word)).encode('utf-8') + b'\n')
+            if word:
+                label = labeler(word)
+                if label is not None:  # only save data with existing labels
+                    placeholder[i] = model[i, :]
+                    # temporary solution for https://github.com/tensorflow/tensorflow/issues/9094
+                    if word == '':
+                        print("Emply Line, should replecaed by any thing else, or will cause a bug of tensorboard")
+                        file_metadata.write("{0}".format('<Empty Line>').encode('utf-8') + b'\n')
+                    else:
+                        file_metadata.write(
+                            "{0}\t{1}".format(word, labeler(word)).encode('utf-8') + b'\n')
 
     weights = tf.Variable(placeholder, trainable=False, name=file_name)
     checkpoint = tf.train.Checkpoint(embedding=weights)
