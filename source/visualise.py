@@ -5,7 +5,7 @@ import numpy as np
 import tensorflow as tf
 from tensorboard.plugins import projector
 
-from source.process_embeddings import Embeddings
+from source.process_embeddings import Embeddings, filter_by_vocab
 from source.unsupervised_metrics import wn_category
 
 
@@ -21,12 +21,16 @@ def tensorboard_emb(data_dir, model_name, output_path, tn_label='clusters', labe
     :param tn_label: function(word) returns value, labels for text and/or colouring
     :param label_name: str, title for the labeling (e.g.: Cluster)
     """
-    embs = Embeddings(data_dir, [model_name])
-    model, vocab = embs.embeddings[0], embs.vocabs[0]
     if tn_label == 'frequency':
         pass
     elif tn_label == 'clusters':
         labeler = lambda w: wn_category(w)
+
+    print('Load embedding')
+    embs = Embeddings(data_dir, [model_name])
+    print('Filter embedding and vocab by existing cluster names')
+    filter_vocab = [w for w in embs.vocabs[0] if labeler(w) is not None]
+    model, vocab = filter_by_vocab(embs.embeddings[0], embs.vocabs[0], filter_vocab)
 
     file_name = "{}_metadata".format(model_name)
     meta_file = "{}.tsv".format(file_name)
@@ -35,17 +39,14 @@ def tensorboard_emb(data_dir, model_name, output_path, tn_label='clusters', labe
     with open(os.path.join(output_path, meta_file), 'wb') as file_metadata:
         file_metadata.write("Word\t{}".format(label_name).encode('utf-8') + b'\n')
         for i, word in enumerate(vocab):
-            if word:
-                label = labeler(word)
-                if label is not None:  # only save data with existing labels
-                    placeholder[i] = model[i, :]
-                    # temporary solution for https://github.com/tensorflow/tensorflow/issues/9094
-                    if word == '':
-                        print("Emply Line, should replecaed by any thing else, or will cause a bug of tensorboard")
-                        file_metadata.write("{0}".format('<Empty Line>').encode('utf-8') + b'\n')
-                    else:
-                        file_metadata.write(
-                            "{0}\t{1}".format(word, labeler(word)).encode('utf-8') + b'\n')
+            placeholder[i] = model[i, :]
+            # temporary solution for https://github.com/tensorflow/tensorflow/issues/9094
+            if word == '':
+                print("Emply Line, should replecaed by any thing else, or will cause a bug of tensorboard")
+                file_metadata.write("{0}".format('<Empty Line>').encode('utf-8') + b'\n')
+            else:
+                file_metadata.write(
+                    "{0}\t{1}".format(word, labeler(word)).encode('utf-8') + b'\n')
 
     weights = tf.Variable(placeholder, trainable=False, name=file_name)
     checkpoint = tf.train.Checkpoint(embedding=weights)
