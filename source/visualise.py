@@ -60,13 +60,13 @@ def tensorboard_emb(data_dir, model_name, output_path, tn_label='clusters', labe
 
     weights = tf.Variable(placeholder, trainable=False, name=file_name)
     checkpoint = tf.train.Checkpoint(embedding=weights)
-    checkpoint.save(os.path.join(output_path, "embedding.ckpt"))
+    checkpoint.save(os.path.join(output_path, f"embedding_{model_name}.ckpt"))
 
     # Set up config
     config = projector.ProjectorConfig()
     embedding = config.embeddings.add()
     # The name of the tensor will be suffixed by `/.ATTRIBUTES/VARIABLE_VALUE`
-    embedding.tensor_name = "embedding/.ATTRIBUTES/VARIABLE_VALUE"
+    embedding.tensor_name = f"embedding_{model_name}/.ATTRIBUTES/VARIABLE_VALUE"
     embedding.metadata_path = meta_file
     projector.visualize_embeddings(output_path, config)
 
