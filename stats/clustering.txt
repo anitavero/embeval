@@ -23,3 +23,22 @@ Kmeans, #clusters = 3
 |  Davies Bouldin Score     | 0.2889 |
 +---------------------------+--------+
 
+
+google_resnet152
+Kmeans, #clusters = 13
+-------------------------------
+Metric                    Score
+----------------------  -------
+Silhouette Score         0.072
+Calinski Harabaz Score  53.52
+Davies Bouldin Score     2.9122
+
+
+vecs3lem1
+Kmeans, #clusters = 13
+---------------------------------
+Metric                      Score
+----------------------  ---------
+Silhouette Score          -0.0723
+Calinski Harabaz Score  2065.14
+Davies Bouldin Score       3.0866

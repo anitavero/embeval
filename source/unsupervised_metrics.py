@@ -10,8 +10,10 @@ from nltk.corpus import wordnet as wn
 from itertools import chain
 from tqdm import tqdm
 import json
-from source.utils import suffixate
+from glob import glob
+from tabulate import tabulate
 
+from source.utils import suffixate
 from source.process_embeddings import Embeddings
 
 
@@ -109,6 +111,17 @@ def run_clustering_experiments(datadir='/anfs/bigdisc/alv34/wikidump/extracted/m
             json.dump(model_metrics, f)
 
 
+def print_cluster_results(resdir='/Users/anitavero/projects/data/wikidump/models/'):
+    res_files = glob(resdir + '/cluster_metrics*')
+    for rf in res_files:
+        with open(rf, 'r') as f:
+            res = json.load(f)
+        print(os.path.basename(rf).split('.')[0], '\n')
+        table = tabulate([(m, s) for m, s in res.items()],
+                         headers=['Metric', 'Score'])
+        print(table, '\n')
+
+
 def wn_category(word):
     """Map a word to categories based on WordNet closures."""
     cats = ['transport', 'food', 'building', 'animal', 'appliance', 'action', 'clothes', 'utensil', 'body', 'color',
@@ -126,7 +139,7 @@ def wn_category(word):
 
 
 if __name__ == '__main__':
-    argh.dispatch_commands([run_clustering, run_clustering_experiments, n_nearest_neighbors])
+    argh.dispatch_commands([run_clustering, run_clustering_experiments, print_cluster_results, n_nearest_neighbors])
     # vocab = np.array(['a', 'b', 'c', 'd', 'e'])
     # words = np.array(['a', 'c', 'e'])
     # E = np.array([[1, 0],
