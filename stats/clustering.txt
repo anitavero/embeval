@@ -24,21 +24,11 @@ Kmeans, #clusters = 3
 +---------------------------+--------+
 
 
-google_resnet152
-Kmeans, #clusters = 13
--------------------------------
-Metric                    Score
-----------------------  -------
-Silhouette Score         0.072
-Calinski Harabaz Score  53.52
-Davies Bouldin Score     2.9122
 
-
-vecs3lem1
 Kmeans, #clusters = 13
----------------------------------
-Metric                      Score
-----------------------  ---------
-Silhouette Score          -0.0723
-Calinski Harabaz Score  2065.14
-Davies Bouldin Score       3.0866
+------------------------------------------
+Metric                    $E_V$      $E_S$
+----------------------  -------  ---------
+Silhouette Score         0.072     -0.0723
+Calinski Harabaz Score   53.52     2065.14
+Davies Bouldin Score     2.9122     3.0866

@@ -112,14 +112,29 @@ def run_clustering_experiments(datadir='/anfs/bigdisc/alv34/wikidump/extracted/m
 
 
 def print_cluster_results(resdir='/Users/anitavero/projects/data/wikidump/models/'):
+
+    def emb_labels(fn):
+        if 'resnet' in fn:
+            return r'$E_V$'
+        if 'vecs3lem' in fn:
+            return r'$E_S$'
+        if 'model' in fn:
+            return r'$E_L$'
+
     res_files = glob(resdir + '/cluster_metrics*')
-    for rf in res_files:
+    tab = []
+    header = ['Metric']
+    for col, rf in enumerate(res_files):
         with open(rf, 'r') as f:
             res = json.load(f)
-        print(os.path.basename(rf).split('.')[0], '\n')
-        table = tabulate([(m, s) for m, s in res.items()],
-                         headers=['Metric', 'Score'])
-        print(table, '\n')
+        header.append(emb_labels(rf))
+        for row, (metric, score) in enumerate(res.items()):
+            if col == 0:
+                tab.append([[] for i in range(len(res_files) + 1)])
+            tab[row][0] = metric
+            tab[row][col + 1] = score
+    table = tabulate(tab, headers=header)
+    print(table)
 
 
 def wn_category(word):
