@@ -4,12 +4,13 @@ from argh import arg
 import re
 import numpy as np
 from sklearn.cluster import DBSCAN, KMeans
-from prettytable import PrettyTable
 from sklearn import metrics
 from sklearn.metrics.pairwise import cosine_distances
 from nltk.corpus import wordnet as wn
 from itertools import chain
 from tqdm import tqdm
+import json
+from source.utils import suffixate
 
 from source.process_embeddings import Embeddings
 
@@ -61,14 +62,14 @@ def kmeans(model, n_clusters=3, random_state=1, n_jobs=4):
 
 def cluster_eval(vectors, labels):
     """Unsupervised clustering metrics."""
-    t = PrettyTable(['Metric', 'Score'])
+    results = {}
     def safe_metric(metric):
         name = re.sub('_', ' ', metric.__name__).title()
         try:
             if metric == metrics.silhouette_score:
-                t.add_row([name, round(metric(vectors, labels, metric='cosine'), 4)])
+                results[name] = round(metric(vectors, labels, metric='cosine'), 4)
             else:
-                t.add_row([name, round(metric(vectors, labels), 4)])
+                results[name] = round(metric(vectors, labels), 4)
         except ValueError as e:
             print("[{0}] {1}".format(name, e))
 
@@ -76,7 +77,7 @@ def cluster_eval(vectors, labels):
     safe_metric(metrics.calinski_harabaz_score)
     safe_metric(metrics.davies_bouldin_score)
 
-    print(t)
+    return results
 
 
 def run_clustering(model_file, cluster_method, n_clusters=3, random_state=1, eps=0.5, min_samples=90,
@@ -90,16 +91,22 @@ def run_clustering(model_file, cluster_method, n_clusters=3, random_state=1, eps
         labels = dbscan_clustering(model, eps=eps, min_samples=min_samples, n_jobs=workers)
     elif cluster_method == 'kmeans':
         labels = kmeans(model, n_clusters=n_clusters, random_state=random_state, n_jobs=workers)
-    cluster_eval(model, labels)
+
+    return cluster_eval(model, labels)
 
 
 @arg('-mns', '--model_names', nargs='+', type=str, required=True)
-def run_clustering_experiments(data_dir, model_names=[], cluster_method='dbscan', n_clusters=3, random_state=1,
-                               eps=0.5, min_samples=90, workers=4):
+def run_clustering_experiments(datadir='/anfs/bigdisc/alv34/wikidump/extracted/models/',
+                               savedir='/anfs/bigdisc/alv34/wikidump/extracted/models/results/',
+                               model_names=[], cluster_method='dbscan', n_clusters=3, random_state=1,
+                               eps=0.5, min_samples=90, workers=4, suffix=''):
     for m in tqdm(model_names):
-        print(m)
-        run_clustering(os.path.join(data_dir, m), cluster_method, n_clusters, random_state,
-                       eps, min_samples, workers)
+        mname = m.split('.')[0]
+        print(mname)
+        model_metrics = run_clustering(os.path.join(datadir, m), cluster_method, n_clusters, random_state,
+                                          eps, min_samples, workers)
+        with open(os.path.join(savedir, f'cluster_metrics_{cluster_method}_{mname}{suffixate(suffix)}.json'), 'w') as f:
+            json.dump(model_metrics, f)
 
 
 def wn_category(word):

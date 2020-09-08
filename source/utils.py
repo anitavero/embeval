@@ -7,6 +7,12 @@ import os
 import argparse
 
 
+def suffixate(s):
+    if s != '' and s[0] != '_':
+        s = '_' + s
+    return s
+
+
 def tuple_list(arg):
     """List[Tuple[str]] argument type.
         format: whitespace separated str lists, separated by |. eg. 'embs1 embs2 | embs2 embs3 embs4'
