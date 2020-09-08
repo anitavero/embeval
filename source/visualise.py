@@ -20,6 +20,16 @@ def tensorboard_emb(data_dir, model_name, output_path, tn_label='clusters', labe
     :param output_path: str, directory
     :param tn_label: function(word) returns value, labels for text and/or colouring
     :param label_name: str, title for the labeling (e.g.: Cluster)
+
+    Usage on remote server with port forwarding:
+        * when you ssh into the machine, you use the option -L to transfer the port 6006 of the remote server
+          into the port 16006 of my machine (for instance): 
+        * ssh -L 16006:127.0.0.1:6006 alv34@yellowhammer
+          What it does is that everything on the port 6006 of the server (in 127.0.0.1:6006) will be forwarded 
+          to my machine on the port 16006.
+        * You can then launch tensorboard on the remote machine using a standard tensorboard --logdir log with
+          the default 6006 port
+        * On your local machine, go to http://127.0.0.1:16006 and enjoy your remote TensorBoard.
     """
     if tn_label == 'frequency':
         pass
