@@ -32,3 +32,9 @@ Metric                    $E_V$      $E_S$
 Silhouette Score         0.072     -0.0723
 Calinski Harabaz Score   53.52     2065.14
 Davies Bouldin Score     2.9122     3.0866
+
+Metric                   $E_L$   $E_V$   $E_S$ |   $E_L + E_V$    $E_L + E_S$ |   Random
+---------------------- ------- ------- ------- | -------------  ------------- | --------
+Silhouette Score        0.0718  0.0995  0.1751 |        0.084          0.0511 |  -0.0009
+Calinski Harabaz Score 18.3129 41.1364 23.2529 |       37.3961        16.157  |   2.8237
+Davies Bouldin Score    3.8241  2.8372  3.0534 |        2.9828         3.9222 |   8.2453
