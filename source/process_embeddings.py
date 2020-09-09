@@ -100,7 +100,7 @@ class Embeddings:
                 return f'VG-{context}'
             elif 'vecs' in nm:
                 return 'VG SceneGraph'
-            elif 'model' in nm:
+            elif 'model' in nm or 'common_subset' in nm:
                 return nm
             elif nm not in Embeddings.fasttext_vss.keys():
                 data, cnn = nm.split('_')
