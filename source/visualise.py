@@ -41,6 +41,7 @@ def tensorboard_emb(data_dir, model_name, output_path, tn_label='clusters', labe
     print('Filter embedding and vocab by existing cluster names')
     filter_vocab = [w for w in embs.vocabs[0] if labeler(w) is not None]
     model, vocab = filter_by_vocab(embs.embeddings[0], embs.vocabs[0], filter_vocab)
+    print('#Vocab after filtering:', len(vocab))
 
     file_name = "{}_metadata".format(model_name)
     meta_file = "{}.tsv".format(file_name)
