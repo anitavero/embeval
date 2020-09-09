@@ -13,8 +13,8 @@ import json
 from glob import glob
 from tabulate import tabulate
 
-from source.utils import suffixate
-from source.process_embeddings import Embeddings
+from source.utils import suffixate, tuple_list
+from source.process_embeddings import Embeddings, mid_fusion, filter_by_vocab, MM_TOKEN
 
 
 ################# Nearest Neigbor metrics #################
@@ -82,12 +82,10 @@ def cluster_eval(vectors, labels):
     return results
 
 
-def run_clustering(model_file, cluster_method, n_clusters=3, random_state=1, eps=0.5, min_samples=90,
+def run_clustering(model, cluster_method, n_clusters=3, random_state=1, eps=0.5, min_samples=90,
                    workers=4):
-    if model_file == 'random':
-        model = np.random.random(size=(70000, 300))
-    else:
-        model = np.load(model_file)
+    if type(model) == str:
+        model = np.load(model)
 
     if cluster_method == 'dbscan':
         labels = dbscan_clustering(model, eps=eps, min_samples=min_samples, n_jobs=workers)
@@ -97,17 +95,36 @@ def run_clustering(model_file, cluster_method, n_clusters=3, random_state=1, eps
     return cluster_eval(model, labels)
 
 
-@arg('-mns', '--model_names', nargs='+', type=str, required=True)
+@arg('-mmembs', '--mm_embs_of', type=tuple_list)
+@arg('-vns', '--vecs_names', nargs='+', type=str, required=True)
 def run_clustering_experiments(datadir='/anfs/bigdisc/alv34/wikidump/extracted/models/',
                                savedir='/anfs/bigdisc/alv34/wikidump/extracted/models/results/',
-                               model_names=[], cluster_method='dbscan', n_clusters=3, random_state=1,
+                               vecs_names=[], mm_embs_of=[], cluster_method='dbscan', n_clusters=3, random_state=1,
                                eps=0.5, min_samples=90, workers=4, suffix=''):
-    for m in tqdm(model_names):
-        mname = m.split('.')[0]
-        print(mname)
-        model_metrics = run_clustering(os.path.join(datadir, m), cluster_method, n_clusters, random_state,
-                                          eps, min_samples, workers)
-        with open(os.path.join(savedir, f'cluster_metrics_{cluster_method}_{mname}{suffixate(suffix)}.json'), 'w') as f:
+    # TODO: Test
+    embs = Embeddings(datadir, vecs_names)
+    emb_tuples = [tuple(embs.embeddings[vecs_names.index(l)] for l in t) for t in mm_embs_of]
+    vocab_tuples = [tuple(embs.vocabs[vecs_names.index(l)] for l in t) for t in mm_embs_of]
+    mm_labels = [tuple(l for l in t) for t in mm_embs_of]
+    mm_embeddings, mm_vocabs, mm_labels = mid_fusion(emb_tuples, vocab_tuples, mm_labels, padding=False)
+
+    models = []
+    labels = []
+    # Filter all with intersection fo vocabs
+    isec_vocab = set.intersection(*map(set, mm_vocabs))
+    for e, v, l in list(zip(embs.embeddings, embs.vocabs, embs.vecs_names)) + list(zip(mm_embeddings, mm_vocabs, mm_labels)):
+        fe, _ = filter_by_vocab(e, v, isec_vocab)
+        models.append(fe)
+        labels.append(l)
+
+    # Add random embedding baseline
+    models.append(np.random.random(size=(len(isec_vocab), 300)))
+    labels.append('Random')
+
+    for m, l in tqdm(zip(models, labels)):
+        print(l)
+        model_metrics = run_clustering(m, cluster_method, n_clusters, random_state, eps, min_samples, workers)
+        with open(os.path.join(savedir, f'cluster_metrics_{cluster_method}_{l}{suffixate(suffix)}.json'), 'w') as f:
             json.dump(model_metrics, f)
 
 
