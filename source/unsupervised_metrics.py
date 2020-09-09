@@ -131,7 +131,6 @@ def run_clustering_experiments(datadir='/anfs/bigdisc/alv34/wikidump/extracted/m
         np.save(os.path.join(datadir, f'{l}_common_subset'), fe)
         with open(os.path.join(datadir, f'{l}_common_subset.vocab'), 'w') as f:
             f.write('\n'.join(fv))
-    return
     # Add random embedding baseline
     models.append(np.random.random(size=(len(isec_vocab), 300)))
     labels.append('Random')
