@@ -99,7 +99,7 @@ def run_clustering(model, cluster_method, n_clusters=3, random_state=1, eps=0.5,
 @arg('-vns', '--vecs_names', nargs='+', type=str, required=True)
 def run_clustering_experiments(datadir='/anfs/bigdisc/alv34/wikidump/extracted/models/',
                                savedir='/anfs/bigdisc/alv34/wikidump/extracted/models/results/',
-                               vecs_names=[], mm_embs_of=[], cluster_method='dbscan', n_clusters=3, random_state=1,
+                               vecs_names=[], mm_embs_of=[], cluster_method='dbscan', n_clusters=-1, random_state=1,
                                eps=0.5, min_samples=90, workers=4, suffix=''):
     # TODO: Test
     embs = Embeddings(datadir, vecs_names)
@@ -121,11 +121,19 @@ def run_clustering_experiments(datadir='/anfs/bigdisc/alv34/wikidump/extracted/m
     models.append(np.random.random(size=(len(isec_vocab), 300)))
     labels.append('Random')
 
-    for m, l in tqdm(zip(models, labels)):
-        print(l)
-        model_metrics = run_clustering(m, cluster_method, n_clusters, random_state, eps, min_samples, workers)
-        with open(os.path.join(savedir, f'cluster_metrics_{cluster_method}_{l}{suffixate(suffix)}.json'), 'w') as f:
-            json.dump(model_metrics, f)
+    def run(nc):
+        for m, l in zip(models, labels):
+            print(l)
+            model_metrics = run_clustering(m, cluster_method, nc, random_state, eps, min_samples, workers)
+            with open(os.path.join(savedir, f'cluster_metrics_{cluster_method}_{l}_nc{nc}{suffixate(suffix)}.json'), 'w') as f:
+                json.dump(model_metrics, f)
+
+    if n_clusters == -1:
+        ncs = [i * 10 for i in range(1, 9)]
+        for nc in tqdm(ncs):
+            run(nc)
+    elif n_clusters > 0:
+        run(n_clusters)
 
 
 def print_cluster_results(resdir='/Users/anitavero/projects/data/wikidump/models/'):
