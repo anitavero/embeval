@@ -12,12 +12,18 @@ from tqdm import tqdm
 import json
 from glob import glob
 from tabulate import tabulate
-from matplotlib import pyplot as plt
+import matplotlib
+matplotlib.rcParams["savefig.dpi"] = 300
+import matplotlib.pyplot as plt
+matplotlib.style.use('fivethirtyeight')
 from itertools import groupby
 from collections import defaultdict
 
 from source.utils import suffixate, tuple_list
-from source.process_embeddings import Embeddings, mid_fusion, filter_by_vocab, MM_TOKEN
+from source.process_embeddings import Embeddings, mid_fusion, filter_by_vocab
+
+
+FIG_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'figs')
 
 
 ################# Nearest Neigbor metrics #################
@@ -174,19 +180,32 @@ def print_cluster_results(resdir='/Users/anitavero/projects/data/wikidump/models
 def plot_cluster_results(resdir='/Users/anitavero/projects/data/wikidump/models/'):
     res_files = glob(resdir + '/cluster_metrics*')
     grp_files = groupby(res_files, key=lambda s: s.split('kmeans')[1].split('nc')[0])
-    score_lines = defaultdict(list)
-    labels = []
+
+    score_lines = defaultdict(lambda: defaultdict(list))
+    ncls = []
+    ncb = True
+    get_num_clusters = lambda s: int(s.split('nc')[1].split('.')[0])
     for k, g in grp_files:
-        nc_sorted = sorted(list(g), key=lambda s: int(s.split('nc')[1].split('.')[0]))
+        nc_sorted = sorted(list(g), key=get_num_clusters)
         for fn in nc_sorted:
-            # line = []
+            if ncb:
+                ncls.append(get_num_clusters(fn))
+            label = emb_labels(os.path.basename(fn))
             with open(fn, 'r') as f:
                 res = json.load(f)
             for metric, score in res.items():
-                # line.append(score)
-                score_lines[metric][emb_labels(os.path.basename(fn))].append(score)
-        labels.append(emb_labels(os.path.basename(fn)))
-    print(labels, score_lines)
+                score_lines[metric][label].append(score)
+        ncb = False
+
+    for metric, lines in score_lines.items():
+        fig, ax = plt.subplots()
+        for lb, ln in lines.items():
+            ax.plot(ln, label=lb, marker='o')
+        ax.set_xticks(range(len(ncls)))
+        ax.set_xticklabels(ncls)
+        ax.set_ylabel(metric)
+        ax.legend(loc='best')
+        plt.savefig(os.path.join(FIG_DIR, f'{metric}'), bbox_inches='tight')
 
 
 
