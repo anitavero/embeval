@@ -122,7 +122,7 @@ def run_clustering_experiments(datadir='/anfs/bigdisc/alv34/wikidump/extracted/m
     # Filter all with intersection fo vocabs
     isec_vocab = set.intersection(*map(set, mm_vocabs))
     with open(os.path.join(savedir, 'common_subset_vocab_VG_GoogleResnet_Wiki2020.json'), 'w') as f:
-        json.dump(isec_vocab, f)
+        json.dump(list(isec_vocab), f)
     return len(isec_vocab)
     for e, v, l in list(zip(embs.embeddings, embs.vocabs, embs.vecs_names)) + list(zip(mm_embeddings, mm_vocabs, mm_labels)):
         fe, _ = filter_by_vocab(e, v, isec_vocab)
