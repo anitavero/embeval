@@ -12,6 +12,9 @@ from tqdm import tqdm
 import json
 from glob import glob
 from tabulate import tabulate
+from matplotlib import pyplot as plt
+from itertools import groupby
+from collections import defaultdict
 
 from source.utils import suffixate, tuple_list
 from source.process_embeddings import Embeddings, mid_fusion, filter_by_vocab, MM_TOKEN
@@ -136,22 +139,22 @@ def run_clustering_experiments(datadir='/anfs/bigdisc/alv34/wikidump/extracted/m
         run(n_clusters)
 
 
+def emb_labels(fn):
+    if 'model' in fn and 'resnet' in fn:
+        return r'$E_L + E_V$'
+    elif 'model' in fn and 'vecs3lem' in fn:
+        return r'$E_L + E_S$'
+    elif 'resnet' in fn and 'model' not in fn:
+        return r'$E_V$'
+    elif 'vecs3lem' in fn and 'model' not in fn:
+        return r'$E_S$'
+    elif 'model' in fn and 'resnet' not in fn and 'vecs3lem' not in fn:
+        return r'$E_L$'
+    elif 'Random' in fn:
+        return 'Random'
+
+
 def print_cluster_results(resdir='/Users/anitavero/projects/data/wikidump/models/'):
-
-    def emb_labels(fn):
-        if 'model' in fn and 'resnet' in fn:
-            return r'$E_L + E_V$'
-        elif 'model' in fn and 'vecs3lem' in fn:
-            return r'$E_L + E_S$'
-        elif 'resnet' in fn and 'model' not in fn:
-            return r'$E_V$'
-        elif 'vecs3lem' in fn and 'model' not in fn:
-            return r'$E_S$'
-        elif 'model' in fn and 'resnet' not in fn and 'vecs3lem' not in fn:
-            return r'$E_L$'
-        elif 'Random' in fn:
-            return 'Random'
-
     res_files = glob(resdir + '/cluster_metrics*')
     tab = []
     header = ['Metric']
@@ -166,6 +169,25 @@ def print_cluster_results(resdir='/Users/anitavero/projects/data/wikidump/models
             tab[row][col + 1] = score
     table = tabulate(tab, headers=header)
     print(table)
+
+
+def plot_cluster_results(resdir='/Users/anitavero/projects/data/wikidump/models/'):
+    res_files = glob(resdir + '/cluster_metrics*')
+    grp_files = groupby(res_files, key=lambda s: s.split('kmeans')[1].split('nc')[0])
+    score_lines = defaultdict(list)
+    labels = []
+    for k, g in grp_files:
+        nc_sorted = sorted(list(g), key=lambda s: int(s.split('nc')[1].split('.')[0]))
+        for fn in nc_sorted:
+            # line = []
+            with open(fn, 'r') as f:
+                res = json.load(f)
+            for metric, score in res.items():
+                # line.append(score)
+                score_lines[metric][emb_labels(os.path.basename(fn))].append(score)
+        labels.append(emb_labels(os.path.basename(fn)))
+    print(labels, score_lines)
+
 
 
 def wn_category(word):
@@ -185,7 +207,8 @@ def wn_category(word):
 
 
 if __name__ == '__main__':
-    argh.dispatch_commands([run_clustering, run_clustering_experiments, print_cluster_results, n_nearest_neighbors])
+    argh.dispatch_commands([run_clustering, run_clustering_experiments, print_cluster_results, plot_cluster_results,
+                            n_nearest_neighbors])
     # vocab = np.array(['a', 'b', 'c', 'd', 'e'])
     # words = np.array(['a', 'c', 'e'])
     # E = np.array([[1, 0],
