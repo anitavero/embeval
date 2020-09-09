@@ -207,6 +207,7 @@ def plot_cluster_results(resdir='/Users/anitavero/projects/data/wikidump/models/
         ax.set_xticks(range(len(ncls)))
         ax.set_xticklabels(ncls)
         ax.set_ylabel(metric)
+        ax.set_xlabel('Number of clusters')
         ax.legend(loc='best')
         plt.savefig(os.path.join(FIG_DIR, f'{metric}'), bbox_inches='tight')
 
