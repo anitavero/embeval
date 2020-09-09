@@ -125,10 +125,13 @@ def run_clustering_experiments(datadir='/anfs/bigdisc/alv34/wikidump/extracted/m
         json.dump(list(isec_vocab), f)
     print('#Common subset vocab:', len(isec_vocab))
     for e, v, l in list(zip(embs.embeddings, embs.vocabs, embs.vecs_names)) + list(zip(mm_embeddings, mm_vocabs, mm_labels)):
-        fe, _ = filter_by_vocab(e, v, isec_vocab)
+        fe, fv = filter_by_vocab(e, v, isec_vocab)
         models.append(fe)
         labels.append(l)
         np.save(os.path.join(datadir, f'{l}_common_subset'), fe)
+        with open(os.path.join(datadir, f'{l}_common_subset.vocab'), 'w') as f:
+            f.write('\n'.join(fv))
+    return
     # Add random embedding baseline
     models.append(np.random.random(size=(len(isec_vocab), 300)))
     labels.append('Random')
