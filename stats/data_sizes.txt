@@ -1,0 +1,43 @@
+Model sizes
+4.8M Sep  9 22:32 models/google_resnet152_common_subset.npy
+2.8M Sep  9 22:32 models/vecs3lem1_common_subset.npy
+2.8M Sep  9 22:32 models/model_n-1_s0_window-5_common_subset.npy
+
+
+Training data
+
+ResNet - ImageNet
+Now: 14,197,122 images
+trained on: 1.28 million
+full resolution images with an average size of around 400 × 350
+ImageNet 2012 classification dataset that consists of 1000 classes. The models
+are trained on the 1.28 million training images \ref{resnet}
+
+https://gluon-cv.mxnet.io/build/examples_datasets/imagenet.html
+~140G
+
++ 647G Google Images for the words
+
+VG SceneGraph
+Total region descriptions: 4,297,502
+Total image object instances: 1,366,673
+Total object-object relationship instances: 1,531,448
+Total attribute-object instances: 1,670,182
+SUM: 8,865,805
+~9M
+
+Download region descriptions (712.07 MB)
+Download objects (413.87 MB)
+Download attributes (462.56 MB)
+Download relationships (709.58 MB)
+Download the scene graphs (739.37 MB)
+SUM: 3037.45MB ~ 3G
+
+394M    visualgenome/data/objects.json
+1.4G    visualgenome/data/scene_graphs.json
+1.8G    total
+
+
+Wikipedia2020
+13 billion tokens
+14G
