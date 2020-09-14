@@ -16,7 +16,9 @@ are trained on the 1.28 million training images \ref{resnet}
 https://gluon-cv.mxnet.io/build/examples_datasets/imagenet.html
 ~140G
 
-+ 647G Google Images for the words
+Google SemSim images:
+15770 image
+79MB
 
 VG SceneGraph
 Total region descriptions: 4,297,502
