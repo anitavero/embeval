@@ -578,39 +578,52 @@ def plot_for_freqranges(scores: np.ndarray, gt_divisor, quantity=-1, common_subs
 
     # Plot data with error bars
     def bar_data(nms, mixed_pattern):
-        means, errs = [], []
+        means, errs, covs = [], [], []
         for fmin, fmax in freq_ranges:
             fnames = [n for n in nms if f'fqrng_{fmin}-{fmax}' in n]
             fcorrs, fpvals, fcoverages = zip(*[correlations['ground_truth | ' + n] for n in fnames])
-            f_mean, f_std = np.mean(fcorrs), np.std(fcorrs)
+            f_mean, f_std, f_cov = np.mean(fcorrs), np.std(fcorrs), np.mean(fcoverages)
             means.append(f_mean)
             errs.append(f_std)
+            covs.append(100 * f_cov / pair_num)
         # MIXED: Full data
         mcorrs, mpvals, mcoverages = zip(*[correlations['ground_truth | ' + n] for n in mixed
                                                                         if mixed_pattern(n)])
-        m_mean, m_std = np.mean(mcorrs), np.std(mcorrs)
+        m_mean, m_std, m_cov = np.mean(mcorrs), np.std(mcorrs), np.mean(mcoverages)
         means.append(m_mean)
         errs.append(m_std)
-        return means, errs
+        covs.append(100 * m_cov / pair_num)
+        return means, errs, covs
 
-    ling_means, ling_errs = bar_data(ling_names, lambda x: '+' not in x)
+    def coverage_texts(xpos, means, covs, errs):
+        for xp, y, cov, err in zip(xpos, means, covs, errs):
+            ax.text(xp, y + err + 0.01, str(int(cov)), fontweight='bold', fontsize=7, horizontalalignment='center')
+
+    ling_means, ling_errs, ling_covs = bar_data(ling_names, lambda x: '+' not in x)
 
     fig, ax = plt.subplots()
     bar_width = 0.2
     xpos = np.linspace(1, 2 + 2 * len(vis_names), len(freq_ranges) + 1)
 
     ax.bar(np.array(xpos), ling_means, yerr=ling_errs, width=bar_width, label='Linguistic')
+    coverage_texts(xpos, ling_means, ling_covs, ling_errs)
     pi = 1
     for vn in vis_names:
         vcorr, vpval, vcoverage = correlations['ground_truth | ' + vn]
-        ax.bar(np.array(xpos) + pi * bar_width, [vcorr for i in xpos], yerr=[0 for i in xpos], width=bar_width,
-               label=Embeddings.get_label(vn))
+        vxpos = np.array(xpos) + pi * bar_width
+        vcorrs = [vcorr for i in xpos]
+        verrs = [0 for i in xpos]
+        vcoverage = 100 * vcoverage / pair_num
+        ax.bar(vxpos, vcorrs, yerr=[0 for i in xpos], width=bar_width, label=Embeddings.get_label(vn))
+        coverage_texts(vxpos, vcorrs, [vcoverage for i in xpos], verrs)
         pi += 1
     # separate MM for vis_names too
     for mmn, vn in zip(mm_names, vis_names):
         mmlabel = 'MM - ' + Embeddings.get_label(vn)
-        mmn_means, mmn_errs = bar_data(mmn, lambda x: vn in x)
-        ax.bar(np.array(xpos) + pi * bar_width, mmn_means, yerr=mmn_errs, width=bar_width, label=mmlabel)
+        mmn_means, mmn_errs, mmn_covs = bar_data(mmn, lambda x: vn in x)
+        mmn_xpos = np.array(xpos) + pi * bar_width
+        ax.bar(mmn_xpos, mmn_means, yerr=mmn_errs, width=bar_width, label=mmlabel)
+        coverage_texts(mmn_xpos, mmn_means, mmn_covs, mmn_errs)
         pi += 1
 
     ax.set_xticks(xpos)
