@@ -63,6 +63,7 @@ class DataSets:
         self.simlex = json.load(open(datadir + '/simlex.json'))
         self.datasets = {'MEN': self.men, 'SimLex': self.simlex}  # , 'SimVerb': self.simverb}
         self.normalizers = {'MEN': 50, 'SimLex': 10}  # , 'SimVerb': 10}
+        self.pair_num = {'MEN': 3000, 'SimLex': 999}
 
 
 def dataset_vocab(dataset: str) -> list:
@@ -492,7 +493,7 @@ def plot_scores(scores: np.ndarray, gt_divisor=10, vecs_names=None, labels=None,
     return ax
 
 
-def plot_for_quantities(scores: np.ndarray, gt_divisor, common_subset=False, legend=False):
+def plot_for_quantities(scores: np.ndarray, gt_divisor, common_subset=False, legend=False, pair_num=None):
     ling_names = [n for n in scores.dtype.names if 'fqrng' not in n and 'ground_truth' not in n and 'model' in n
                   and '+' not in n]
     vis_names = [n for n in scores.dtype.names if 'fqrng' not in n and 'ground_truth' not in n and 'model' not in n
@@ -510,32 +511,45 @@ def plot_for_quantities(scores: np.ndarray, gt_divisor, common_subset=False, leg
 
     # Plot data with error bars
     def bar_data(nms):
-        means, errs = [], []
+        means, errs, covs = [], [], []
         for q in quantities:
             qnames = [n for n in nms if f'n{q}_' in n]
             qcorrs, qpvals, qcoverages = zip(*[correlations['ground_truth | ' + n] for n in qnames])
-            q_mean, q_std = np.mean(qcorrs), np.std(qcorrs)
+            q_mean, q_std, q_cov = np.mean(qcorrs), np.std(qcorrs), np.mean(qcoverages)
             means.append(q_mean)
             errs.append(q_std)
-        return means, errs
+            covs.append(100 * q_cov / pair_num)   # Return coverage in percentages
+        return means, errs, covs
 
-    ling_means, ling_errs = bar_data(ling_names)
+    ling_means, ling_errs, ling_covs = bar_data(ling_names)
+
+    def coverage_texts(xpos, means, covs, errs):
+        for xp, y, cov, err in zip(xpos, means, covs, errs):
+            ax.text(xp, y + err + 0.01, str(int(cov)), fontweight='bold', fontsize=7, horizontalalignment='center')
 
     fig, ax = plt.subplots()
     bar_width = 0.2
     xpos = np.linspace(1, 2 + 2 * len(vis_names), len(quantities))
 
     ax.bar(np.array(xpos), ling_means, yerr=ling_errs, width=bar_width, label='Linguistic')
+    coverage_texts(xpos, ling_means, ling_covs, ling_errs)
     pi = 1
     for vn in vis_names:
         vcorr, vpval, vcoverage = correlations['ground_truth | ' + vn]
-        ax.bar(np.array(xpos) + pi * bar_width, [vcorr for i in xpos], yerr=[0 for i in xpos], width=bar_width, label=Embeddings.get_label(vn))
+        vxpos = np.array(xpos) + pi * bar_width
+        vcorrs = [vcorr for i in xpos]
+        verrs = [0 for i in xpos]
+        vcoverage = 100 * vcoverage / pair_num
+        ax.bar(vxpos, vcorrs, yerr=verrs, width=bar_width, label=Embeddings.get_label(vn))
+        coverage_texts(vxpos, vcorrs, [vcoverage for i in xpos], verrs)
         pi += 1
     # separate MM for vis_names too
     for mmn, vn in zip(mm_names, vis_names):
         mmlabel = 'MM - ' + Embeddings.get_label(vn)
-        mmn_means, mmn_errs = bar_data(mmn)
-        ax.bar(np.array(xpos) + pi * bar_width, mmn_means, yerr=mmn_errs, width=bar_width, label=mmlabel)
+        mmn_means, mmn_errs, mmn_covs = bar_data(mmn)
+        mmn_xpos = np.array(xpos) + pi * bar_width
+        ax.bar(mmn_xpos, mmn_means, yerr=mmn_errs, width=bar_width, label=mmlabel)
+        coverage_texts(mmn_xpos, mmn_means, mmn_covs, mmn_errs)
         pi += 1
 
     ax.set_xticks(xpos)
@@ -545,7 +559,7 @@ def plot_for_quantities(scores: np.ndarray, gt_divisor, common_subset=False, leg
         ax.legend(loc='best', fontsize='x-small')
 
 
-def plot_for_freqranges(scores: np.ndarray, gt_divisor, quantity=-1, common_subset=False, title=''):
+def plot_for_freqranges(scores: np.ndarray, gt_divisor, quantity=-1, common_subset=False, pair_num=None):
     names = [n for n in scores.dtype.names if 'fqrng' in n and f'n{quantity}' in n and 'ground_truth' not in n]
     mixed = [n for n in scores.dtype.names if 'n-1' in n and 'fqrng' not in n and 'ground_truth' not in n]
     ling_names = [n for n in names if 'model' in n and '+' not in n]
@@ -848,14 +862,14 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
         for name in list(scores.keys()):
             scrs = deepcopy(scores[name])
             plot_for_quantities(scrs, gt_divisor=datasets.normalizers[name], common_subset=common_subset,
-                                legend=True if name == 'MEN' else False)
+                                legend=True if name == 'MEN' else False, pair_num=datasets.pair_num[name])
             plt.savefig('../figs/quantities_' + name + '.png', bbox_inches='tight')
 
     if 'plot_freqrange' in actions:
         for name in list(scores.keys()):
             scrs = deepcopy(scores[name])
             plot_for_freqranges(scrs, gt_divisor=datasets.normalizers[name], common_subset=common_subset,
-                                quantity=quantity)
+                                quantity=quantity, pair_num=datasets.pair_num[name])
             plt.savefig('../figs/freqranges_' + name + '.png', bbox_inches='tight')
 
     if 'plotscores' in actions:
