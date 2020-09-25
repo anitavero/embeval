@@ -287,7 +287,7 @@ def filter_for_freqranges(datadir, file_pattern, distribution_file, num_groups=3
         :param num_groups: int, number of frequency groups. The groups have approximately equal frequency mass.
     """
     print(f'Divide vocab to {num_groups} splits with approx. equal mass')
-    fqvocabs = divide_vocab_by_freqranges(distribution_file, num_groups)
+    fqvocabs = divide_vocab_by_freqranges(distribution_file, num_groups, save=True)
 
     vecs_names = [get_file_name(path) for path in glob(os.path.join(datadir, f'*{file_pattern}*.npy'))]
     print('Load embeddings')
@@ -314,35 +314,50 @@ def divide_vocab_by_freqranges(distribution_file, num_groups=3, save=False):
     with open(distribution_file, 'r') as f:
         dist = json.load(f)
     sorted_dist = sorted(dist.items(), key=lambda item: item[1])    # sort words by frequency
-    sum_mass = sum(dist.values())
-    group_mass = sum_mass // num_groups
+    swords, scounts = zip(*sorted_dist)
+    group_size = len(sorted_dist) // num_groups
     fqvocabs = []
-    group_sum = 0
-    fqvocab = []
-    fmin = sorted_dist[0][1]
-    vocablen = len(sorted_dist)
-    for i in tqdm(range(vocablen)):
-        w, c = sorted_dist[i]
-        fqvocab.append(w)
-        group_sum += c
-        if group_sum > group_mass:
-            fqvocabs.append((f'{fmin} {sorted_dist[i-1][1]}', fqvocab[:-1]))
-            if save:
-                # Save embeddings and vocabs for freq range
-                new_label = f'{os.path.splitext(distribution_file)[0]}_fqrng_{fmin}-{sorted_dist[i-1][1]}'
-                with open(f'{new_label}.vocab', 'w') as f:
-                    f.write('\n'.join(fqvocab))
-            fqvocab = [w]
-            fmin = c
-            group_sum = c
-        if i == vocablen - 1:
-            fqvocabs.append((f'{fmin} {sorted_dist[i][1]}', fqvocab))
-            if save:
-                new_label = f'{os.path.splitext(distribution_file)[0]}_fqrng_{fmin}-{sorted_dist[i][1]}'
-                with open(f'{new_label}.vocab', 'w') as f:
-                    f.write('\n'.join(fqvocab))
-
+    for i in range(0, len(sorted_dist), group_size):
+        fmin = scounts[i]
+        fmax = scounts[i + group_size]
+        fqvocabs[f'{fmin} {fmax}'] = swords[i:i+group_size]
+        if save:
+            # Save embeddings and vocabs for freq range
+            new_label = f'{os.path.splitext(distribution_file)[0]}_fqrng_{fmin}-{fmax}'
+            with open(f'{new_label}.vocab', 'w') as f:
+                f.write('\n'.join(swords[i:i+group_size]))
     return fqvocabs
+
+
+    # sum_mass = sum(dist.values())
+    # group_mass = sum_mass // num_groups
+    # fqvocabs = []
+    # group_sum = 0
+    # fqvocab = []
+    # fmin = sorted_dist[0][1]
+    # vocablen = len(sorted_dist)
+    # for i in tqdm(range(vocablen)):
+    #     w, c = sorted_dist[i]
+    #     fqvocab.append(w)
+    #     group_sum += c
+    #     if group_sum > group_mass:
+    #         fqvocabs.append((f'{fmin} {sorted_dist[i-1][1]}', fqvocab[:-1]))
+    #         if save:
+    #             # Save embeddings and vocabs for freq range
+    #             new_label = f'{os.path.splitext(distribution_file)[0]}_fqrng_{fmin}-{sorted_dist[i-1][1]}'
+    #             with open(f'{new_label}.vocab', 'w') as f:
+    #                 f.write('\n'.join(fqvocab))
+    #         fqvocab = [w]
+    #         fmin = c
+    #         group_sum = c
+    #     if i == vocablen - 1:
+    #         fqvocabs.append((f'{fmin} {sorted_dist[i][1]}', fqvocab))
+    #         if save:
+    #             new_label = f'{os.path.splitext(distribution_file)[0]}_fqrng_{fmin}-{sorted_dist[i][1]}'
+    #             with open(f'{new_label}.vocab', 'w') as f:
+    #                 f.write('\n'.join(fqvocab))
+    #
+    # return fqvocabs
 
 
 if __name__ == '__main__':
