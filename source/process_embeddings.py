@@ -316,7 +316,7 @@ def divide_vocab_by_freqranges(distribution_file, num_groups=3, save=False):
     sorted_dist = sorted(dist.items(), key=lambda item: item[1])    # sort words by frequency
     sum_mass = sum(dist.values())
     group_mass = sum_mass // num_groups
-    fqvocabs = {}
+    fqvocabs = []
     group_sum = 0
     fqvocab = []
     fmin = sorted_dist[0][1]
@@ -326,7 +326,7 @@ def divide_vocab_by_freqranges(distribution_file, num_groups=3, save=False):
         fqvocab.append(w)
         group_sum += c
         if group_sum > group_mass:
-            fqvocabs[f'{fmin} {sorted_dist[i-1][1]}'] = fqvocab[:-1]
+            fqvocabs.append((f'{fmin} {sorted_dist[i-1][1]}', fqvocab[:-1]))
             if save:
                 # Save embeddings and vocabs for freq range
                 new_label = f'{os.path.splitext(distribution_file)[0]}_fqrng_{fmin}-{sorted_dist[i-1][1]}'
@@ -336,7 +336,7 @@ def divide_vocab_by_freqranges(distribution_file, num_groups=3, save=False):
             fmin = c
             group_sum = c
         if i == vocablen - 1:
-            fqvocabs[f'{fmin} {sorted_dist[i][1]}'] = fqvocab
+            fqvocabs.append((f'{fmin} {sorted_dist[i][1]}', fqvocab))
             if save:
                 new_label = f'{os.path.splitext(distribution_file)[0]}_fqrng_{fmin}-{sorted_dist[i][1]}'
                 with open(f'{new_label}.vocab', 'w') as f:
