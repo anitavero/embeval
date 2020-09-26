@@ -10,6 +10,7 @@ import re
 import io
 from copy import deepcopy
 from glob import glob
+import math
 import argparse, argh
 from argh import arg
 
@@ -314,13 +315,15 @@ def divide_vocab_by_freqranges(distribution_file, num_groups=3, save=False):
     with open(distribution_file, 'r') as f:
         dist = json.load(f)
     sorted_dist = sorted(dist.items(), key=lambda item: item[1])    # sort words by frequency
+    N = len(sorted_dist)
     swords, scounts = zip(*sorted_dist)
-    group_size = len(sorted_dist) // num_groups
+    group_size = N // num_groups
     fqvocabs = []
-    for i in range(0, len(sorted_dist), group_size):
+    for i in range(0, N, group_size):
+        # print(i, i + group_size, N)
         fmin = scounts[i]
-        fmax = scounts[i + group_size]
-        fqvocabs[f'{fmin} {fmax}'] = swords[i:i+group_size]
+        fmax = scounts[i + group_size - 1]
+        fqvocabs.append((f'{fmin} {fmax}', swords[i:i+group_size]))
         if save:
             # Save embeddings and vocabs for freq range
             new_label = f'{os.path.splitext(distribution_file)[0]}_fqrng_{fmin}-{fmax}'

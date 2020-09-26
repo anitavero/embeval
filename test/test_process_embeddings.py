@@ -21,34 +21,36 @@ def test_divide_vocab_by_freqranges():
         dist1 = {"a": 1, "b": 5, "c": 10, "d": 15, "e": 21, "f": 25}
     """
     fqvocabs = divide_vocab_by_freqranges(data_dir + '/dist.json', num_groups=3)
-    assert list(zip(*fqvocabs))[0] == ('1 10', '20 20', '40 40')
-    assert fqvocabs[0][1] == ['a', 'b']
-    assert fqvocabs[1][1] == ['c']
-    assert fqvocabs[2][1] == ['d']
+    assert list(zip(*fqvocabs))[0] == ('1 1', '10 10', '20 20', '40 40')
+    assert fqvocabs[0][1] == ('a',)
+    assert fqvocabs[1][1] == ('b',)
+    assert fqvocabs[2][1] == ('c',)
+    assert fqvocabs[3][1] == ('d',)
 
     fqvocabs = divide_vocab_by_freqranges(data_dir + '/dist_shuffled.json', num_groups=3)
-    assert list(zip(*fqvocabs))[0] == ('1 10', '20 20', '40 40')
-    assert fqvocabs[0][1] == ['a', 'b']
-    assert fqvocabs[1][1] == ['c']
-    assert fqvocabs[2][1] == ['d']
+    assert list(zip(*fqvocabs))[0] == ('1 1', '10 10', '20 20', '40 40')
+    assert fqvocabs[0][1] == ('a',)
+    assert fqvocabs[1][1] == ('b',)
+    assert fqvocabs[2][1] == ('c',)
+    assert fqvocabs[3][1] == ('d',)
 
     fqvocabs = divide_vocab_by_freqranges(data_dir + '/dist.json', num_groups=2)
-    assert list(zip(*fqvocabs))[0] == ('1 20', '40 40')
-    assert fqvocabs[0][1] == ['a', 'b', 'c']
-    assert fqvocabs[1][1] == ['d']
+    assert list(zip(*fqvocabs))[0] == ('1 10', '20 40')
+    assert fqvocabs[0][1] == ('a', 'b')
+    assert fqvocabs[1][1] == ('c', 'd')
 
     fqvocabs = divide_vocab_by_freqranges(data_dir + '/dist.json', num_groups=1)
     assert list(zip(*fqvocabs))[0] == ('1 40',)
-    assert fqvocabs[0][1] == ['a', 'b', 'c', 'd']
+    assert fqvocabs[0][1] == ('a', 'b', 'c', 'd')
 
     fqvocabs = divide_vocab_by_freqranges(data_dir + '/dist1.json', num_groups=3)
-    assert list(zip(*fqvocabs))[0] == ('1 10', '15 15', '21 21', '25 25')
+    assert list(zip(*fqvocabs))[0] == ('1 5', '10 15', '21 25')
 
     with open(data_dir + '/dist2.json', 'w') as f:
         json.dump({"a": 1, "b": 2, "c": 1, "d": 1, "e": 1, "f": 1}, f)
     fqvocabs = divide_vocab_by_freqranges(data_dir + '/dist2.json', num_groups=3)
-    assert list(zip(*fqvocabs))[0] == ('1 1', '1 1', '1 1', '2 2')
-    assert list(zip(*fqvocabs))[1] == (['a', 'c'], ['d', 'e'], ['f'], ['b'])
+    assert list(zip(*fqvocabs))[0] == ('1 1', '1 1', '1 2')
+    assert list(zip(*fqvocabs))[1] == (('a', 'c'), ('d', 'e'), ('f', 'b'))
 
 
 def test_filter_by_vocab():
