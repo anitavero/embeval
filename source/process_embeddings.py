@@ -320,7 +320,6 @@ def divide_vocab_by_freqranges(distribution_file, num_groups=3, save=False):
     group_size = N // num_groups
     fqvocabs = []
     for i in range(0, N, group_size):
-        # print(i, i + group_size, N)
         fmin = scounts[i]
         fmax = scounts[i + group_size - 1]
         fqvocabs.append((f'{fmin} {fmax}', swords[i:i+group_size]))
