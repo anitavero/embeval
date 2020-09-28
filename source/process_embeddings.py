@@ -297,7 +297,7 @@ def filter_for_freqranges(datadir, file_pattern, distribution_file, num_groups=3
     fembs = {}
     print('Filter embeddings for freq ranges')
     for emb, vocab, label in zip(embs.embeddings, embs.vocabs, embs.vecs_labels):
-        for fqrange, fqvocab in fqvocabs.items():
+        for fqrange, fqvocab in fqvocabs:
             fmin, fmax = fqrange.split()
             print(f'{label}, Freq: {fmin} - {fmax}')
             femb, fvocab = filter_by_vocab(emb, vocab, fqvocab)
