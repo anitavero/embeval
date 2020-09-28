@@ -285,9 +285,9 @@ def filter_by_vocab(vecs, vocab, filter_vocab):
 
 def filter_for_freqranges(datadir, file_pattern, distribution_file, num_groups=3):
     """Filter embedding files with the given file pattern.
-        :param num_groups: int, number of frequency groups. The groups have approximately equal frequency mass.
+        :param num_groups: int, number of frequency groups. The groups have approximately equal number of unique words.
     """
-    print(f'Divide vocab to {num_groups} splits with approx. equal mass')
+    print(f'Divide vocab to {num_groups} splits with approx. equal number of unique words')
     fqvocabs = divide_vocab_by_freqranges(distribution_file, num_groups, save=True)
 
     model_files = [f for f in glob(os.path.join(datadir, f'*{file_pattern}*.npy')) if 'fqrng' not in f]
