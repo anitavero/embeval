@@ -322,7 +322,10 @@ def divide_vocab_by_freqranges(distribution_file, num_groups=3, save=False):
     fqvocabs = []
     for i in range(0, N, group_size):
         fmin = scounts[i]
-        fmax = scounts[i + group_size - 1]
+        if N >= i + group_size - 1:
+            fmax = scounts[i + group_size - 1]
+        else:
+            fmax = scounts[-1]
         fqvocabs.append((f'{fmin} {fmax}', swords[i:i+group_size]))
         if save:
             # Save embeddings and vocabs for freq range
