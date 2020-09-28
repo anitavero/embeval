@@ -290,7 +290,8 @@ def filter_for_freqranges(datadir, file_pattern, distribution_file, num_groups=3
     print(f'Divide vocab to {num_groups} splits with approx. equal mass')
     fqvocabs = divide_vocab_by_freqranges(distribution_file, num_groups, save=True)
 
-    vecs_names = [get_file_name(path) for path in glob(os.path.join(datadir, f'*{file_pattern}*.npy'))]
+    model_files = [f for f in glob(os.path.join(datadir, f'*{file_pattern}*.npy')) if 'fqrng' not in f]
+    vecs_names = [get_file_name(path) for path in model_files]
     print('Load embeddings')
     embs = Embeddings(datadir, vecs_names)
     fembs = {}
