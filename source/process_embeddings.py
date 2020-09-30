@@ -304,7 +304,7 @@ def filter_for_freqranges(datadir, file_pattern, distribution_file, num_groups=3
             fembs[f'{fmin} {fmax}'] = {'label': label, 'vecs': femb, 'vocab': fvocab}
 
             # Save embeddings and vocabs for freq range
-            new_label = f'{datadir}/{label}_fqrng_{fmin}-{fmax}'
+            new_label = f'{datadir}/{label}_split{num_groups}_fqrng_{fmin}-{fmax}'
             with open(f'{new_label}.vocab', 'w') as f:
                 f.write('\n'.join(fvocab))
             np.save(f'{new_label}.npy', femb)
@@ -329,7 +329,7 @@ def divide_vocab_by_freqranges(distribution_file, num_groups=3, save=False):
         fqvocabs.append((f'{fmin} {fmax}', swords[i:i+group_size]))
         if save:
             # Save embeddings and vocabs for freq range
-            new_label = f'{os.path.splitext(distribution_file)[0]}_fqrng_{fmin}-{fmax}'
+            new_label = f'{os.path.splitext(distribution_file)[0]}_split{num_groups}_fqrng_{fmin}-{fmax}'
             with open(f'{new_label}.vocab', 'w') as f:
                 f.write('\n'.join(swords[i:i+group_size]))
     return fqvocabs
