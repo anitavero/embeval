@@ -4,7 +4,7 @@ import argh
 from glob import glob
 
 
-def main(exp_name, pre_score_files=None):
+def main(exp_name, filter_pattern='', pre_score_files=None):
   #  ######## Test #######
   #  datadir = '/Users/anitavero/projects/data'
   #  embdir = '/Users/anitavero/projects/data/wikidump/models/'
@@ -15,7 +15,7 @@ def main(exp_name, pre_score_files=None):
     embdir = '/anfs/bigdisc/alv34/wikidump/extracted/models/'
     savedir = embdir + '/results/'
 
-    models = glob(embdir + '*model*npy*')
+    models = glob(embdir + f'*model*{filter_pattern}*npy*')
     models = [os.path.split(m)[1].split('.')[0] for m in models]
 
     task_eval.main(datadir, actions=['compscores'], embdir=embdir,
