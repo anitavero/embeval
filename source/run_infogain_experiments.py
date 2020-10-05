@@ -4,7 +4,7 @@ import argh
 from glob import glob
 
 
-def main(exp_name, filter_pattern='', pre_score_files=None, subdir=None):
+def main(exp_name, filter_pattern='', pre_score_files=None, subdir=''):
   #  ######## Test #######
   #  datadir = '/Users/anitavero/projects/data'
   #  embdir = '/Users/anitavero/projects/data/wikidump/models/'
@@ -12,7 +12,7 @@ def main(exp_name, filter_pattern='', pre_score_files=None, subdir=None):
   #  ######## END Test #######
 
     datadir = '/local/filespace/alv34/Datasets/'
-    embdir = '/anfs/bigdisc/alv34/wikidump/extracted/models/'
+    embdir = '/anfs/bigdisc/alv34/wikidump/extracted/models/' + subdir
     savedir = embdir + '/results/'
 
     models = glob(embdir + f'*model*{filter_pattern}*npy*')
