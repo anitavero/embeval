@@ -4,7 +4,7 @@ import argh
 from glob import glob
 
 
-def main(exp_name, filter_pattern='', pre_score_files=None):
+def main(exp_name, filter_pattern='', pre_score_files=None, subdir=None):
   #  ######## Test #######
   #  datadir = '/Users/anitavero/projects/data'
   #  embdir = '/Users/anitavero/projects/data/wikidump/models/'
