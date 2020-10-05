@@ -15,7 +15,7 @@ def main(exp_name, filter_pattern='', pre_score_files=None, subdir=''):
     embdir = '/anfs/bigdisc/alv34/wikidump/extracted/models/' + subdir
     savedir = embdir + '/results/'
 
-    models = glob(embdir + f'*model*{filter_pattern}*npy*')
+    models = glob(os.path.join(embdir, f'*model*{filter_pattern}*npy*'))
     models = [os.path.split(m)[1].split('.')[0] for m in models]
 
     task_eval.main(datadir, actions=['compscores'], embdir=embdir,
