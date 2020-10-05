@@ -138,9 +138,9 @@ class Embeddings:
                 model = Word2Vec.load(path)
                 vecs = model.wv.vectors
                 vvocab = np.array(list(model.wv.vocab.keys()))
-        except FileNotFoundError as err:
-            print(f'{err.filename} not found.')
-            return
+        except Exception as ex:
+            template = "An exception of type {0} occurred. Arguments:\n{1!r}"
+            print(template.format(type(ex).__name__, ex.args))
         if filter_vocab:
             vecs, vvocab = filter_by_vocab(vecs, vvocab, filter_vocab)
         return vecs, vvocab
