@@ -80,34 +80,39 @@ class Embeddings:
         name = re.sub('ground_truth [-|\|] ', '', name)  # Remove ground_truth prefix
 
         def label(nm):
-            cnn_format = {'vgg': 'VGG', 'alexnetfc7': 'AlexNet', 'alexnet': 'AlexNet',
-                          'resnet-18': 'ResNet-18', 'resnet152': 'ResNet-152'}
-            mod_format = {'vs': 'VIS', 'mm': 'MM'}
-            if 'frcnn' in nm:
-                _, context, modality, _ = nm.split('_')
-                return f'Google-{mod_format[modality]} {context}'
-            elif 'fmri' in nm:
-                if 'combined' in nm:
+            try:
+                cnn_format = {'vgg': 'VGG', 'alexnetfc7': 'AlexNet', 'alexnet': 'AlexNet',
+                              'resnet-18': 'ResNet-18', 'resnet152': 'ResNet-152'}
+                mod_format = {'vs': 'VIS', 'mm': 'MM'}
+                if 'frcnn' in nm:
                     _, context, modality, _ = nm.split('_')
-                    return f'VG-{mod_format[modality]} {context}'
-                elif 'descriptors' in nm:
-                    context, _, modality, _ = nm.split('-')[1].split('_')
-                    return f'VG-{mod_format[modality]} {context}'
-                else:
-                    _, data, cnn = nm.split('_')
+                    return f'Google-{mod_format[modality]} {context}'
+                elif 'fmri' in nm:
+                    if 'combined' in nm:
+                        _, context, modality, _ = nm.split('_')
+                        return f'VG-{mod_format[modality]} {context}'
+                    elif 'descriptors' in nm:
+                        context, _, modality, _ = nm.split('-')[1].split('_')
+                        return f'VG-{mod_format[modality]} {context}'
+                    else:
+                        _, data, cnn = nm.split('_')
+                        return f'{data.capitalize()} {cnn_format[cnn]}'
+                elif 'men' in nm:
+                    _, context = nm.split('-')
+                    return f'VG-{context}'
+                elif 'vecs' in nm:
+                    return 'VG SceneGraph'
+                elif 'model' in nm or 'common_subset' in nm or 'random' in nm:
+                    return nm
+                elif nm not in Embeddings.fasttext_vss.keys():
+                    data, cnn = nm.split('_')
                     return f'{data.capitalize()} {cnn_format[cnn]}'
-            elif 'men' in nm:
-                _, context = nm.split('-')
-                return f'VG-{context}'
-            elif 'vecs' in nm:
-                return 'VG SceneGraph'
-            elif 'model' in nm or 'common_subset' in nm or 'random' in nm:
-                return nm
-            elif nm not in Embeddings.fasttext_vss.keys():
-                data, cnn = nm.split('_')
-                return f'{data.capitalize()} {cnn_format[cnn]}'
-            else:
-                return nm
+                else:
+                    return nm
+            except Exception as ex:
+                template = "An exception of type {0} occurred. Arguments:\n{1!r}"
+                print(template.format(type(ex).__name__, ex.args))
+                print('File name:', nm)
 
         if MM_TOKEN in name:
             name1, name2 = name.split(MM_TOKEN)
