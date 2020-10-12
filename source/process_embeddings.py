@@ -104,9 +104,9 @@ class Embeddings:
                     return 'VG SceneGraph'
                 elif 'model' in nm or 'common_subset' in nm or 'random' in nm:
                     return nm
-                elif nm not in Embeddings.fasttext_vss.keys():
-                    data, cnn = nm.split('_')
-                    return f'{data.capitalize()} {cnn_format[cnn]}'
+                # elif nm not in Embeddings.fasttext_vss.keys():
+                #     data, cnn = nm.split('_')
+                #     return f'{data.capitalize()} {cnn_format[cnn]}'
                 else:
                     return nm
             except Exception as ex:
