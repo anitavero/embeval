@@ -19,7 +19,7 @@ def main(exp_name, filter_pattern='', pre_score_files=None, subdir=''):
     models = [os.path.split(m)[1].split('.')[0] for m in models]
 
     task_eval.main(datadir, actions=['compscores'], embdir=embdir,
-                   vecs_names=['VG SceneGraph', 'google_resnet152'],
+                   vecs_names=['vecs3lem1', 'google_resnet152'],
                    ling_vecs_names=models,
                    mm_lingvis=True,
                    mm_padding=False,
