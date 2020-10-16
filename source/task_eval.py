@@ -9,7 +9,7 @@ from tqdm import tqdm
 import json
 import argh
 from argh import arg
-import argparse
+import math
 from typing import List, Tuple
 
 import matplotlib
@@ -112,6 +112,44 @@ def coverage(vocabulary, data):
     coverage_lemma = len(list(set(vocab).intersection(set(data.fmri_vocab))))
     print(f'fMRI coverage:', coverage_lemma, f'({round(100 * coverage_lemma / len(data.fmri_vocab))}%)')
     print(f'fMRI coverage without lemmas:', coverage, f'({round(100 * coverage / len(data.fmri_vocab))}%)')
+
+
+def divide_eval_vocab_by_freqranges(distribution_file, eval_data_dir, dataset_name, num_groups=3, save=False):
+    with open(distribution_file, 'r') as f:
+        dist = json.load(f)
+    ds = DataSets(eval_data_dir)
+    evalv = list(set(dataset_vocab(ds.datasets[dataset_name])))
+
+    print(f'Filter distribution file with {dataset_name} vocab')
+    eval_dist = dict((w, c) for w, c in tqdm(dist.items()) if w in evalv) # Filter distribution vocab by eval vocab
+
+    # Print and save logs
+    log = f'#{dataset_name} vocab: {len(evalv)}\n'
+    log += f'#Filtered Wiki vocab: {len(eval_dist)}\n'
+    if len(eval_dist) < len(evalv):
+       log += f'Missing words in Wiki: {list(set(evalv) - set(eval_dist.keys()))}'
+    print(log)
+    with open(f'{os.path.splitext(distribution_file)[0]}_{dataset_name}_split{num_groups}.log', 'w') as f:
+        f.write(log)
+
+    sorted_dist = sorted(eval_dist.items(), key=lambda item: item[1])     # sort words by frequency
+    N = len(evalv)
+    swords, scounts = zip(*sorted_dist)
+    group_size = math.ceil(N / num_groups)
+    fqvocabs = []
+    for i in range(0, N, group_size):
+        fmin = scounts[i]
+        if N > i + group_size - 1:
+            fmax = scounts[i + group_size - 1]
+        else:
+            fmax = scounts[-1]
+        fqvocabs.append((f'{fmin} {fmax}', swords[i:i+group_size]))
+        if save:
+            # Save embeddings and vocabs for freq range
+            new_label = f'{os.path.splitext(distribution_file)[0]}_{dataset_name}_split{num_groups}_fqrng_{fmin}-{fmax}'
+            with open(f'{new_label}.vocab', 'w') as f:
+                f.write('\n'.join(swords[i:i+group_size]))
+    return fqvocabs
 
 
 def compute_correlations(scores: (np.ndarray, list), name_pairs: List[Tuple[str, str]] = None,
@@ -559,8 +597,11 @@ def plot_for_quantities(scores: np.ndarray, gt_divisor, common_subset=False, leg
         ax.legend(loc='best', fontsize='x-small')
 
 
-def plot_for_freqranges(scores: np.ndarray, gt_divisor, quantity=-1, common_subset=False, pair_num=None):
+def plot_for_freqranges(scores: np.ndarray, gt_divisor, quantity=-1, common_subset=False, pair_num=None,
+                        split_num=None):
     names = [n for n in scores.dtype.names if 'fqrng' in n and f'n{quantity}' in n and 'ground_truth' not in n]
+    if split_num:
+        names = [n for n in names if f'split{split_num}' in n and n.count('+') <= 1]
     mixed = [n for n in scores.dtype.names if 'n-1' in n and 'fqrng' not in n and 'ground_truth' not in n]
     ling_names = [n for n in names if 'model' in n and '+' not in n]
     vis_names = [n for n in scores.dtype.names if 'fqrng' not in n and 'ground_truth' not in n and 'model' not in n
@@ -882,8 +923,8 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
         for name in list(scores.keys()):
             scrs = deepcopy(scores[name])
             plot_for_freqranges(scrs, gt_divisor=datasets.normalizers[name], common_subset=common_subset,
-                                quantity=quantity, pair_num=datasets.pair_num[name])
-            plt.savefig('../figs/freqranges_' + name + '.png', bbox_inches='tight')
+                                quantity=quantity, pair_num=datasets.pair_num[name], split_num=3)
+            plt.savefig('../figs/eqsplit_freqranges_' + name + '.png', bbox_inches='tight')
 
     if 'plotscores' in actions:
         for name in list(scores.keys()):
@@ -1002,4 +1043,4 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
 
 
 if __name__ == '__main__':
-    argh.dispatch_command(main)
+    argh.dispatch_commands([main, divide_eval_vocab_by_freqranges])
