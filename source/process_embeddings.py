@@ -10,7 +10,8 @@ import re
 import io
 from copy import deepcopy
 from glob import glob
-import argparse, argh
+import argh
+from argh import arg
 
 from source.utils import get_file_name
 
@@ -288,7 +289,8 @@ def filter_by_vocab(vecs, vocab, filter_vocab):
     return fvecs, list(fvocab)
 
 
-def filter_for_freqranges(datadir, file_pattern, fqvocabs_file):
+@arg('-fpt', '--file_patterns', nargs='+', type=str)
+def filter_for_freqranges(datadir, fqvocabs_file, file_patterns=''):
     """Filter embedding files with the given file pattern.
         :param num_groups: int, number of frequency groups. The groups have approximately equal number of unique words.
     """
@@ -296,7 +298,8 @@ def filter_for_freqranges(datadir, file_pattern, fqvocabs_file):
         fqvocabs = json.load(f)
     evalds, splitnum = fqvocabs_file.split('.')[0].split('_')[1:]
 
-    model_files = [f for f in glob(os.path.join(datadir, f'*{file_pattern}*.npy')) if 'fqrng' not in f]
+    model_files = [f for f in glob(os.path.join(datadir, '*.npy')) if 'fqrng' not in f and
+                   all([p in f for p in file_patterns])]
     vecs_names = [get_file_name(path) for path in model_files]
     print('Load embeddings')
     embs = Embeddings(datadir, vecs_names)
