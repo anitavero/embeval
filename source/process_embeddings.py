@@ -290,14 +290,17 @@ def filter_by_vocab(vecs, vocab, filter_vocab):
 
 
 @arg('-fpt', '--file_patterns', nargs='+', type=str)
-def filter_for_freqranges(datadir, fqvocabs_file, file_patterns=''):
+def filter_for_freqranges(datadir, fqvocabs_file, file_patterns=None):
     """Filter embedding files with the given file pattern."""
     with open(fqvocabs_file, 'r') as f:
         fqvocabs = json.load(f)
     evalds, splitnum = fqvocabs_file.split('.')[0].split('_')[1:]
 
-    model_files = [f for f in glob(os.path.join(datadir, '*.npy')) if 'fqrng' not in f and
-                   all([p in f for p in file_patterns])]
+    if file_patterns is None:
+        fpt = True
+    else:
+        fpt = all([p in f for p in file_patterns])
+    model_files = [f for f in glob(os.path.join(datadir, '*.npy')) if 'fqrng' not in f and fpt]
     vecs_names = [get_file_name(path) for path in model_files]
     print('Load embeddings')
     embs = Embeddings(datadir, vecs_names)
