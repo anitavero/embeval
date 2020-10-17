@@ -291,9 +291,7 @@ def filter_by_vocab(vecs, vocab, filter_vocab):
 
 @arg('-fpt', '--file_patterns', nargs='+', type=str)
 def filter_for_freqranges(datadir, fqvocabs_file, file_patterns=''):
-    """Filter embedding files with the given file pattern.
-        :param num_groups: int, number of frequency groups. The groups have approximately equal number of unique words.
-    """
+    """Filter embedding files with the given file pattern."""
     with open(fqvocabs_file, 'r') as f:
         fqvocabs = json.load(f)
     evalds, splitnum = fqvocabs_file.split('.')[0].split('_')[1:]
