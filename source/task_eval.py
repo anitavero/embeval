@@ -144,11 +144,9 @@ def divide_eval_vocab_by_freqranges(distribution_file, eval_data_dir, dataset_na
         else:
             fmax = scounts[-1]
         fqvocabs.append((f'{fmin} {fmax}', swords[i:i+group_size]))
-        if save:
-            # Save embeddings and vocabs for freq range
-            new_label = f'{os.path.splitext(distribution_file)[0]}_{dataset_name}_split{num_groups}_fqrng_{fmin}-{fmax}'
-            with open(f'{new_label}.vocab', 'w') as f:
-                f.write('\n'.join(swords[i:i+group_size]))
+    if save:    # Save vocabs for freq ranges
+        with open(f'{os.path.splitext(distribution_file)[0]}_{dataset_name}_split{num_groups}.json', 'w') as f:
+            json.dump(fqvocabs, f)
     return fqvocabs
 
 

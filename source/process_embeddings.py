@@ -288,12 +288,13 @@ def filter_by_vocab(vecs, vocab, filter_vocab):
     return fvecs, list(fvocab)
 
 
-def filter_for_freqranges(datadir, file_pattern, fqvocabs, num_groups=3):
+def filter_for_freqranges(datadir, file_pattern, fqvocabs_file, num_groups=3):
     """Filter embedding files with the given file pattern.
         :param num_groups: int, number of frequency groups. The groups have approximately equal number of unique words.
     """
     print(f'Divide vocab to {num_groups} splits with approx. equal number of unique words')
-    # fqvocabs = divide_vocab_by_freqranges(distribution_file, num_groups, save=True)
+    with open(fqvocabs_file, 'r') as f:
+        fqvocabs = json.load(f)
 
     model_files = [f for f in glob(os.path.join(datadir, f'*{file_pattern}*.npy')) if 'fqrng' not in f]
     vecs_names = [get_file_name(path) for path in model_files]
