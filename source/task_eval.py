@@ -596,10 +596,13 @@ def plot_for_quantities(scores: np.ndarray, gt_divisor, common_subset=False, leg
 
 
 def plot_for_freqranges(scores: np.ndarray, gt_divisor, quantity=-1, common_subset=False, pair_num=None,
-                        split_num=None):
-    names = [n for n in scores.dtype.names if 'fqrng' in n and f'n{quantity}' in n and 'ground_truth' not in n]
+                        split_num=None, ds_name=None):
+    names = [n for n in scores.dtype.names if 'fqrng' in n and f'n{quantity}' in n and 'ground_truth' not in n
+             and 'common_subset' not in n]
     if split_num:
         names = [n for n in names if f'split{split_num}' in n and n.count('+') <= 1]
+    if ds_name:
+        names = [n for n in names if ds_name in n]
     mixed = [n for n in scores.dtype.names if 'n-1' in n and 'fqrng' not in n and 'ground_truth' not in n]
     ling_names = [n for n in names if 'model' in n and '+' not in n]
     vis_names = [n for n in scores.dtype.names if 'fqrng' not in n and 'ground_truth' not in n and 'model' not in n
@@ -849,7 +852,6 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
     :param mm_lingvis:
     :param tablefmt: printed table format. 'simple' - terminal, 'latex_raw' - latex table.
     :param concrete_num:
-    :param pre_score_files:
     :param datadir: Path to directory which contains evaluation data (and embedding data if embdir is not given)
     :param vecs_names: List[str] Names of embeddings
     :param embdir: Path to directory which contains embedding files.
@@ -921,7 +923,7 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
         for name in list(scores.keys()):
             scrs = deepcopy(scores[name])
             plot_for_freqranges(scrs, gt_divisor=datasets.normalizers[name], common_subset=common_subset,
-                                quantity=quantity, pair_num=datasets.pair_num[name], split_num=3)
+                                quantity=quantity, pair_num=datasets.pair_num[name], split_num=3, ds_name=name)
             plt.savefig('../figs/eqsplit_freqranges_' + name + '.png', bbox_inches='tight')
 
     if 'plotscores' in actions:
