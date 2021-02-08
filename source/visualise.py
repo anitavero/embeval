@@ -9,8 +9,8 @@ from source.process_embeddings import Embeddings, filter_by_vocab
 from source.unsupervised_metrics import wn_category
 
 
-@arg('--tn-label', choices=['frequency',
-                            'optics_cl'])
+@arg('--tn-label', choices=['clusters',
+                            'None'])
 def tensorboard_emb(data_dir, model_name, output_path, tn_label='clusters', label_name='clusters'):
     """
     Visualise embeddings using TensorBoard.
