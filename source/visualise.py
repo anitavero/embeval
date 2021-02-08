@@ -16,7 +16,6 @@ def tensorboard_emb(data_dir, model_name, output_path, tn_label='clusters', labe
     Visualise embeddings using TensorBoard.
     Code from: https://gist.github.com/BrikerMan/7bd4e4bd0a00ac9076986148afc06507
     :param model_name: name of numpy array files: embedding (.npy) and vocab (.vocab)
-    :param model_name: str, name for meta files
     :param output_path: str, directory
     :param tn_label: function(word) returns value, labels for text and/or colouring
     :param label_name: str, title for the labeling (e.g.: Cluster)
