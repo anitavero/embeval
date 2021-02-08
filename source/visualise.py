@@ -30,17 +30,21 @@ def tensorboard_emb(data_dir, model_name, output_path, tn_label='clusters', labe
           the default 6006 port
         * On your local machine, go to http://127.0.0.1:16006 and enjoy your remote TensorBoard.
     """
-    if tn_label == 'frequency':
-        pass
+    if tn_label == 'None':
+        labeler = None
     elif tn_label == 'clusters':
         labeler = lambda w: wn_category(w)
 
     print('Load embedding')
     embs = Embeddings(data_dir, [model_name])
-    print('Filter embedding and vocab by existing cluster names')
-    filter_vocab = [w for w in embs.vocabs[0] if labeler(w) is not None]
-    model, vocab = filter_by_vocab(embs.embeddings[0], embs.vocabs[0], filter_vocab)
-    print('#Vocab after filtering:', len(vocab))
+    if labeler:
+        print('Filter embedding and vocab by existing cluster names')
+        filter_vocab = [w for w in embs.vocabs[0] if labeler(w) is not None]
+        model, vocab = filter_by_vocab(embs.embeddings[0], embs.vocabs[0], filter_vocab)
+        print('#Vocab after filtering:', len(vocab))
+    else:
+        model = embs.embeddings[0]
+        vocab = embs.vocabs[0]
 
     file_name = "{}_metadata".format(model_name)
     meta_file = "{}.tsv".format(file_name)
