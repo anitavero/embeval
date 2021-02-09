@@ -1,7 +1,42 @@
 import sys, os
+sys.path.append(os.getcwd())
 sys.path.append(os.getcwd() + '/source')
 
 from source.unsupervised_metrics import *
+
+
+def test_get_clustering_labels_metrics():
+    """
+    Test data which is loaded from 'test/data':
+        test_model = np.array([[1, 1, 1],
+                               [2, 2, 2],
+                               [3, 3, 3],
+                               [4, 4, 4]])
+        test_vocab = ['a', 'b', 'c', 'd']
+    """
+    get_clustering_labels_metrics(['test_model'], datadir='test/data/',
+                                  savedir='test/data/',
+                                  cluster_method='kmeans', n_clusters=4, random_state=1, eps=0.5, min_samples=90,
+                                  workers=1, suffix='')
+    labels = np.load('test/data/cluster_labels_kmeans_test_model_nc4.npy')
+    print(labels)
+    assert len(set(labels)) == 4
+
+    get_clustering_labels_metrics(['test_model'], datadir='test/data/',
+                                  savedir='test/data/',
+                                  cluster_method='kmeans', n_clusters=3, random_state=1, eps=0.5, min_samples=90,
+                                  workers=1, suffix='')
+    labels = np.load('test/data/cluster_labels_kmeans_test_model_nc3.npy')
+    print(labels)
+    assert len(set(labels)) == 3
+
+    get_clustering_labels_metrics(['test_model'], datadir='test/data/',
+                                  savedir='test/data/',
+                                  cluster_method='kmeans', n_clusters=2, random_state=1, eps=0.5, min_samples=90,
+                                  workers=1, suffix='')
+    labels = np.load('test/data/cluster_labels_kmeans_test_model_nc2.npy')
+    print(labels)
+    assert len(set(labels)) == 2
 
 
 def test_n_nearest_neighbors():

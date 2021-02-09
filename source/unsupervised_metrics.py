@@ -101,7 +101,20 @@ def run_clustering(model, cluster_method, n_clusters=3, random_state=1, eps=0.5,
     elif cluster_method == 'kmeans':
         labels = kmeans(model, n_clusters=n_clusters, random_state=random_state, n_jobs=workers)
 
-    return cluster_eval(model, labels)
+    return cluster_eval(model, labels), labels
+
+
+def get_clustering_labels_metrics(vecs_names, datadir='/anfs/bigdisc/alv34/wikidump/extracted/models/',
+                                  savedir='/anfs/bigdisc/alv34/wikidump/extracted/models/results/',
+                                  cluster_method='kmeans', n_clusters=3, random_state=1, eps=0.5, min_samples=90,
+                                  workers=4, suffix=''):
+    embs = Embeddings(datadir, vecs_names)
+    for e, v, l in list(zip(embs.embeddings, embs.vocabs, embs.vecs_names)):
+        model_metrics, cl_labels = run_clustering(e, cluster_method, n_clusters, random_state, eps, min_samples, workers)
+        with open(os.path.join(savedir, f'cluster_metrics_labelled_{cluster_method}_{l}_nc{n_clusters}{suffixate(suffix)}.json'),
+                  'w') as f:
+            json.dump(model_metrics, f)
+        np.save(os.path.join(savedir, f'cluster_labels_{cluster_method}_{l}_nc{n_clusters}{suffixate(suffix)}'), cl_labels)
 
 
 @arg('-mmembs', '--mm_embs_of', type=tuple_list)
@@ -138,7 +151,7 @@ def run_clustering_experiments(datadir='/anfs/bigdisc/alv34/wikidump/extracted/m
     def run(nc):
         for m, l in zip(models, labels):
             print(l)
-            model_metrics = run_clustering(m, cluster_method, nc, random_state, eps, min_samples, workers)
+            model_metrics, _ = run_clustering(m, cluster_method, nc, random_state, eps, min_samples, workers)
             with open(os.path.join(savedir, f'cluster_metrics_{cluster_method}_{l}_nc{nc}{suffixate(suffix)}.json'), 'w') as f:
                 json.dump(model_metrics, f)
 
@@ -233,7 +246,7 @@ def wn_category(word):
 
 if __name__ == '__main__':
     argh.dispatch_commands([run_clustering, run_clustering_experiments, print_cluster_results, plot_cluster_results,
-                            n_nearest_neighbors])
+                            n_nearest_neighbors, get_clustering_labels_metrics])
     # vocab = np.array(['a', 'b', 'c', 'd', 'e'])
     # words = np.array(['a', 'c', 'e'])
     # E = np.array([[1, 0],
