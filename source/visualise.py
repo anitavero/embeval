@@ -1,6 +1,7 @@
 import os
 import argh
 from argh import arg
+import json
 import numpy as np
 import tensorflow as tf
 from tensorboard.plugins import projector
@@ -9,15 +10,14 @@ from source.process_embeddings import Embeddings, filter_by_vocab
 from source.unsupervised_metrics import wn_category
 
 
-@arg('--tn-label', choices=['clusters',
-                            'None'])
-def tensorboard_emb(data_dir, model_name, output_path, tn_label='clusters', label_name='clusters'):
+@arg('--tn-label')
+def tensorboard_emb(data_dir, model_name, output_path, tn_label='wn_clusters', label_name='clusters'):
     """
     Visualise embeddings using TensorBoard.
     Code from: https://gist.github.com/BrikerMan/7bd4e4bd0a00ac9076986148afc06507
     :param model_name: name of numpy array files: embedding (.npy) and vocab (.vocab)
     :param output_path: str, directory
-    :param tn_label: function(word) returns value, labels for text and/or colouring
+    :param tn_label: label dictionary file path or options: {"wn_clusters", "None"}
     :param label_name: str, title for the labeling (e.g.: Cluster)
 
     Usage on remote server with port forwarding:
@@ -32,7 +32,7 @@ def tensorboard_emb(data_dir, model_name, output_path, tn_label='clusters', labe
     """
     print('Load embedding')
     embs = Embeddings(data_dir, [model_name])
-    if tn_label == 'clusters':
+    if tn_label == 'wn_clusters':
         labeler = lambda w: wn_category(w)
         print('Filter embedding and vocab by existing cluster names')
         filter_vocab = [w for w in embs.vocabs[0] if labeler(w) is not None]
@@ -42,6 +42,12 @@ def tensorboard_emb(data_dir, model_name, output_path, tn_label='clusters', labe
         labeler = lambda w: w
         model = embs.embeddings[0]
         vocab = embs.vocabs[0]
+    elif os.path.exists(tn_label):
+        with open(tn_label, 'r') as f:
+            label_dict = json.load(f)
+        labeler = lambda w: label_dict[w]
+    else:
+        print('Add a valid label dictionary file path or choose between {"wn_clusters", "None"}.')
 
     file_name = "{}_metadata".format(model_name)
     meta_file = "{}.tsv".format(file_name)

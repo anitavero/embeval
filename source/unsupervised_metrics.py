@@ -116,7 +116,11 @@ def get_clustering_labels_metrics(vecs_names=[], datadir='/anfs/bigdisc/alv34/wi
         with open(os.path.join(savedir, f'cluster_metrics_labelled_{cluster_method}_{l}_nc{n_clusters}{suffixate(suffix)}.json'),
                   'w') as f:
             json.dump(model_metrics, f)
-        np.save(os.path.join(savedir, f'cluster_labels_{cluster_method}_{l}_nc{n_clusters}{suffixate(suffix)}'), cl_labels)
+
+        with open(os.path.join(savedir, f'cluster_labels_{cluster_method}_{l}_nc{n_clusters}{suffixate(suffix)}.json'),
+                  'w') as f:
+            label_dict = {w: str(l) for l, w in zip(cl_labels, v)}
+            json.dump(label_dict, f)
 
 
 @arg('-mmembs', '--mm_embs_of', type=tuple_list)
