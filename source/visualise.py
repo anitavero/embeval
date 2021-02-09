@@ -45,7 +45,7 @@ def tensorboard_emb(data_dir, model_name, output_path, tn_label='wn_clusters', l
     elif os.path.exists(tn_label):
         with open(tn_label, 'r') as f:
             label_dict = json.load(f)
-        labeler = lambda w: label_dict[w]
+        labeler = lambda w: int(label_dict[w])
         model = embs.embeddings[0]
         vocab = embs.vocabs[0]
     else:
