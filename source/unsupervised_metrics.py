@@ -104,12 +104,14 @@ def run_clustering(model, cluster_method, n_clusters=3, random_state=1, eps=0.5,
     return cluster_eval(model, labels), labels
 
 
-def get_clustering_labels_metrics(vecs_names, datadir='/anfs/bigdisc/alv34/wikidump/extracted/models/',
+@arg('-vns', '--vecs_names', nargs='+', type=str, required=True)
+def get_clustering_labels_metrics(vecs_names=[], datadir='/anfs/bigdisc/alv34/wikidump/extracted/models/',
                                   savedir='/anfs/bigdisc/alv34/wikidump/extracted/models/results/',
                                   cluster_method='kmeans', n_clusters=3, random_state=1, eps=0.5, min_samples=90,
                                   workers=4, suffix=''):
     embs = Embeddings(datadir, vecs_names)
     for e, v, l in list(zip(embs.embeddings, embs.vocabs, embs.vecs_names)):
+        print(l)
         model_metrics, cl_labels = run_clustering(e, cluster_method, n_clusters, random_state, eps, min_samples, workers)
         with open(os.path.join(savedir, f'cluster_metrics_labelled_{cluster_method}_{l}_nc{n_clusters}{suffixate(suffix)}.json'),
                   'w') as f:
