@@ -46,6 +46,8 @@ def tensorboard_emb(data_dir, model_name, output_path, tn_label='wn_clusters', l
         with open(tn_label, 'r') as f:
             label_dict = json.load(f)
         labeler = lambda w: label_dict[w]
+        model = embs.embeddings[0]
+        vocab = embs.vocabs[0]
     else:
         print('Add a valid label dictionary file path or choose between {"wn_clusters", "None"}.')
 
