@@ -18,8 +18,9 @@ import matplotlib.pyplot as plt
 matplotlib.style.use('fivethirtyeight')
 from itertools import groupby
 from collections import defaultdict
+from tabulate import tabulate, LATEX_ESCAPE_RULES
 
-from source.utils import suffixate, tuple_list
+from source.utils import suffixate, tuple_list, pfont, latex_table_post_process, PrintFont, LaTeXFont
 from source.process_embeddings import Embeddings, mid_fusion, filter_by_vocab
 
 
@@ -121,6 +122,42 @@ def get_clustering_labels_metrics(vecs_names=[], datadir='/anfs/bigdisc/alv34/wi
                   'w') as f:
             label_dict = {w: str(l) for l, w in zip(cl_labels, v)}
             json.dump(label_dict, f)
+
+
+def inspect_clusters(cluster_label_filepath, tablefmt):
+    """
+    :param cluster_label_filepath:
+    :param tablefmt: printed table format. 'simple' - terminal, 'latex_raw' - latex table.
+    :return:
+    """
+    with open(cluster_label_filepath, 'r') as f:
+        cl_dict = json.load(f)
+
+    clusters = defaultdict(list)
+    for w, c in cl_dict.items():
+        clusters[int(c)].append(w)
+
+    clusters = sorted([(cl, ws) for cl, ws in clusters.items()], key=lambda x: len(x[1]))
+
+
+    if 'latex' in tablefmt:
+        font = LaTeXFont
+    else:
+        font = PrintFont
+
+    table = tabulate([(cl, ', '.join(words)) for cl, words in clusters],
+                     headers=[pfont(['BOLD'], x, font) for x in['Cluster', 'Members']],
+                     tablefmt=tablefmt)
+
+    if 'latex' in tablefmt:
+        table = latex_table_post_process(table, range(0, 19),
+                    'Members of the 20 clusters in $E_S$. Clusters are ordered by size.',
+                                        label='E_S_20_clusters')
+
+    with open('figs/E_S_20_clusters.tex', 'w') as f:
+        f.write(table)
+
+    return clusters, table
 
 
 @arg('-mmembs', '--mm_embs_of', type=tuple_list)
@@ -252,7 +289,7 @@ def wn_category(word):
 
 if __name__ == '__main__':
     argh.dispatch_commands([run_clustering, run_clustering_experiments, print_cluster_results, plot_cluster_results,
-                            n_nearest_neighbors, get_clustering_labels_metrics])
+                            n_nearest_neighbors, get_clustering_labels_metrics, inspect_clusters])
     # vocab = np.array(['a', 'b', 'c', 'd', 'e'])
     # words = np.array(['a', 'c', 'e'])
     # E = np.array([[1, 0],
