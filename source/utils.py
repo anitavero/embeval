@@ -151,7 +151,7 @@ def latex_table_post_process(table, bottomrule_row_ids: List[int] = [], title=''
     if bottomrule_row_ids:
         for r in bottomrule_row_ids:
             r += 1  # Omit header
-            rows[r + 1] = '\n\\bottomrule' + rows[r + 1]
+            rows[r + 1] = '\n\\hline' + rows[r + 1]
         table = newline.join(rows)
 
     return table

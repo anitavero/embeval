@@ -123,8 +123,8 @@ def get_clustering_labels_metrics(vecs_names=[], datadir='/anfs/bigdisc/alv34/wi
             label_dict = {w: str(l) for l, w in zip(cl_labels, v)}
             json.dump(label_dict, f)
 
-
-def inspect_clusters(cluster_label_filepath, tablefmt):
+@arg('-embtype', '--embtype', choices=['S', 'L', 'V'])
+def inspect_clusters(cluster_label_filepath, tablefmt, embtype='S'):
     """
     :param cluster_label_filepath:
     :param tablefmt: printed table format. 'simple' - terminal, 'latex_raw' - latex table.
@@ -139,7 +139,7 @@ def inspect_clusters(cluster_label_filepath, tablefmt):
 
     clusters = sorted([(cl, ws) for cl, ws in clusters.items()], key=lambda x: len(x[1]))
 
-
+    # Table of cluster members ordered by size
     if 'latex' in tablefmt:
         font = LaTeXFont
     else:
@@ -151,11 +151,20 @@ def inspect_clusters(cluster_label_filepath, tablefmt):
 
     if 'latex' in tablefmt:
         table = latex_table_post_process(table, range(0, 19),
-                    'Members of the 20 clusters in $E_S$. Clusters are ordered by size.',
-                                        label='E_S_20_clusters')
+                    f'Members of the {len(clusters)} clusters in $E_{embtype}$. Clusters are ordered by size.',
+                                        label=f'E_{embtype}_{len(clusters)}_clusters')
 
-    with open('figs/E_S_20_clusters.tex', 'w') as f:
+    with open(f'figs/E_{embtype}_{len(clusters)}_clusters.tex', 'w') as f:
         f.write(table)
+
+    # Historgram of cluster sizes
+    plt.bar(range(20), [len(ws) for cl, ws in clusters])
+    plt.xticks([cl for cl, ws in clusters])
+    plt.xlabel('Clusters')
+    plt.ylabel('#Members')
+    plt.semilogy()
+    plt.tight_layout()
+    plt.savefig(f'figs/E_{embtype}_{len(clusters)}_cluster_hist.png')
 
     return clusters, table
 
