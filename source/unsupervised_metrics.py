@@ -123,8 +123,7 @@ def get_clustering_labels_metrics(vecs_names=[], datadir='/anfs/bigdisc/alv34/wi
             label_dict = {w: str(l) for l, w in zip(cl_labels, v)}
             json.dump(label_dict, f)
 
-@arg('-embtype', '--embtype', choices=['S', 'L', 'V'])
-def inspect_clusters(cluster_label_filepath, tablefmt, embtype='S'):
+def inspect_clusters(cluster_label_filepath, tablefmt):
     """
     :param cluster_label_filepath:
     :param tablefmt: printed table format. 'simple' - terminal, 'latex_raw' - latex table.
@@ -140,6 +139,8 @@ def inspect_clusters(cluster_label_filepath, tablefmt, embtype='S'):
     clusters = sorted([(cl, ws) for cl, ws in clusters.items()], key=lambda x: len(x[1]))
 
     # Table of cluster members ordered by size
+    embtype = emb_labels(os.path.split(cluster_label_filepath)[-1])
+    cluster_num = len(clusters)
     if 'latex' in tablefmt:
         font = LaTeXFont
     else:
@@ -150,21 +151,22 @@ def inspect_clusters(cluster_label_filepath, tablefmt, embtype='S'):
                      tablefmt=tablefmt)
 
     if 'latex' in tablefmt:
-        table = latex_table_post_process(table, range(0, 19),
-                    f'Members of the {len(clusters)} clusters in $E_{embtype}$. Clusters are ordered by size.',
-                                        label=f'E_{embtype}_{len(clusters)}_clusters')
+        table = latex_table_post_process(table, range(0, cluster_num - 1),
+                    f'Members of the {len(clusters)} clusters in {embtype}. Clusters are ordered by size.',
+                                        label=f'{embtype}_{len(clusters)}_clusters')
 
-    with open(f'figs/E_{embtype}_{len(clusters)}_clusters.tex', 'w') as f:
+    with open(f'figs/{embtype}_{len(clusters)}_clusters.tex', 'w') as f:
         f.write(table)
 
     # Historgram of cluster sizes
-    plt.bar(range(20), [len(ws) for cl, ws in clusters])
-    plt.xticks([cl for cl, ws in clusters])
+    fig = plt.figure(figsize=(12, 6))
+    plt.bar(range(cluster_num), [len(ws) for cl, ws in clusters])
+    plt.xticks([cl for cl, ws in clusters], fontsize=12)
     plt.xlabel('Clusters')
     plt.ylabel('#Members')
     plt.semilogy()
     plt.tight_layout()
-    plt.savefig(f'figs/E_{embtype}_{len(clusters)}_cluster_hist.png')
+    plt.savefig(f'figs/{embtype}_{len(clusters)}_cluster_hist.png')
 
     return clusters, table
 
