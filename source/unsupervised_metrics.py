@@ -123,7 +123,7 @@ def get_clustering_labels_metrics(vecs_names=[], datadir='/anfs/bigdisc/alv34/wi
             label_dict = {w: str(l) for l, w in zip(cl_labels, v)}
             json.dump(label_dict, f)
 
-def inspect_clusters(cluster_label_filepath, tablefmt):
+def inspect_clusters(cluster_label_filepath, tablefmt, barfontsize=20):
     """
     :param cluster_label_filepath:
     :param tablefmt: printed table format. 'simple' - terminal, 'latex_raw' - latex table.
@@ -161,14 +161,27 @@ def inspect_clusters(cluster_label_filepath, tablefmt):
     # Historgram of cluster sizes
     fig = plt.figure(figsize=(12, 6))
     plt.bar(range(cluster_num), [len(ws) for cl, ws in clusters])
-    plt.xticks([cl for cl, ws in clusters], fontsize=12)
-    plt.xlabel('Clusters')
-    plt.ylabel('#Members')
+    if cluster_num < 30:
+        plt.xticks([cl for cl, ws in clusters], fontsize=barfontsize)
+    else:
+        plt.xticks([cl for cl, ws in clusters], fontsize=12)
+    plt.yticks(fontsize=barfontsize)
+    plt.xlabel('Clusters', fontsize=barfontsize)
+    plt.ylabel('#Members', fontsize=barfontsize)
     plt.semilogy()
     plt.tight_layout()
     plt.savefig(f'figs/{embtype}_{len(clusters)}_cluster_hist.png')
 
     return clusters, table
+
+
+def run_inspect_clusters(barfontsize=25):
+    datapath = '/Users/anitavero/projects/data/wikidump/models/results'
+    for clfile in ['cluster_labels_kmeans_vecs3lem1_common_subset_nc20.json',
+                   'cluster_labels_kmeans_vecs3lem1_common_subset_nc40.json',
+                   'cluster_labels_kmeans_model_n-1_s0_window-5_common_subset_nc20.json',
+                   'cluster_labels_kmeans_google_resnet152_common_subset_nc20.json']:
+        inspect_clusters(os.path.join(datapath, clfile), 'latex_raw', barfontsize=barfontsize)
 
 
 @arg('-mmembs', '--mm_embs_of', type=tuple_list)
@@ -300,7 +313,7 @@ def wn_category(word):
 
 if __name__ == '__main__':
     argh.dispatch_commands([run_clustering, run_clustering_experiments, print_cluster_results, plot_cluster_results,
-                            n_nearest_neighbors, get_clustering_labels_metrics, inspect_clusters])
+                            n_nearest_neighbors, get_clustering_labels_metrics, inspect_clusters, run_inspect_clusters])
     # vocab = np.array(['a', 'b', 'c', 'd', 'e'])
     # words = np.array(['a', 'c', 'e'])
     # E = np.array([[1, 0],
