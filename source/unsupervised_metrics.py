@@ -138,8 +138,8 @@ def distances_from_centroids(emb, vocab, label_dict, centroids):
     dists = {}
     V = np.array(vocab)
     for w, cl in label_dict.items():
-        i = np.where(V == w)
-        dists[w] = cosine(emb[i, :], centroids[cl, :])
+        i = np.where(V == w)[0][0]
+        dists[w] = cosine(emb[i, :], centroids[int(cl), :])
     return dists
 
 
