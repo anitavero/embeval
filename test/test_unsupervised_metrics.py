@@ -3,6 +3,7 @@ sys.path.append(os.getcwd())
 sys.path.append(os.getcwd() + '/source')
 
 from source.unsupervised_metrics import *
+import numpy as np
 
 
 def test_distances_from_centroids():
@@ -10,14 +11,16 @@ def test_distances_from_centroids():
                     [0, 1, 0],
                     [0, 0, 1],
                     [1, 1, 1]])
-    labels = ['a', 'b', 'c', 'd']
+    vocab = ['a', 'b', 'c', 'd']
     centroids = np.array([[2, 0, 0],
-                          [0, 4, 0],
-                          [1, 0, 0],
-                          [1, 1, 1]])
+                          [0, 4, 0]])
+    label_dict = {'a': 0, 'b': 0, 'c': 1, 'd': 1}
 
-    dists = distances_from_centroids(emb, labels, centroids)
-    assert dists == {'a': 0.0, 'b': 0.0, 'c': 1.0, 'd': 0.0}
+    dists = distances_from_centroids(emb, vocab, label_dict, centroids)
+    assert dists['a'] == 0.0
+    assert dists['b'] == 1.0
+    assert dists['c'] == 1.0
+    assert np.isclose(dists['d'], 1 - (4 / (np.sqrt(3) * np.sqrt(16))))
 
 
 def test_get_clustering_labels_metrics():
