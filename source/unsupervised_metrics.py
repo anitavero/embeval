@@ -6,6 +6,7 @@ import numpy as np
 from sklearn.cluster import DBSCAN, KMeans
 from sklearn import metrics
 from sklearn.metrics.pairwise import cosine_distances
+from scipy.spatial.distance import cosine
 from nltk.corpus import wordnet as wn
 from itertools import chain
 from tqdm import tqdm
@@ -69,7 +70,8 @@ def kmeans(model, n_clusters=3, random_state=1, n_jobs=4):
     kmeans_model = KMeans(n_clusters=n_clusters, random_state=random_state, verbose=True,
                           n_jobs=n_jobs).fit(model)
     labels = kmeans_model.labels_
-    return labels
+    centroids = kmeans_model.cluster_centers_
+    return labels, centroids
 
 
 def cluster_eval(vectors, labels):
@@ -99,10 +101,11 @@ def run_clustering(model, cluster_method, n_clusters=3, random_state=1, eps=0.5,
 
     if cluster_method == 'dbscan':
         labels = dbscan_clustering(model, eps=eps, min_samples=min_samples, n_jobs=workers)
+        centroids = []
     elif cluster_method == 'kmeans':
-        labels = kmeans(model, n_clusters=n_clusters, random_state=random_state, n_jobs=workers)
+        labels, centroids = kmeans(model, n_clusters=n_clusters, random_state=random_state, n_jobs=workers)
 
-    return cluster_eval(model, labels), labels
+    return cluster_eval(model, labels), labels, centroids
 
 
 @arg('-vns', '--vecs_names', nargs='+', type=str, required=True)
@@ -113,7 +116,7 @@ def get_clustering_labels_metrics(vecs_names=[], datadir='/anfs/bigdisc/alv34/wi
     embs = Embeddings(datadir, vecs_names)
     for e, v, l in list(zip(embs.embeddings, embs.vocabs, embs.vecs_names)):
         print(l)
-        model_metrics, cl_labels = run_clustering(e, cluster_method, n_clusters, random_state, eps, min_samples, workers)
+        model_metrics, cl_labels, centroids = run_clustering(e, cluster_method, n_clusters, random_state, eps, min_samples, workers)
         with open(os.path.join(savedir, f'cluster_metrics_labelled_{cluster_method}_{l}_nc{n_clusters}{suffixate(suffix)}.json'),
                   'w') as f:
             json.dump(model_metrics, f)
@@ -122,6 +125,14 @@ def get_clustering_labels_metrics(vecs_names=[], datadir='/anfs/bigdisc/alv34/wi
                   'w') as f:
             label_dict = {w: str(l) for l, w in zip(cl_labels, v)}
             json.dump(label_dict, f)
+
+
+def distances_from_centroids(emb, labels, centroids):
+    dists = {}
+    for i in range(len(labels)):
+        dists[labels[i]] = cosine(emb[i, :], centroids[i])
+    return dists
+
 
 def inspect_clusters(cluster_label_filepath, tablefmt, barfontsize=20):
     """

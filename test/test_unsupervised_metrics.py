@@ -5,6 +5,21 @@ sys.path.append(os.getcwd() + '/source')
 from source.unsupervised_metrics import *
 
 
+def test_distances_from_centroids():
+    emb = np.array([[1, 0, 0],
+                    [0, 1, 0],
+                    [0, 0, 1],
+                    [1, 1, 1]])
+    labels = ['a', 'b', 'c', 'd']
+    centroids = np.array([[2, 0, 0],
+                          [0, 4, 0],
+                          [1, 0, 0],
+                          [1, 1, 1]])
+
+    dists = distances_from_centroids(emb, labels, centroids)
+    assert dists == {'a': 0.0, 'b': 0.0, 'c': 1.0, 'd': 0.0}
+
+
 def test_get_clustering_labels_metrics():
     """
     Test data which is loaded from 'test/data':
