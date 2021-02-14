@@ -126,6 +126,13 @@ def get_clustering_labels_metrics(vecs_names=[], datadir='/anfs/bigdisc/alv34/wi
             label_dict = {w: str(l) for l, w in zip(cl_labels, v)}
             json.dump(label_dict, f)
 
+        # Save distances from centroids
+        dists = distances_from_centroids(e, v, centroids)
+        with open(os.path.join(savedir, f'dists_from_centr_{cluster_method}_{l}_nc{n_clusters}{suffixate(suffix)}.json'),
+                  'w') as f:
+            json.dump(dists, f)
+
+
 
 def distances_from_centroids(emb, labels, centroids):
     dists = {}
