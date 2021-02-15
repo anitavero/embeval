@@ -158,6 +158,13 @@ def inspect_clusters(cluster_label_filepath, tablefmt, barfontsize=20):
 
     clusters = sorted([(cl, ws) for cl, ws in clusters.items()], key=lambda x: len(x[1]))
 
+    # Order words by their distance from the centroid
+    order_words_by_centroid_distance(clusters, cluster_label_filepath)
+
+    # Save clusters
+    with open(cluster_label_filepath.replace('cluster_labels', 'clusters'), 'w') as f:
+        json.dump(clusters, f)
+
     # Table of cluster members ordered by size
     embtype = emb_labels(os.path.split(cluster_label_filepath)[-1])
     cluster_num = len(clusters)
@@ -193,6 +200,17 @@ def inspect_clusters(cluster_label_filepath, tablefmt, barfontsize=20):
     plt.savefig(f'figs/{embtype}_{len(clusters)}_cluster_hist.png')
 
     return clusters, table
+
+
+def order_words_by_centroid_distance(clusters, cluster_label_filepath):
+    """Order words by their distance from the centroid"""
+    path, fn = os.path.split(cluster_label_filepath)
+    dist_file = os.path.join(path, '_'.join(['dists_from_centr'] + fn.split('_')[2:]))
+    with open(dist_file, 'r') as f:
+        cent_dists = json.load(f)
+
+    for cl, words in clusters:
+        words.sort(key=lambda w: cent_dists[w])
 
 
 def run_inspect_clusters(barfontsize=25):

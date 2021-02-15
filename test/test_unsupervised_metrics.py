@@ -6,6 +6,17 @@ from source.unsupervised_metrics import *
 import numpy as np
 
 
+def test_order_words_by_centroid_distance():
+    clusters = [(0, ['c', 'b', 'a']), (1, ['e', 'd'])]
+    cl_labels = {'a': 0, 'b': 0.1, 'c': 1, 'd': 0.1, 'e': 0.2}
+    cluster_label_filepath = 'test/data/test_cluster_labels.json'
+    with open('test/data/dists_from_centr_labels.json', 'w') as f:
+        json.dump(cl_labels, f)
+
+    order_words_by_centroid_distance(clusters, cluster_label_filepath)
+    assert clusters == [(0, ['a', 'b', 'c']), (1, ['d', 'e'])]
+
+
 def test_distances_from_centroids():
     emb = np.array([[1, 0, 0],
                     [0, 1, 0],
