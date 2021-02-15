@@ -252,6 +252,68 @@ def print_clusters(cluster_label_filepath, tablefmt, barfontsize=20):
 
     return clusters, table
 
+def jaccard_similarity_score(x, y):
+    """
+    Jaccard Similarity J (A,B) = | Intersection (A,B) | /
+                                    | Union (A,B) |
+    """
+    intersection_cardinality = len(set(x).intersection(set(y)))
+    union_cardinality = len(set(x).union(set(y)))
+    return intersection_cardinality / float(union_cardinality)
+
+
+def cluster_similarities():
+    emb_clusters = {}
+    datapath = '/Users/anitavero/projects/data/wikidump/models/results'
+    for clfile in ['clusters_WN_kmeans_vecs3lem1_common_subset_nc20.json',
+                   'clusters_WN_kmeans_model_n-1_s0_window-5_common_subset_nc20.json',
+                   'clusters_WN_kmeans_google_resnet152_common_subset_nc20.json']:
+        with open(os.path.join(datapath, clfile), 'r') as f:
+            clusters = json.load(f)
+        embtype = emb_labels(os.path.split(clfile)[-1])
+        emb_clusters[embtype] = clusters
+
+    jaccard_similarities = {}
+    for ie, (e, cls) in enumerate(emb_clusters.items()):
+        for ie1, (e1, cls1) in enumerate(emb_clusters.items()):
+            if ie < ie1:
+                sims = np.empty((20, 20))
+                xticks, yticks = [], []
+                for i, c in enumerate(cls):
+                    yticks.append(', '.join(c[1]))
+                    for j, c1 in enumerate(cls1):
+                        if len(xticks) < 20:
+                            xticks.append(', '.join(c1[1]))
+                        sims[i, j] = jaccard_similarity_score(c[2], c1[2])
+                jaccard_similarities[f'{e}-{e1}'] = sims
+
+                similarity_heatmap(sims, xticks, yticks, f'{e}-{e1}')
+
+    return jaccard_similarities
+
+
+def similarity_heatmap(V, xticks, yticks, title_embs):
+    plt.rcParams["axes.grid"] = False
+    fig, ax = plt.subplots(figsize=(22, 16))
+    im = ax.imshow(V)
+
+    # We want to show all ticks...
+    ax.set_xticks(np.arange(len(xticks)))
+    ax.set_yticks(np.arange(len(yticks)))
+    # ... and label them with the respective list entries
+    ax.set_xticklabels(xticks, fontsize=20)
+    ax.set_yticklabels(yticks, fontsize=20)
+
+    # Rotate the tick labels and set their alignment.
+    plt.setp(ax.get_xticklabels(), rotation=45, ha="right",
+             rotation_mode="anchor")
+
+    plt.colorbar(im)
+
+    ax.set_title(f"Jaccard similarities of clusters in {title_embs}")
+    fig.tight_layout()
+    plt.savefig(f'figs/{title_embs}_jaccard_heatmap.png')
+
 
 def run_print_clusters(barfontsize=25):
     datapath = '/Users/anitavero/projects/data/wikidump/models/results'
@@ -401,7 +463,7 @@ def wn_category(word):
 if __name__ == '__main__':
     argh.dispatch_commands([run_clustering, run_clustering_experiments, print_cluster_results, plot_cluster_results,
                             n_nearest_neighbors, get_clustering_labels_metrics, inspect_clusters, run_inspect_clusters,
-                            label_clusters_with_wordnet, run_print_clusters])
+                            label_clusters_with_wordnet, run_print_clusters, cluster_similarities])
     # vocab = np.array(['a', 'b', 'c', 'd', 'e'])
     # words = np.array(['a', 'c', 'e'])
     # E = np.array([[1, 0],
