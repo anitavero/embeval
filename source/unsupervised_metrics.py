@@ -18,7 +18,7 @@ matplotlib.rcParams["savefig.dpi"] = 300
 import matplotlib.pyplot as plt
 matplotlib.style.use('fivethirtyeight')
 from itertools import groupby
-from collections import defaultdict
+from collections import defaultdict, Counter
 from tabulate import tabulate, LATEX_ESCAPE_RULES
 
 from source.utils import suffixate, tuple_list, pfont, latex_table_post_process, PrintFont, LaTeXFont
@@ -143,6 +143,52 @@ def distances_from_centroids(emb, vocab, label_dict, centroids):
     return dists
 
 
+def order_words_by_centroid_distance(clusters, cluster_label_filepath):
+    """Order words by their distance from the centroid"""
+    path, fn = os.path.split(cluster_label_filepath)
+    dist_file = os.path.join(path, '_'.join(['dists_from_centr'] + fn.split('_')[2:]))
+    with open(dist_file, 'r') as f:
+        cent_dists = json.load(f)
+
+    for cl, words in clusters:
+        words.sort(key=lambda w: cent_dists[w])
+
+
+def synset_closures(word, depth=3, get_names=False):
+    hyper = lambda s: s.hypernyms()
+    synsets = wn.synsets(word)
+    closures = list(chain.from_iterable([list(sns.closure(hyper, depth=depth)) for sns in synsets])) + synsets
+    if get_names:
+        closures = [str(syns).split('.')[0].split("'")[1] for syns in closures]
+    return closures
+
+
+def wn_label_for_words(words, depth=3):
+    sys_name_list = []
+    for w in words:
+        sys_name_list += list(set(synset_closures(w, depth=depth, get_names=True)))
+    label = Counter(sys_name_list)
+    return [w for w, fq in label.most_common()]
+
+
+def label_clusters_with_wordnet(depth=3, max_label_num=3):
+    """First max_label_num most common synset names."""
+    datapath = '/Users/anitavero/projects/data/wikidump/models/results'
+    for clfile in ['clusters_kmeans_vecs3lem1_common_subset_nc20.json',
+                   'clusters_kmeans_vecs3lem1_common_subset_nc40.json',
+                   'clusters_kmeans_model_n-1_s0_window-5_common_subset_nc20.json',
+                   'clusters_kmeans_google_resnet152_common_subset_nc20.json']:
+        with open(os.path.join(datapath, clfile), 'r') as f:
+            cls = json.load(f)
+
+        wncls = []
+        for clid, words in cls:
+            wncls.append((clid, wn_label_for_words(words, depth)[:max_label_num], words))
+
+        with open(os.path.join(datapath, clfile.replace('clusters', 'clusters_WN')), 'w') as f:
+            json.dump(wncls, f)
+
+
 def inspect_clusters(cluster_label_filepath, tablefmt, barfontsize=20):
     """
     :param cluster_label_filepath:
@@ -200,17 +246,6 @@ def inspect_clusters(cluster_label_filepath, tablefmt, barfontsize=20):
     plt.savefig(f'figs/{embtype}_{len(clusters)}_cluster_hist.png')
 
     return clusters, table
-
-
-def order_words_by_centroid_distance(clusters, cluster_label_filepath):
-    """Order words by their distance from the centroid"""
-    path, fn = os.path.split(cluster_label_filepath)
-    dist_file = os.path.join(path, '_'.join(['dists_from_centr'] + fn.split('_')[2:]))
-    with open(dist_file, 'r') as f:
-        cent_dists = json.load(f)
-
-    for cl, words in clusters:
-        words.sort(key=lambda w: cent_dists[w])
 
 
 def run_inspect_clusters(barfontsize=25):
@@ -351,7 +386,8 @@ def wn_category(word):
 
 if __name__ == '__main__':
     argh.dispatch_commands([run_clustering, run_clustering_experiments, print_cluster_results, plot_cluster_results,
-                            n_nearest_neighbors, get_clustering_labels_metrics, inspect_clusters, run_inspect_clusters])
+                            n_nearest_neighbors, get_clustering_labels_metrics, inspect_clusters, run_inspect_clusters,
+                            label_clusters_with_wordnet])
     # vocab = np.array(['a', 'b', 'c', 'd', 'e'])
     # words = np.array(['a', 'c', 'e'])
     # E = np.array([[1, 0],
