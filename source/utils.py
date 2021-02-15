@@ -142,7 +142,7 @@ def latex_table_post_process(table, bottomrule_row_ids: List[int] = [], title=''
     """
     table = latex_table_wrapper(table, title, fit_to_page, label)
 
-    newline = '\\\\'
+    newline = ' \\\\'
     rows = table.split(newline)
     rows[0] = re.sub('\\\\hline', '\\\\toprule', rows[0])
     rows[1] = re.sub('\\\\hline', '\\\\midrule', rows[1])

@@ -189,7 +189,7 @@ def label_clusters_with_wordnet(depth=3, max_label_num=3):
             json.dump(wncls, f)
 
 
-def inspect_clusters(cluster_label_filepath, tablefmt, barfontsize=20):
+def inspect_clusters(cluster_label_filepath):
     """
     :param cluster_label_filepath:
     :param tablefmt: printed table format. 'simple' - terminal, 'latex_raw' - latex table.
@@ -204,23 +204,28 @@ def inspect_clusters(cluster_label_filepath, tablefmt, barfontsize=20):
 
     clusters = sorted([(cl, ws) for cl, ws in clusters.items()], key=lambda x: len(x[1]))
 
-    # Order words by their distance from the centroid
-    order_words_by_centroid_distance(clusters, cluster_label_filepath)
-
     # Save clusters
     with open(cluster_label_filepath.replace('cluster_labels', 'clusters'), 'w') as f:
         json.dump(clusters, f)
 
+
+def print_clusters(cluster_label_filepath, tablefmt, barfontsize=20):
     # Table of cluster members ordered by size
     embtype = emb_labels(os.path.split(cluster_label_filepath)[-1])
+
+    with open(cluster_label_filepath, 'r') as f:
+        clusters = json.load(f)
+
     cluster_num = len(clusters)
     if 'latex' in tablefmt:
         font = LaTeXFont
+        labelform = lambda ls: '\\makecell[tr]{' + '\\\\'.join(ls).replace('_', ' ') + '}'
     else:
         font = PrintFont
+        labelform = lambda x: x
 
-    table = tabulate([(cl, ', '.join(words)) for cl, words in clusters],
-                     headers=[pfont(['BOLD'], x, font) for x in['Cluster', 'Members']],
+    table = tabulate([(labelform(wnls), cl, ', '.join(words)) for cl, wnls, words in clusters],
+                     headers=[pfont(['BOLD'], x, font) for x in['WN label', 'Own label', 'Members']],
                      tablefmt=tablefmt)
 
     if 'latex' in tablefmt:
@@ -233,11 +238,11 @@ def inspect_clusters(cluster_label_filepath, tablefmt, barfontsize=20):
 
     # Historgram of cluster sizes
     fig = plt.figure(figsize=(12, 6))
-    plt.bar(range(cluster_num), [len(ws) for cl, ws in clusters])
+    plt.bar(range(cluster_num), [len(ws) for cl, wnls, ws in clusters])
     if cluster_num < 30:
-        plt.xticks([cl for cl, ws in clusters], fontsize=barfontsize)
+        plt.xticks([cl for cl, wnls, ws in clusters], fontsize=barfontsize)
     else:
-        plt.xticks([cl for cl, ws in clusters], fontsize=12)
+        plt.xticks([cl for cl, wnls, ws in clusters], fontsize=12)
     plt.yticks(fontsize=barfontsize)
     plt.xlabel('Clusters', fontsize=barfontsize)
     plt.ylabel('#Members', fontsize=barfontsize)
@@ -248,13 +253,22 @@ def inspect_clusters(cluster_label_filepath, tablefmt, barfontsize=20):
     return clusters, table
 
 
-def run_inspect_clusters(barfontsize=25):
+def run_print_clusters(barfontsize=25):
+    datapath = '/Users/anitavero/projects/data/wikidump/models/results'
+    for clfile in ['clusters_WN_kmeans_vecs3lem1_common_subset_nc20.json',
+                   'clusters_WN_kmeans_vecs3lem1_common_subset_nc40.json',
+                   'clusters_WN_kmeans_model_n-1_s0_window-5_common_subset_nc20.json',
+                   'clusters_WN_kmeans_google_resnet152_common_subset_nc20.json']:
+        print_clusters(os.path.join(datapath, clfile), 'latex_raw', barfontsize=barfontsize)
+
+
+def run_inspect_clusters():
     datapath = '/Users/anitavero/projects/data/wikidump/models/results'
     for clfile in ['cluster_labels_kmeans_vecs3lem1_common_subset_nc20.json',
                    'cluster_labels_kmeans_vecs3lem1_common_subset_nc40.json',
                    'cluster_labels_kmeans_model_n-1_s0_window-5_common_subset_nc20.json',
                    'cluster_labels_kmeans_google_resnet152_common_subset_nc20.json']:
-        inspect_clusters(os.path.join(datapath, clfile), 'latex_raw', barfontsize=barfontsize)
+        inspect_clusters(os.path.join(datapath, clfile))
 
 
 @arg('-mmembs', '--mm_embs_of', type=tuple_list)
@@ -387,7 +401,7 @@ def wn_category(word):
 if __name__ == '__main__':
     argh.dispatch_commands([run_clustering, run_clustering_experiments, print_cluster_results, plot_cluster_results,
                             n_nearest_neighbors, get_clustering_labels_metrics, inspect_clusters, run_inspect_clusters,
-                            label_clusters_with_wordnet])
+                            label_clusters_with_wordnet, run_print_clusters])
     # vocab = np.array(['a', 'b', 'c', 'd', 'e'])
     # words = np.array(['a', 'c', 'e'])
     # E = np.array([[1, 0],
