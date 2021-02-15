@@ -293,9 +293,9 @@ def cluster_similarities():
 
 
 def similarity_heatmap(V, xticks, yticks, title_embs):
-    plt.rcParams["axes.grid"] = False
-    fig, ax = plt.subplots(figsize=(22, 16))
-    im = ax.imshow(V)
+    import seaborn as sns
+    fig, ax = plt.subplots(figsize=(20, 16))
+    ax = sns.heatmap(V, linewidths=.1)
 
     # We want to show all ticks...
     ax.set_xticks(np.arange(len(xticks)))
@@ -307,8 +307,8 @@ def similarity_heatmap(V, xticks, yticks, title_embs):
     # Rotate the tick labels and set their alignment.
     plt.setp(ax.get_xticklabels(), rotation=45, ha="right",
              rotation_mode="anchor")
-
-    plt.colorbar(im)
+    plt.setp(ax.get_yticklabels(), rotation=0, ha="right",
+             rotation_mode="anchor")
 
     ax.set_title(f"Jaccard similarities of clusters in {title_embs}")
     fig.tight_layout()
