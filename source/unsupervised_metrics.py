@@ -17,9 +17,11 @@ import matplotlib
 matplotlib.rcParams["savefig.dpi"] = 300
 import matplotlib.pyplot as plt
 matplotlib.style.use('fivethirtyeight')
+import seaborn as sns
 from itertools import groupby
 from collections import defaultdict, Counter
 from tabulate import tabulate, LATEX_ESCAPE_RULES
+import pandas as pd
 
 from source.utils import suffixate, tuple_list, pfont, latex_table_post_process, PrintFont, LaTeXFont
 from source.process_embeddings import Embeddings, mid_fusion, filter_by_vocab
@@ -262,7 +264,7 @@ def jaccard_similarity_score(x, y):
     return intersection_cardinality / float(union_cardinality)
 
 
-def cluster_similarities():
+def cluster_similarities(order='default'):
     emb_clusters = {}
     datapath = '/Users/anitavero/projects/data/wikidump/models/results'
     for clfile in ['clusters_WN_kmeans_vecs3lem1_common_subset_nc20.json',
@@ -287,13 +289,25 @@ def cluster_similarities():
                         sims[i, j] = jaccard_similarity_score(c[2], c1[2])
                 jaccard_similarities[f'{e}-{e1}'] = sims
 
-                similarity_heatmap(sims, xticks, yticks, f'{e}-{e1}')
+                if order == 'clustermap':
+                    similarity_clustermap(sims, xticks, yticks, f'{e}-{e1}')
+                else:
+                    similarity_heatmap(sims, xticks, yticks, f'{e}-{e1}')
 
     return jaccard_similarities
 
 
+def similarity_clustermap(V, xticks, yticks, title_embs):
+    df = pd.DataFrame(V, columns=xticks, index=yticks)
+    plt.subplots(figsize=(20, 16))
+    cm = sns.clustermap(df, linewidths=.1)
+
+    # plt.setp(cm.ax_heatmap.xaxis.get_majorticklabels(), rotation=45)  # Messes up the labels...
+    cm.fig.suptitle(f"Jaccard similarities of clusters in {title_embs}")
+    cm.savefig(f'figs/{title_embs}_jaccard_clustermap.png')
+
+
 def similarity_heatmap(V, xticks, yticks, title_embs):
-    import seaborn as sns
     fig, ax = plt.subplots(figsize=(20, 16))
     ax = sns.heatmap(V, linewidths=.1)
 
