@@ -291,10 +291,23 @@ def cluster_similarities(order='default'):
 
                 if order == 'clustermap':
                     similarity_clustermap(sims, xticks, yticks, f'{e}-{e1}')
-                else:
+                elif order == 'default':
                     similarity_heatmap(sims, xticks, yticks, f'{e}-{e1}')
+                else:
+                    pass
 
     return jaccard_similarities
+
+
+def similar_cluster_nums():
+    jss = cluster_similarities('')
+    thresholds = [0.2, 0.3, 0.4]
+    nums = defaultdict(list)
+    for k in jss.keys():
+        for th in thresholds:
+            nums[k].append(np.count_nonzero(jss[k] > th))
+
+    return nums
 
 
 def similarity_clustermap(V, xticks, yticks, title_embs):
