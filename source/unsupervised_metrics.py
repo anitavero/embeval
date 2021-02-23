@@ -398,7 +398,7 @@ def vg_dists(datadir='/Users/anitavero/projects/data/'):
     with open(os.path.join(datadir, 'vg_contexts_rad3_lemmatised1.txt'), 'r') as f:
         words = [pair.split()[0] for pair in f.read().split('\n')]
     with open(os.path.join(datadir, 'vg_contexts_rad3_lemmatised1_dists.json'), 'w') as f:
-        json.dum(Counter(words), f)
+        json.dump(Counter(words), f)
 
 
 @arg('-mmembs', '--mm_embs_of', type=tuple_list)
