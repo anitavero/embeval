@@ -396,7 +396,7 @@ def avg_cluster_wordfrequency(datadir='/Users/anitavero/projects/data/'):
 
 def vg_dists(datadir='/Users/anitavero/projects/data/'):
     with open(os.path.join(datadir, 'vg_contexts_rad3_lemmatised1.txt'), 'r') as f:
-        words = [w for w, cw in f.read().split('\n')]
+        words = [pair.split()[0] for pair in f.read().split('\n')]
     with open(os.path.join(datadir, 'vg_contexts_rad3_lemmatised1_dists.json'), 'w') as f:
         json.dum(Counter(words), f)
 
