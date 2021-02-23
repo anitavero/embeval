@@ -383,10 +383,22 @@ def avg_cluster_wordfrequency(datadir='/Users/anitavero/projects/data/'):
     vg_dist_com = {w: 100 * c/sum_vg for w, c in vg_dist_com.items()}
     vg_dist_com = {k: v for k, v in sorted(vg_dist_com.items(), key=lambda item: item[1])}
 
+    freqs = {'wiki': wiki_dist_com, 'vg': vg_dist_com}
 
-    # TODO: avg rel freqs for clusters
-    dists = {'wiki': wiki_dist_com, 'vg': vg_dist_com}
-    return dists
+    # Avg rel freqs for clusters
+    datapath = '/Users/anitavero/projects/data/wikidump/models/results'
+    for clfile, mod in [('clusters_kmeans_vecs3lem1_common_subset_nc20.json', 'vg'),
+                        ('clusters_kmeans_model_n-1_s0_window-5_common_subset_nc20.json', 'wiki')]:
+        with open(os.path.join(datapath, clfile), 'r') as f:
+            cls = json.load(f)
+        fqcls = []
+        for clid, words in cls:
+            cl_freqs = [freqs[mod][w] for w in words]
+            fqcls.append((clid, words, np.mean(cl_freqs), np.std(cl_freqs)))
+
+        with open(os.path.join(datapath, clfile.replace('clusters', 'clusters_avgfeq')), 'w') as f:
+            json.dump(fqcls, f)
+
 
 
 def vg_dists(datadir='/Users/anitavero/projects/data/visualgenome'):
