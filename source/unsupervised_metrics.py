@@ -96,7 +96,7 @@ def cluster_eval(vectors, labels):
     return results
 
 
-def run_clustering(model, cluster_method, n_clusters=3, random_state=1, eps=0.5, min_samples=90,
+def run_clustering(model, cluster_method, n_clusters=3, random_state=1, eps=0.5, min_samples=5,
                    workers=4):
     if type(model) == str:
         model = np.load(model)
@@ -358,6 +358,32 @@ def run_inspect_clusters():
                    'cluster_labels_kmeans_model_n-1_s0_window-5_common_subset_nc20.json',
                    'cluster_labels_kmeans_google_resnet152_common_subset_nc20.json']:
         inspect_clusters(os.path.join(datapath, clfile))
+
+
+def avg_cluster_wordfrequency(datadir='/Users/anitavero/projects/data/'):
+    with open(os.path.join(datadir, 'wikidump/tokenized/common_subset_vocab_VG_GoogleResnet_Wiki2020.json'), 'r') as f:
+        vocab = json.load(f)
+
+    with open(os.path.join(datadir, 'wikidump/tokenized/distribution.json'), 'r') as f:
+        wiki_dist = json.load(f)
+    wiki_dist_com = {w: c for w, c in tqdm(wiki_dist.items(), desc='Wiki') if w in vocab}
+
+    with open(os.path.join(datadir, 'visualgenome/object_vocab.json'), 'r') as f:
+        vg_obj_dist = json.load(f)
+    vg_obj_dist_com = {w: c for w, c in tqdm(vg_obj_dist, desc='VG obj') if w in vocab}
+    with open(os.path.join(datadir, 'visualgenome/vg_relationship_vocab.json'), 'r') as f:
+        vg_rel_dist = json.load(f)
+    vg_rel_dist_com = {w: c for w, c in tqdm(vg_rel_dist.items(), desc='VG rel') if w in vocab}
+
+    vg_dist_com = defaultdict(int)
+    for w, c in tqdm(list(vg_obj_dist_com.items()) + list(vg_rel_dist_com.items()), desc='VG'):
+        vg_dist_com[w] += c
+
+    # TODO: relative frequencies
+    # TODO: avg rel freqs for clusters
+    dists = {'wiki': wiki_dist_com, 'vg': vg_dist_com}
+    return dists
+
 
 
 @arg('-mmembs', '--mm_embs_of', type=tuple_list)
