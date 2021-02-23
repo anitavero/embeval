@@ -368,25 +368,20 @@ def avg_cluster_wordfrequency(datadir='/Users/anitavero/projects/data/'):
         wiki_dist = json.load(f)
     wiki_dist_com = {w: c for w, c in tqdm(wiki_dist.items(), desc='Wiki') if w in vocab}
 
-    with open(os.path.join(datadir, 'visualgenome/object_vocab.json'), 'r') as f:
-        vg_obj_dist = json.load(f)
-    vg_obj_dist_com = {w: c for w, c in tqdm(vg_obj_dist, desc='VG obj') if w in vocab}
-    with open(os.path.join(datadir, 'visualgenome/vg_relationship_vocab.json'), 'r') as f:
-        vg_rel_dist = json.load(f)
-    vg_rel_dist_com = {w: c for w, c in tqdm(vg_rel_dist.items(), desc='VG rel') if w in vocab}
-
-    vg_dist_com = defaultdict(int)
-    for w, c in tqdm(list(vg_obj_dist_com.items()) + list(vg_rel_dist_com.items()), desc='VG'):
-        vg_dist_com[w] += c
-
+    with open(os.path.join(datadir, 'visualgenome/vg_contexts_rad3_lemmatised1_dists.json'), 'r') as f:
+        vg_dist = json.load(f)
+    vg_dist_com = {w: c for w, c in tqdm(vg_dist.items(), desc='VG rel') if w in vocab}
 
     assert len(wiki_dist_com) == len(vg_dist_com)
+
     # Relative frequencies
     sum_wiki = sum(wiki_dist_com.values())
-    wiki_dist_com = {w: c/sum_wiki for w, c in wiki_dist_com.items()}
+    wiki_dist_com = {w: 100 * c/sum_wiki for w, c in wiki_dist_com.items()}
+    wiki_dist_com = {k: v for k, v in sorted(wiki_dist_com.items(), key=lambda item: item[1])}
 
     sum_vg = sum(vg_dist_com.values())
-    vg_dist_com = {w: c/sum_vg for w, c in vg_dist_com.items()}
+    vg_dist_com = {w: 100 * c/sum_vg for w, c in vg_dist_com.items()}
+    vg_dist_com = {k: v for k, v in sorted(vg_dist_com.items(), key=lambda item: item[1])}
 
 
     # TODO: avg rel freqs for clusters
