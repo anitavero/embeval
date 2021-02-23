@@ -397,7 +397,12 @@ def avg_cluster_wordfrequency(datadir='/Users/anitavero/projects/data/'):
 def vg_dists(datadir='/Users/anitavero/projects/data/visualgenome'):
     with open(os.path.join(datadir, 'vg_contexts_rad3_lemmatised1.txt'), 'r') as f:
         ctx = [pair.split() for pair in tqdm(f.read().split('\n'))]
-        words = [w for w, cx in ctx]
+    words = []
+    for pair in ctx:
+        if len(pair) < 2:
+            print('MISSING', pair)
+        else:
+            words.append(pair[0])
     with open(os.path.join(datadir, 'vg_contexts_rad3_lemmatised1_dists.json'), 'w') as f:
         json.dump(Counter(words), f)
 
