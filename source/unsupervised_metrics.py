@@ -379,11 +379,26 @@ def avg_cluster_wordfrequency(datadir='/Users/anitavero/projects/data/'):
     for w, c in tqdm(list(vg_obj_dist_com.items()) + list(vg_rel_dist_com.items()), desc='VG'):
         vg_dist_com[w] += c
 
-    # TODO: relative frequencies
+
+    assert len(wiki_dist_com) == len(vg_dist_com)
+    # Relative frequencies
+    sum_wiki = sum(wiki_dist_com.values())
+    wiki_dist_com = {w: c/sum_wiki for w, c in wiki_dist_com.items()}
+
+    sum_vg = sum(vg_dist_com.values())
+    vg_dist_com = {w: c/sum_vg for w, c in vg_dist_com.items()}
+
+
     # TODO: avg rel freqs for clusters
     dists = {'wiki': wiki_dist_com, 'vg': vg_dist_com}
     return dists
 
+
+def vg_dists(datadir='/Users/anitavero/projects/data/'):
+    with open(os.path.join(datadir, 'vg_contexts_rad3_lemmatised1.txt'), 'r') as f:
+        words = [w for w, cw in f.read().split('\n')]
+    with open(os.path.join(datadir, 'vg_contexts_rad3_lemmatised1_dists.json'), 'w') as f:
+        json.dum(Counter(words), f)
 
 
 @arg('-mmembs', '--mm_embs_of', type=tuple_list)
@@ -516,7 +531,8 @@ def wn_category(word):
 if __name__ == '__main__':
     argh.dispatch_commands([run_clustering, run_clustering_experiments, print_cluster_results, plot_cluster_results,
                             n_nearest_neighbors, get_clustering_labels_metrics, inspect_clusters, run_inspect_clusters,
-                            label_clusters_with_wordnet, run_print_clusters, cluster_similarities])
+                            label_clusters_with_wordnet, run_print_clusters, cluster_similarities,
+                            avg_cluster_wordfrequency])
     # vocab = np.array(['a', 'b', 'c', 'd', 'e'])
     # words = np.array(['a', 'c', 'e'])
     # E = np.array([[1, 0],
