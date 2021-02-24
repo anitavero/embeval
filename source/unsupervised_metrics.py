@@ -188,19 +188,17 @@ def wn_label_for_words(words, depth=3):
 
 def label_clusters_with_wordnet(depth=3, max_label_num=3):
     """First max_label_num most common synset names."""
-    datapath = '/Users/anitavero/projects/data/wikidump/models/results'
-    for clfile in ['clusters_kmeans_vecs3lem1_common_subset_nc20.json',
-                   'clusters_kmeans_vecs3lem1_common_subset_nc40.json',
-                   'clusters_kmeans_model_n-1_s0_window-5_common_subset_nc20.json',
-                   'clusters_kmeans_google_resnet152_common_subset_nc20.json']:
-        with open(os.path.join(datapath, clfile), 'r') as f:
+    with open('cluster_files.json', 'r') as f:
+        cf = json.load(f)
+    for clfile in cf['clfiles']:
+        with open(os.path.join(cf['datapath'], clfile), 'r') as f:
             cls = json.load(f)
 
         wncls = []
         for clid, words in cls:
             wncls.append((clid, wn_label_for_words(words, depth)[:max_label_num], words))
 
-        with open(os.path.join(datapath, clfile.replace('clusters', 'clusters_WN')), 'w') as f:
+        with open(os.path.join(cf['datapath'], clfile.replace('clusters', 'clusters_WN')), 'w') as f:
             json.dump(wncls, f)
 
 
