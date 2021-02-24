@@ -264,16 +264,34 @@ def jaccard_similarity_score(x, y):
     return intersection_cardinality / float(union_cardinality)
 
 
+def order_clusters_by_avgfreq(clusters, datapath, clfile):
+    with open(os.path.join(datapath, clfile.replace('WN', 'avgfeq')), 'r') as f:
+        cl_freqs = json.load(f)
+    cl_freqs = sorted(cl_freqs, key=lambda x: x[2])
+    clusters = {clid: [wn_label, words] for clid, wn_label, words in clusters}
+    ordered_cls = []
+    for clid, words, fq_mean, fq_std in cl_freqs:
+        ordered_cls.append([clid] + clusters[clid] + [fq_mean])
+
+    return ordered_cls
+
+
 def cluster_similarities(order='default'):
     emb_clusters = {}
     datapath = '/Users/anitavero/projects/data/wikidump/models/results'
-    for clfile in ['clusters_WN_kmeans_vecs3lem1_common_subset_nc20.json',
-                   'clusters_WN_kmeans_model_n-1_s0_window-5_common_subset_nc20.json',
-                   'clusters_WN_kmeans_google_resnet152_common_subset_nc20.json']:
+
+    clfiles = ['clusters_WN_kmeans_vecs3lem1_common_subset_nc20.json',
+               'clusters_WN_kmeans_model_n-1_s0_window-5_common_subset_nc20.json']
+    if order != 'avgfreq':
+        clfiles.append('clusters_WN_kmeans_google_resnet152_common_subset_nc20.json')
+
+    for clfile in clfiles:
         with open(os.path.join(datapath, clfile), 'r') as f:
             clusters = json.load(f)
         embtype = emb_labels(os.path.split(clfile)[-1])
         emb_clusters[embtype] = clusters
+        if order == 'avgfreq':
+            emb_clusters[embtype] = order_clusters_by_avgfreq(clusters, datapath, clfile)
 
     jaccard_similarities = {}
     for ie, (e, cls) in enumerate(emb_clusters.items()):
@@ -282,17 +300,17 @@ def cluster_similarities(order='default'):
                 sims = np.empty((20, 20))
                 xticks, yticks = [], []
                 for i, c in enumerate(cls):
-                    yticks.append(', '.join(c[1]))
+                    yticks.append(', '.join(c[1]) + f' {round(c[3], 5)}' if order == 'avgfreq' else '')
                     for j, c1 in enumerate(cls1):
                         if len(xticks) < 20:
-                            xticks.append(', '.join(c1[1]))
+                            xticks.append(', '.join(c1[1]) + f' {round(c1[3], 5)}' if order == 'avgfreq' else '')
                         sims[i, j] = jaccard_similarity_score(c[2], c1[2])
                 jaccard_similarities[f'{e}-{e1}'] = sims
 
                 if order == 'clustermap':
                     similarity_clustermap(sims, xticks, yticks, f'{e}-{e1}')
-                elif order == 'default':
-                    similarity_heatmap(sims, xticks, yticks, f'{e}-{e1}')
+                elif order == 'default' or order == 'avgfreq':
+                    similarity_heatmap(sims, xticks, yticks, f'{e}-{e1}', order)
                 else:
                     pass
 
@@ -320,7 +338,7 @@ def similarity_clustermap(V, xticks, yticks, title_embs):
     cm.savefig(f'figs/{title_embs}_jaccard_clustermap.png')
 
 
-def similarity_heatmap(V, xticks, yticks, title_embs):
+def similarity_heatmap(V, xticks, yticks, title_embs, order):
     fig, ax = plt.subplots(figsize=(20, 16))
     ax = sns.heatmap(V, linewidths=.1)
 
@@ -339,7 +357,7 @@ def similarity_heatmap(V, xticks, yticks, title_embs):
 
     ax.set_title(f"Jaccard similarities of clusters in {title_embs}")
     fig.tight_layout()
-    plt.savefig(f'figs/{title_embs}_jaccard_heatmap.png')
+    plt.savefig(f'figs/{title_embs}_jaccard_heatmap_{order}.png')
 
 
 def run_print_clusters(barfontsize=25):
