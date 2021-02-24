@@ -54,6 +54,14 @@ def n_nearest_neighbors(data_dir, model_name, words=[], n: int = 10):
 ################# Clusterization metrics #################
 
 
+def cluster_method_from_filename(fn):
+    if 'kmeans' in fn:
+        method='kmeans'
+    elif 'agglomerative' in fn:
+        method = 'agglomerative'
+    return method
+
+
 def dbscan_clustering(model, eps=0.5, min_samples=90, n_jobs=4):
     db = DBSCAN(eps=eps, min_samples=min_samples, metric='cosine', n_jobs=n_jobs).fit(model)
     labels = db.labels_
@@ -234,10 +242,7 @@ def print_clusters(clusters_WN_filepath, tablefmt, barfontsize=20):
     # Table of cluster members ordered by size
     embtype = emb_labels(os.path.split(clusters_WN_filepath)[-1])
 
-    if 'kmeans' in clusters_WN_filepath:
-        method='kmeans'
-    elif 'agglomerative' in clusters_WN_filepath:
-        method = 'agglomerative'
+    method = cluster_method_from_filename(clusters_WN_filepath)
 
     with open(clusters_WN_filepath, 'r') as f:
         clusters = json.load(f)
@@ -300,14 +305,14 @@ def order_clusters_by_avgfreq(clusters, datapath, clfile):
     return ordered_cls
 
 
-def cluster_similarities(order='default'):
+def cluster_similarities(order='default', clmethod='agglomerative'):
     emb_clusters = {}
     datapath = '/Users/anitavero/projects/data/wikidump/models/results'
 
-    clfiles = ['clusters_WN_kmeans_vecs3lem1_common_subset_nc20.json',
-               'clusters_WN_kmeans_model_n-1_s0_window-5_common_subset_nc20.json']
+    clfiles = [f'clusters_WN_{clmethod}_vecs3lem1_common_subset_nc20.json',
+               f'clusters_WN_{clmethod}_model_n-1_s0_window-5_common_subset_nc20.json']
     if order != 'avgfreq':
-        clfiles.append('clusters_WN_kmeans_google_resnet152_common_subset_nc20.json')
+        clfiles.append(f'clusters_WN_{clmethod}_google_resnet152_common_subset_nc20.json')
 
     for clfile in clfiles:
         with open(os.path.join(datapath, clfile), 'r') as f:
@@ -324,17 +329,17 @@ def cluster_similarities(order='default'):
                 sims = np.empty((20, 20))
                 xticks, yticks = [], []
                 for i, c in enumerate(cls):
-                    yticks.append(', '.join(c[1]) + f' {round(c[3], 5)}' if order == 'avgfreq' else '')
+                    yticks.append(', '.join(c[1]) + (f' {round(c[3], 5)}' if order == 'avgfreq' else ''))
                     for j, c1 in enumerate(cls1):
                         if len(xticks) < 20:
-                            xticks.append(', '.join(c1[1]) + f' {round(c1[3], 5)}' if order == 'avgfreq' else '')
+                            xticks.append(', '.join(c1[1]) + (f' {round(c1[3], 5)}' if order == 'avgfreq' else ''))
                         sims[i, j] = jaccard_similarity_score(c[2], c1[2])
                 jaccard_similarities[f'{e}-{e1}'] = sims
 
                 if order == 'clustermap':
-                    similarity_clustermap(sims, xticks, yticks, f'{e}-{e1}')
+                    similarity_clustermap(sims, xticks, yticks, f'{e}-{e1}_{clmethod}')
                 elif order == 'default' or order == 'avgfreq':
-                    similarity_heatmap(sims, xticks, yticks, f'{e}-{e1}', order)
+                    similarity_heatmap(sims, xticks, yticks, f'{e}-{e1}_{clmethod}', order)
                 else:
                     pass
 
