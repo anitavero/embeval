@@ -223,18 +223,23 @@ def inspect_clusters(cluster_label_filepath):
         json.dump(clusters, f)
 
 
-def print_clusters(cluster_label_filepath, tablefmt, barfontsize=20):
+def print_clusters(clusters_WN_filepath, tablefmt, barfontsize=20):
     """
 
-    :param cluster_label_filepath:
+    :param clusters_WN_filepath:
     :param tablefmt: printed table format. 'simple' - terminal, 'latex_raw' - latex table.
     :param barfontsize:
     :return:
     """
     # Table of cluster members ordered by size
-    embtype = emb_labels(os.path.split(cluster_label_filepath)[-1])
+    embtype = emb_labels(os.path.split(clusters_WN_filepath)[-1])
 
-    with open(cluster_label_filepath, 'r') as f:
+    if 'kmeans' in clusters_WN_filepath:
+        method='kmeans'
+    elif 'agglomerative' in clusters_WN_filepath:
+        method = 'agglomerative'
+
+    with open(clusters_WN_filepath, 'r') as f:
         clusters = json.load(f)
 
     cluster_num = len(clusters)
@@ -254,7 +259,7 @@ def print_clusters(cluster_label_filepath, tablefmt, barfontsize=20):
                     f'Members of the {len(clusters)} clusters in {embtype}. Clusters are ordered by size.',
                                         label=f'{embtype}_{len(clusters)}_clusters')
 
-    with open(f'figs/{embtype}_{len(clusters)}_clusters.tex', 'w') as f:
+    with open(f'figs/{embtype}_{len(clusters)}_clusters_{method}.tex', 'w') as f:
         f.write(table)
 
     # Historgram of cluster sizes
@@ -269,7 +274,7 @@ def print_clusters(cluster_label_filepath, tablefmt, barfontsize=20):
     plt.ylabel('#Members', fontsize=barfontsize)
     plt.semilogy()
     plt.tight_layout()
-    plt.savefig(f'figs/{embtype}_{len(clusters)}_cluster_hist.png')
+    plt.savefig(f'figs/{embtype}_{len(clusters)}_cluster_hist_{method}.png')
 
     return clusters, table
 
@@ -380,12 +385,10 @@ def similarity_heatmap(V, xticks, yticks, title_embs, order):
 
 
 def run_print_clusters(barfontsize=25):
-    datapath = '/Users/anitavero/projects/data/wikidump/models/results'
-    for clfile in ['clusters_WN_kmeans_vecs3lem1_common_subset_nc20.json',
-                   'clusters_WN_kmeans_vecs3lem1_common_subset_nc40.json',
-                   'clusters_WN_kmeans_model_n-1_s0_window-5_common_subset_nc20.json',
-                   'clusters_WN_kmeans_google_resnet152_common_subset_nc20.json']:
-        print_clusters(os.path.join(datapath, clfile), 'latex_raw', barfontsize=barfontsize)
+    with open('cluster_files.json', 'r') as f:
+        cf = json.load(f)
+    for clfile in cf['clfiles']:
+        print_clusters(os.path.join(cf['datapath'], clfile), 'latex_raw', barfontsize=barfontsize)
 
 
 def run_inspect_clusters():
