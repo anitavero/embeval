@@ -3,7 +3,7 @@ import argh
 from argh import arg
 import re
 import numpy as np
-from sklearn.cluster import DBSCAN, KMeans
+from sklearn.cluster import DBSCAN, KMeans, AgglomerativeClustering
 from sklearn import metrics
 from sklearn.metrics.pairwise import cosine_distances
 from scipy.spatial.distance import cosine
@@ -76,6 +76,12 @@ def kmeans(model, n_clusters=3, random_state=1, n_jobs=4):
     return labels, centroids
 
 
+def agglomerative_clustering(model, n_clusters=3, linkage='ward'):
+    clustering = AgglomerativeClustering(linkage=linkage, n_clusters=n_clusters).fit(model)
+    labels = clustering.labels_
+    return labels
+
+
 def cluster_eval(vectors, labels):
     """Unsupervised clustering metrics."""
     results = {}
@@ -97,15 +103,17 @@ def cluster_eval(vectors, labels):
 
 
 def run_clustering(model, cluster_method, n_clusters=3, random_state=1, eps=0.5, min_samples=5,
-                   workers=4):
+                   workers=4, linkage='ward'):
     if type(model) == str:
         model = np.load(model)
 
+    centroids = []
     if cluster_method == 'dbscan':
         labels = dbscan_clustering(model, eps=eps, min_samples=min_samples, n_jobs=workers)
-        centroids = []
     elif cluster_method == 'kmeans':
         labels, centroids = kmeans(model, n_clusters=n_clusters, random_state=random_state, n_jobs=workers)
+    elif cluster_method == 'agglomerative':
+        labels = agglomerative_clustering(model, n_clusters=n_clusters, linkage=linkage)
 
     return cluster_eval(model, labels), labels, centroids
 
@@ -114,11 +122,12 @@ def run_clustering(model, cluster_method, n_clusters=3, random_state=1, eps=0.5,
 def get_clustering_labels_metrics(vecs_names=[], datadir='/anfs/bigdisc/alv34/wikidump/extracted/models/',
                                   savedir='/anfs/bigdisc/alv34/wikidump/extracted/models/results/',
                                   cluster_method='kmeans', n_clusters=3, random_state=1, eps=0.5, min_samples=90,
-                                  workers=4, suffix=''):
+                                  workers=4, suffix='', linkage='ward'):
     embs = Embeddings(datadir, vecs_names)
     for e, v, l in list(zip(embs.embeddings, embs.vocabs, embs.vecs_names)):
         print(l)
-        model_metrics, cl_labels, centroids = run_clustering(e, cluster_method, n_clusters, random_state, eps, min_samples, workers)
+        model_metrics, cl_labels, centroids = run_clustering(e, cluster_method, n_clusters, random_state, eps,
+                                                             min_samples, workers, linkage)
         with open(os.path.join(savedir, f'cluster_metrics_labelled_{cluster_method}_{l}_nc{n_clusters}{suffixate(suffix)}.json'),
                   'w') as f:
             json.dump(model_metrics, f)
@@ -128,11 +137,12 @@ def get_clustering_labels_metrics(vecs_names=[], datadir='/anfs/bigdisc/alv34/wi
                   'w') as f:
             json.dump(label_dict, f)
 
-        # Save distances from centroids
-        dists = distances_from_centroids(e, v, label_dict, centroids)
-        with open(os.path.join(savedir, f'dists_from_centr_{cluster_method}_{l}_nc{n_clusters}{suffixate(suffix)}.json'),
-                  'w') as f:
-            json.dump(dists, f)
+        if centroids != []:
+            # Save distances from centroids
+            dists = distances_from_centroids(e, v, label_dict, centroids)
+            with open(os.path.join(savedir, f'dists_from_centr_{cluster_method}_{l}_nc{n_clusters}{suffixate(suffix)}.json'),
+                      'w') as f:
+                json.dump(dists, f)
 
 
 
@@ -437,7 +447,7 @@ def vg_dists(datadir='/Users/anitavero/projects/data/visualgenome'):
 def run_clustering_experiments(datadir='/anfs/bigdisc/alv34/wikidump/extracted/models/',
                                savedir='/anfs/bigdisc/alv34/wikidump/extracted/models/results/',
                                vecs_names=[], mm_embs_of=[], cluster_method='dbscan', n_clusters=-1, random_state=1,
-                               eps=0.5, min_samples=90, workers=4, suffix=''):
+                               eps=0.5, min_samples=90, workers=4, suffix='', linkage='ward'):
     # TODO: Test
     embs = Embeddings(datadir, vecs_names)
     emb_tuples = [tuple(embs.embeddings[vecs_names.index(l)] for l in t) for t in mm_embs_of]
@@ -466,7 +476,7 @@ def run_clustering_experiments(datadir='/anfs/bigdisc/alv34/wikidump/extracted/m
     def run(nc):
         for m, l in zip(models, labels):
             print(l)
-            model_metrics, _ = run_clustering(m, cluster_method, nc, random_state, eps, min_samples, workers)
+            model_metrics, _, _ = run_clustering(m, cluster_method, nc, random_state, eps, min_samples, workers, linkage)
             with open(os.path.join(savedir, f'cluster_metrics_{cluster_method}_{l}_nc{nc}{suffixate(suffix)}.json'), 'w') as f:
                 json.dump(model_metrics, f)
 
