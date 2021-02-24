@@ -133,9 +133,12 @@ def get_clustering_labels_metrics(vecs_names=[], datadir='/anfs/bigdisc/alv34/wi
             json.dump(model_metrics, f)
 
         label_dict = {w: str(l) for l, w in zip(cl_labels, v)}
-        with open(os.path.join(savedir, f'cluster_labels_{cluster_method}_{l}_nc{n_clusters}{suffixate(suffix)}.json'),
-                  'w') as f:
+        cluster_label_filepath = \
+            os.path.join(savedir, f'cluster_labels_{cluster_method}_{l}_nc{n_clusters}{suffixate(suffix)}.json')
+        with open(cluster_label_filepath, 'w') as f:
             json.dump(label_dict, f)
+
+        inspect_clusters(cluster_label_filepath)    # Save printable clusters dict
 
         if centroids != []:
             # Save distances from centroids
@@ -203,8 +206,9 @@ def label_clusters_with_wordnet(depth=3, max_label_num=3):
 
 def inspect_clusters(cluster_label_filepath):
     """
+    Convert cluster label file containing {word: label} dict to {cluster_id: wordlist} dict,
+     ordered by the number of cluster members.
     :param cluster_label_filepath:
-    :param tablefmt: printed table format. 'simple' - terminal, 'latex_raw' - latex table.
     :return:
     """
     with open(cluster_label_filepath, 'r') as f:
@@ -222,6 +226,13 @@ def inspect_clusters(cluster_label_filepath):
 
 
 def print_clusters(cluster_label_filepath, tablefmt, barfontsize=20):
+    """
+
+    :param cluster_label_filepath:
+    :param tablefmt: printed table format. 'simple' - terminal, 'latex_raw' - latex table.
+    :param barfontsize:
+    :return:
+    """
     # Table of cluster members ordered by size
     embtype = emb_labels(os.path.split(cluster_label_filepath)[-1])
 
