@@ -14,18 +14,19 @@ import json
 from glob import glob
 from tabulate import tabulate
 import matplotlib
+
 matplotlib.rcParams["savefig.dpi"] = 300
 import matplotlib.pyplot as plt
+
 matplotlib.style.use('fivethirtyeight')
 import seaborn as sns
 from itertools import groupby
-from collections import defaultdict, Counter
+from collections import defaultdict, Counter, OrderedDict
 from tabulate import tabulate, LATEX_ESCAPE_RULES
 import pandas as pd
 
 from source.utils import suffixate, tuple_list, pfont, latex_table_post_process, PrintFont, LaTeXFont
 from source.process_embeddings import Embeddings, mid_fusion, filter_by_vocab
-
 
 FIG_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'figs')
 
@@ -35,12 +36,12 @@ FIG_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'figs')
 
 def get_n_nearest_neighbors(words: np.ndarray, E: np.ndarray, vocab: np.ndarray, n: int = 10):
     """n nearest neighbors for words based on cosine distance in Embedding E."""
-    w_idx = np.where(np.in1d(vocab, np.array(words)))[0]   # Words indices in Vocab and Embedding E
+    w_idx = np.where(np.in1d(vocab, np.array(words)))[0]  # Words indices in Vocab and Embedding E
     C = cosine_distances(E)
     np.fill_diagonal(C, np.inf)
-    w_C = C[:, w_idx]                                      # Filter columns for words
-    nNN = np.argpartition(w_C, range(n), axis=0)[:n]       # Every column j contains the indices of NNs of word_j
-    return np.vstack([words, vocab[nNN]])                  # 1st row: words, rows 1...n: nearest neighbors
+    w_C = C[:, w_idx]  # Filter columns for words
+    nNN = np.argpartition(w_C, range(n), axis=0)[:n]  # Every column j contains the indices of NNs of word_j
+    return np.vstack([words, vocab[nNN]])  # 1st row: words, rows 1...n: nearest neighbors
 
 
 @arg('-w', '--words', nargs='+', type=str)
@@ -56,7 +57,7 @@ def n_nearest_neighbors(data_dir, model_name, words=[], n: int = 10):
 
 def cluster_method_from_filename(fn):
     if 'kmeans' in fn:
-        method='kmeans'
+        method = 'kmeans'
     elif 'agglomerative' in fn:
         method = 'agglomerative'
     return method
@@ -93,6 +94,7 @@ def agglomerative_clustering(model, n_clusters=3, linkage='ward'):
 def cluster_eval(vectors, labels):
     """Unsupervised clustering metrics."""
     results = {}
+
     def safe_metric(metric):
         name = re.sub('_', ' ', metric.__name__).title()
         try:
@@ -136,7 +138,8 @@ def get_clustering_labels_metrics(vecs_names=[], datadir='/anfs/bigdisc/alv34/wi
         print(l)
         model_metrics, cl_labels, centroids = run_clustering(e, cluster_method, n_clusters, random_state, eps,
                                                              min_samples, workers, linkage)
-        with open(os.path.join(savedir, f'cluster_metrics_labelled_{cluster_method}_{l}_nc{n_clusters}{suffixate(suffix)}.json'),
+        with open(os.path.join(savedir,
+                               f'cluster_metrics_labelled_{cluster_method}_{l}_nc{n_clusters}{suffixate(suffix)}.json'),
                   'w') as f:
             json.dump(model_metrics, f)
 
@@ -146,15 +149,15 @@ def get_clustering_labels_metrics(vecs_names=[], datadir='/anfs/bigdisc/alv34/wi
         with open(cluster_label_filepath, 'w') as f:
             json.dump(label_dict, f)
 
-        inspect_clusters(cluster_label_filepath)    # Save printable clusters dict
+        inspect_clusters(cluster_label_filepath)  # Save printable clusters dict
 
         if centroids != []:
             # Save distances from centroids
             dists = distances_from_centroids(e, v, label_dict, centroids)
-            with open(os.path.join(savedir, f'dists_from_centr_{cluster_method}_{l}_nc{n_clusters}{suffixate(suffix)}.json'),
+            with open(os.path.join(savedir,
+                                   f'dists_from_centr_{cluster_method}_{l}_nc{n_clusters}{suffixate(suffix)}.json'),
                       'w') as f:
                 json.dump(dists, f)
-
 
 
 def distances_from_centroids(emb, vocab, label_dict, centroids):
@@ -256,13 +259,13 @@ def print_clusters(clusters_WN_filepath, tablefmt, barfontsize=20):
         labelform = lambda x: x
 
     table = tabulate([(labelform(wnls), cl, ', '.join(words)) for cl, wnls, words in clusters],
-                     headers=[pfont(['BOLD'], x, font) for x in['WN label', 'Own label', 'Members']],
+                     headers=[pfont(['BOLD'], x, font) for x in ['WN label', 'Own label', 'Members']],
                      tablefmt=tablefmt)
 
     if 'latex' in tablefmt:
         table = latex_table_post_process(table, range(0, cluster_num - 1),
-                    f'Members of the {len(clusters)} clusters in {embtype}. Clusters are ordered by size.',
-                                        label=f'{embtype}_{len(clusters)}_clusters')
+                                         f'Members of the {len(clusters)} clusters in {embtype}. Clusters are ordered by size.',
+                                         label=f'{embtype}_{len(clusters)}_clusters')
 
     with open(f'figs/{embtype}_{len(clusters)}_clusters_{method}.tex', 'w') as f:
         f.write(table)
@@ -282,6 +285,7 @@ def print_clusters(clusters_WN_filepath, tablefmt, barfontsize=20):
     plt.savefig(f'figs/{embtype}_{len(clusters)}_cluster_hist_{method}.png')
 
     return clusters, table
+
 
 def jaccard_similarity_score(x, y):
     """
@@ -306,50 +310,84 @@ def order_clusters_by_avgfreq(clusters, datapath, clfile):
 
 
 def cluster_similarities(order='default', clmethod='agglomerative', plot=True):
-    emb_clusters = {}
     datapath = '/Users/anitavero/projects/data/wikidump/models/results'
+    emb_clusters1, emb_clusters2 = {}, {}
 
-    clfiles = [f'clusters_WN_{clmethod}_vecs3lem1_common_subset_nc20.json',
-               f'clusters_WN_{clmethod}_model_n-1_s0_window-5_common_subset_nc20.json']
-    if order != 'avgfreq':
-        clfiles.append(f'clusters_WN_{clmethod}_google_resnet152_common_subset_nc20.json')
+    def read_clusters(clmethod):
+        emb_clusters = OrderedDict()
+        clfiles = [f'clusters_WN_{clmethod}_vecs3lem1_common_subset_nc20.json',
+                   f'clusters_WN_{clmethod}_model_n-1_s0_window-5_common_subset_nc20.json']
+        if order != 'avgfreq':
+            clfiles.append(f'clusters_WN_{clmethod}_google_resnet152_common_subset_nc20.json')
 
-    for clfile in clfiles:
-        with open(os.path.join(datapath, clfile), 'r') as f:
-            clusters = json.load(f)
-        embtype = emb_labels(os.path.split(clfile)[-1])
-        emb_clusters[embtype] = clusters
-        if order == 'avgfreq':
-            emb_clusters[embtype] = order_clusters_by_avgfreq(clusters, datapath, clfile)
+        for clfile in clfiles:
+            with open(os.path.join(datapath, clfile), 'r') as f:
+                clusters = json.load(f)
+            embtype = emb_labels(os.path.split(clfile)[-1])
+            emb_clusters[embtype] = clusters
+            if order == 'avgfreq':
+                emb_clusters[embtype] = order_clusters_by_avgfreq(clusters, datapath, clfile)
+
+        return emb_clusters
+
+    if clmethod == 'kmeans' or clmethod == 'agglomerative':
+        emb_clusters = read_clusters(clmethod)
+        emb_clusters1, emb_clusters2 = emb_clusters, emb_clusters
+        compare = 'cross'
+    elif clmethod == 'kmeans_agglomerative':
+        emb_clusters1 = read_clusters('kmeans')
+        emb_clusters2 = read_clusters('agglomerative')
+        compare = 'dot'
+
+    return compute_cluster_similarities(emb_clusters1, emb_clusters2, compare, order, clmethod, plot)
+
+
+def compute_cluster_similarities(emb_clusters1, emb_clusters2, compare, order, clmethod, plot):
+    """
+
+    :param emb_clusters1:
+    :param emb_clusters2:
+    :param compare: 'cross' or 'dot'
+    :param order:
+    :param clmethod:
+    :param plot:
+    :return:
+    """
+    def compute_sim(e, e1, cls, cls1):
+        sims = np.empty((20, 20))
+        xticks, yticks = [], []
+        for i, c in enumerate(cls):
+            yticks.append(', '.join(c[1]) + (f' {round(c[3], 5)}' if order == 'avgfreq' else ''))
+            for j, c1 in enumerate(cls1):
+                if len(xticks) < 20:
+                    xticks.append(', '.join(c1[1]) + (f' {round(c1[3], 5)}' if order == 'avgfreq' else ''))
+                sims[i, j] = jaccard_similarity_score(c[2], c1[2])
+        jaccard_similarities[f'{e}-{e1}'] = sims
+
+        if plot:
+            if order == 'clustermap':
+                similarity_clustermap(sims, xticks, yticks, f'{e}-{e1}_{clmethod}')
+            elif order == 'default' or order == 'avgfreq':
+                similarity_heatmap(sims, xticks, yticks, f'{e}-{e1}_{clmethod}', order)
+            else:
+                pass
 
     jaccard_similarities = {}
-    for ie, (e, cls) in enumerate(emb_clusters.items()):
-        for ie1, (e1, cls1) in enumerate(emb_clusters.items()):
-            if ie < ie1:
-                sims = np.empty((20, 20))
-                xticks, yticks = [], []
-                for i, c in enumerate(cls):
-                    yticks.append(', '.join(c[1]) + (f' {round(c[3], 5)}' if order == 'avgfreq' else ''))
-                    for j, c1 in enumerate(cls1):
-                        if len(xticks) < 20:
-                            xticks.append(', '.join(c1[1]) + (f' {round(c1[3], 5)}' if order == 'avgfreq' else ''))
-                        sims[i, j] = jaccard_similarity_score(c[2], c1[2])
-                jaccard_similarities[f'{e}-{e1}'] = sims
-
-                if plot:
-                    if order == 'clustermap':
-                        similarity_clustermap(sims, xticks, yticks, f'{e}-{e1}_{clmethod}')
-                    elif order == 'default' or order == 'avgfreq':
-                        similarity_heatmap(sims, xticks, yticks, f'{e}-{e1}_{clmethod}', order)
-                    else:
-                        pass
+    if compare == 'cross':
+        for ie, (e, cls) in enumerate(emb_clusters1.items()):
+            for ie1, (e1, cls1) in enumerate(emb_clusters2.items()):
+                if ie < ie1:
+                    compute_sim(e, e1, cls, cls1)
+    elif compare == 'dot':
+        for (e, cls), (e1, cls1) in zip(emb_clusters1.items(), emb_clusters2.items()):
+            compute_sim(e, e1, cls, cls1)
 
     return jaccard_similarities
 
 
 def similar_cluster_nums(clmethod='agglomerative'):
     jss = cluster_similarities(clmethod=clmethod, plot=False)
-    thresholds = [0.2, 0.3, 0.4]
+    thresholds = [0.2, 0.3, 0.4, 0.5, 0.6, 0.7]
     nums = defaultdict(list)
     maxs = dict()
     for k in jss.keys():
@@ -424,11 +462,11 @@ def avg_cluster_wordfrequency(datadir='/Users/anitavero/projects/data/'):
 
     # Relative frequencies
     sum_wiki = sum(wiki_dist_com.values())
-    wiki_dist_com = {w: 100 * c/sum_wiki for w, c in wiki_dist_com.items()}
+    wiki_dist_com = {w: 100 * c / sum_wiki for w, c in wiki_dist_com.items()}
     wiki_dist_com = {k: v for k, v in sorted(wiki_dist_com.items(), key=lambda item: item[1])}
 
     sum_vg = sum(vg_dist_com.values())
-    vg_dist_com = {w: 100 * c/sum_vg for w, c in vg_dist_com.items()}
+    vg_dist_com = {w: 100 * c / sum_vg for w, c in vg_dist_com.items()}
     vg_dist_com = {k: v for k, v in sorted(vg_dist_com.items(), key=lambda item: item[1])}
 
     freqs = {'wiki': wiki_dist_com, 'vg': vg_dist_com}
@@ -446,7 +484,6 @@ def avg_cluster_wordfrequency(datadir='/Users/anitavero/projects/data/'):
 
         with open(os.path.join(datapath, clfile.replace('clusters', 'clusters_avgfeq')), 'w') as f:
             json.dump(fqcls, f)
-
 
 
 def vg_dists(datadir='/Users/anitavero/projects/data/visualgenome'):
@@ -482,7 +519,8 @@ def run_clustering_experiments(datadir='/anfs/bigdisc/alv34/wikidump/extracted/m
     with open(os.path.join(savedir, 'common_subset_vocab_VG_GoogleResnet_Wiki2020.json'), 'w') as f:
         json.dump(list(isec_vocab), f)
     print('#Common subset vocab:', len(isec_vocab))
-    for e, v, l in list(zip(embs.embeddings, embs.vocabs, embs.vecs_names)) + list(zip(mm_embeddings, mm_vocabs, mm_labels)):
+    for e, v, l in list(zip(embs.embeddings, embs.vocabs, embs.vecs_names)) + list(
+            zip(mm_embeddings, mm_vocabs, mm_labels)):
         fe, fv = filter_by_vocab(e, v, isec_vocab)
         models.append(fe)
         labels.append(l)
@@ -496,8 +534,10 @@ def run_clustering_experiments(datadir='/anfs/bigdisc/alv34/wikidump/extracted/m
     def run(nc):
         for m, l in zip(models, labels):
             print(l)
-            model_metrics, _, _ = run_clustering(m, cluster_method, nc, random_state, eps, min_samples, workers, linkage)
-            with open(os.path.join(savedir, f'cluster_metrics_{cluster_method}_{l}_nc{nc}{suffixate(suffix)}.json'), 'w') as f:
+            model_metrics, _, _ = run_clustering(m, cluster_method, nc, random_state, eps, min_samples, workers,
+                                                 linkage)
+            with open(os.path.join(savedir, f'cluster_metrics_{cluster_method}_{l}_nc{nc}{suffixate(suffix)}.json'),
+                      'w') as f:
                 json.dump(model_metrics, f)
 
     if n_clusters == -1:
@@ -570,7 +610,6 @@ def plot_cluster_results(resdir='/Users/anitavero/projects/data/wikidump/models/
         ax.set_xlabel('Number of clusters')
         ax.legend(loc='best')
         plt.savefig(os.path.join(FIG_DIR, f'{metric}'), bbox_inches='tight')
-
 
 
 def wn_category(word):
