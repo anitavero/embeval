@@ -305,7 +305,7 @@ def order_clusters_by_avgfreq(clusters, datapath, clfile):
     return ordered_cls
 
 
-def cluster_similarities(order='default', clmethod='agglomerative'):
+def cluster_similarities(order='default', clmethod='agglomerative', plot=True):
     emb_clusters = {}
     datapath = '/Users/anitavero/projects/data/wikidump/models/results'
 
@@ -336,25 +336,28 @@ def cluster_similarities(order='default', clmethod='agglomerative'):
                         sims[i, j] = jaccard_similarity_score(c[2], c1[2])
                 jaccard_similarities[f'{e}-{e1}'] = sims
 
-                if order == 'clustermap':
-                    similarity_clustermap(sims, xticks, yticks, f'{e}-{e1}_{clmethod}')
-                elif order == 'default' or order == 'avgfreq':
-                    similarity_heatmap(sims, xticks, yticks, f'{e}-{e1}_{clmethod}', order)
-                else:
-                    pass
+                if plot:
+                    if order == 'clustermap':
+                        similarity_clustermap(sims, xticks, yticks, f'{e}-{e1}_{clmethod}')
+                    elif order == 'default' or order == 'avgfreq':
+                        similarity_heatmap(sims, xticks, yticks, f'{e}-{e1}_{clmethod}', order)
+                    else:
+                        pass
 
     return jaccard_similarities
 
 
-def similar_cluster_nums():
-    jss = cluster_similarities('')
+def similar_cluster_nums(clmethod='agglomerative'):
+    jss = cluster_similarities(clmethod=clmethod, plot=False)
     thresholds = [0.2, 0.3, 0.4]
     nums = defaultdict(list)
+    maxs = dict()
     for k in jss.keys():
         for th in thresholds:
             nums[k].append(np.count_nonzero(jss[k] > th))
+        maxs[k] = np.max(jss[k])
 
-    return nums
+    return nums, maxs
 
 
 def similarity_clustermap(V, xticks, yticks, title_embs):
@@ -590,7 +593,7 @@ if __name__ == '__main__':
     argh.dispatch_commands([run_clustering, run_clustering_experiments, print_cluster_results, plot_cluster_results,
                             n_nearest_neighbors, get_clustering_labels_metrics, inspect_clusters, run_inspect_clusters,
                             label_clusters_with_wordnet, run_print_clusters, cluster_similarities,
-                            avg_cluster_wordfrequency, vg_dists])
+                            avg_cluster_wordfrequency, vg_dists, similar_cluster_nums])
     # vocab = np.array(['a', 'b', 'c', 'd', 'e'])
     # words = np.array(['a', 'c', 'e'])
     # E = np.array([[1, 0],
