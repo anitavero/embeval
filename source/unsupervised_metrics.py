@@ -266,25 +266,45 @@ def print_clusters(clusters_WN_filepath, tablefmt, barfontsize=20):
         table = latex_table_post_process(table, range(0, cluster_num - 1),
                                          f'Members of the {len(clusters)} clusters in {embtype}. Clusters are ordered by size.',
                                          label=f'{embtype}_{len(clusters)}_clusters')
+        with open(f'figs/{embtype}_{len(clusters)}_clusters_{method}.tex', 'w') as f:
+            f.write(table)
 
-    with open(f'figs/{embtype}_{len(clusters)}_clusters_{method}.tex', 'w') as f:
-        f.write(table)
-
-    # Historgram of cluster sizes
-    fig = plt.figure(figsize=(12, 6))
-    plt.bar(range(cluster_num), [len(ws) for cl, wnls, ws in clusters])
-    if cluster_num < 30:
-        plt.xticks([cl for cl, wnls, ws in clusters], fontsize=barfontsize)
+    avgfreq_file = clusters_WN_filepath.replace('WN', 'avgfeq')
+    if os.path.exists(avgfreq_file):
+        with open(avgfreq_file, 'r') as f:
+            cl_freqs = json.load(f)
     else:
-        plt.xticks([cl for cl, wnls, ws in clusters], fontsize=12)
-    plt.yticks(fontsize=barfontsize)
-    plt.xlabel('Clusters', fontsize=barfontsize)
-    plt.ylabel('#Members', fontsize=barfontsize)
-    plt.semilogy()
-    plt.tight_layout()
-    plt.savefig(f'figs/{embtype}_{len(clusters)}_cluster_hist_{method}.png')
+        cl_freqs = None
+
+    cluster_sizes_avgfreq(clusters, cl_freqs, embtype, method, barfontsize)
 
     return clusters, table
+
+
+def cluster_sizes_avgfreq(clusters, cl_freqs, embtype=None, method=None, barfontsize=20, suffix=''):
+    """Historgram of cluster sizes"""
+    cluster_num = len(clusters)
+
+    fig, ax1 = plt.subplots(figsize=(12, 6))
+
+    color = '#30a2da'
+    ax1.set_xlabel('Clusters', fontsize=barfontsize)
+    ax1.set_ylabel('#Members', fontsize=barfontsize, color=color)
+    ax1.bar(range(cluster_num), [len(ws) for cl, wnls, ws in clusters], color=color)
+    ax1.tick_params(axis='y', labelcolor=color)
+    ax1.set_xticks(range(cluster_num))
+    ax1.set_xticklabels(np.arange(cluster_num) + 1)
+    ax1.semilogy()
+
+    if cl_freqs:
+        ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
+        color = '#fc4f30'
+        ax2.set_ylabel('Avg word frequency', fontsize=barfontsize, color=color)  # we already handled the x-label with ax1
+        ax2.plot([mf for i, c, mf, sf in cl_freqs], color=color)
+        ax2.tick_params(axis='y', labelcolor=color)
+
+    plt.tight_layout()
+    plt.savefig(f'figs/{embtype}_{len(clusters)}_cluster_hist_{method}{suffixate(suffix)}.png')
 
 
 def jaccard_similarity_score(x, y):
@@ -446,7 +466,7 @@ def run_inspect_clusters():
         inspect_clusters(os.path.join(datapath, clfile))
 
 
-def avg_cluster_wordfrequency(datadir='/Users/anitavero/projects/data/'):
+def avg_cluster_wordfrequency(datadir='/Users/anitavero/projects/data/', clmethod='agglomerative'):
     with open(os.path.join(datadir, 'wikidump/tokenized/common_subset_vocab_VG_GoogleResnet_Wiki2020.json'), 'r') as f:
         vocab = json.load(f)
 
@@ -473,8 +493,8 @@ def avg_cluster_wordfrequency(datadir='/Users/anitavero/projects/data/'):
 
     # Avg rel freqs for clusters
     datapath = '/Users/anitavero/projects/data/wikidump/models/results'
-    for clfile, mod in [('clusters_kmeans_vecs3lem1_common_subset_nc20.json', 'vg'),
-                        ('clusters_kmeans_model_n-1_s0_window-5_common_subset_nc20.json', 'wiki')]:
+    for clfile, mod in [(f'clusters_{clmethod}_vecs3lem1_common_subset_nc20.json', 'vg'),
+                        (f'clusters_{clmethod}_model_n-1_s0_window-5_common_subset_nc20.json', 'wiki')]:
         with open(os.path.join(datapath, clfile), 'r') as f:
             cls = json.load(f)
         fqcls = []
