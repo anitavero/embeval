@@ -292,8 +292,11 @@ def cluster_sizes_avgfreq(clusters, cl_freqs, embtype=None, method=None, barfont
     ax1.set_ylabel('#Members', fontsize=barfontsize, color=color)
     ax1.bar(range(cluster_num), [len(ws) for cl, wnls, ws in clusters], color=color)
     ax1.tick_params(axis='y', labelcolor=color)
+    xtick_labels = np.arange(cluster_num) + 1
+    if cluster_num > 20:
+        xtick_labels = [str(i + 1) if (i + 1) % 2 == 0 else '' for i in range(cluster_num)]
     ax1.set_xticks(range(cluster_num))
-    ax1.set_xticklabels(np.arange(cluster_num) + 1)
+    ax1.set_xticklabels(xtick_labels, fontsize=20)
     ax1.semilogy()
 
     if cl_freqs:
