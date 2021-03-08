@@ -12,10 +12,12 @@ from collections import Counter
 from matplotlib import pyplot as plt
 import random
 from itertools import chain
+import nltk
+from nltk.collocations import *
 
-from text_process import text2gensim, text2w2vf
-from utils import create_dir, read_jl
-import train_word2vecf
+from source.text_process import text2gensim, text2w2vf
+from source.utils import create_dir, read_jl
+import source.train_word2vecf as train_word2vecf
 
 LANG = 'english'
 
@@ -41,6 +43,22 @@ def process_files(data_dir):
         subd, fn = fl.split('/')[-2:]
         with open(os.path.join(save_dir, subd, fn + '.json'), 'w') as f:
             json.dump(sent_lists, f)
+
+
+def pmi_for_words(words, token_list):
+    """Return PMI scores for words in a given tokenized corpus.
+        :param words: string list.
+        :param token_list: string list.
+    """
+    bigram_measures = nltk.collocations.BigramAssocMeasures()
+    print('Bigram collection')
+    finder = BigramCollocationFinder.from_words(token_list)
+    print('Compute PMIs')
+    pmis = finder.score_ngrams(bigram_measures.pmi)
+    word_pmis = {}
+    for w in words:
+        word_pmis[w] = [p for p in pmis if w in p[0]]
+    return word_pmis
 
 
 @arg('--format', type=str, choices=['json', 'text'], default='json')
@@ -179,4 +197,4 @@ def w2v_for_quantities(data_dir, save_dir, w2v_dir, sample_num, trfile_num, size
 
 if __name__ == '__main__':
     argh.dispatch_commands([distribution, plot_distribution, process_files, w2v_for_quantity, w2v_for_quantities,
-                            create_context_files])
+                            create_context_files, pmi_for_words])
