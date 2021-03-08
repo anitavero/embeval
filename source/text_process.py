@@ -2,6 +2,8 @@ import os
 from collections import Counter
 from nltk.corpus import stopwords
 from nltk.tokenize import sent_tokenize
+from nltk import collocations
+from nltk.collocations import *
 from unidecode import unidecode
 import string
 from tqdm import tqdm
@@ -31,6 +33,22 @@ def tokenize(text, lang):
     words = text.translate(trtab).split()
     words = filter(lambda w: w not in stopwords_lang[lang], words)
     return words
+
+
+def pmi_for_words(words, token_list):
+    """Return PMI scores for words in a given tokenized corpus.
+        :param words: string list.
+        :param token_list: string list.
+    """
+    bigram_measures = collocations.BigramAssocMeasures()
+    print('Bigram collection')
+    finder = BigramCollocationFinder.from_words(token_list)
+    print('Compute PMIs')
+    pmis = finder.score_ngrams(bigram_measures.pmi)
+    word_pmis = {}
+    for w in words:
+        word_pmis[w] = [p for p in pmis if w in p[0]]
+    return word_pmis
 
 
 def text2gensim(text, lang):
