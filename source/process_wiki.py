@@ -44,6 +44,11 @@ def process_files(data_dir):
 
 
 def get_pmi_for_words(words_file, data_dir, process=False):
+    """Save PMI scores for bigrams including words in file word_list.
+        :param words_file: json file name in data_dir, consisting of an str list
+        :param data_dir: path to directory with data
+        :param process: bool, if True it preprocesses wiki files if False it loads preprocessed jsons.
+    """
     with open(os.path.join(data_dir, words_file), 'r') as f:
         words = json.load(f)
     if process:

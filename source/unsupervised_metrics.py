@@ -180,6 +180,21 @@ def order_words_by_centroid_distance(clusters, cluster_label_filepath):
         words.sort(key=lambda w: cent_dists[w])
 
 
+def save_closest_words_to_centroids():
+    """Save words from each cluster, which are closest to the centroid."""
+    with open('cluster_files.json', 'r') as f:
+        cf = json.load(f)
+    cwords = []
+    for clfile in cf['clfiles']:
+        with open(os.path.join(cf['datapath'], clfile), 'r') as f:
+            cls = json.load(f)
+        for _, _, words in cls:
+            cwords.append(words[0])
+
+    with open(os.path.join(cf['datapath'], 'centroid_words.json'), 'w') as f:
+        json.dump(cwords, f)
+
+
 def synset_closures(word, depth=3, get_names=False):
     hyper = lambda s: s.hypernyms()
     synsets = wn.synsets(word)
@@ -655,7 +670,7 @@ if __name__ == '__main__':
     argh.dispatch_commands([run_clustering, run_clustering_experiments, print_cluster_results, plot_cluster_results,
                             n_nearest_neighbors, get_clustering_labels_metrics, inspect_clusters, run_inspect_clusters,
                             label_clusters_with_wordnet, run_print_clusters, cluster_similarities,
-                            avg_cluster_wordfrequency, vg_dists, similar_cluster_nums])
+                            avg_cluster_wordfrequency, vg_dists, similar_cluster_nums, save_closest_words_to_centroids])
     # vocab = np.array(['a', 'b', 'c', 'd', 'e'])
     # words = np.array(['a', 'c', 'e'])
     # E = np.array([[1, 0],
