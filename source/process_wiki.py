@@ -53,7 +53,7 @@ def get_pmi_for_words(words_file, data_dir, process=False):
         words = json.load(f)
     if process:
         process_files(data_dir)
-    files = glob(os.path.join(data_dir, 'tokenized/*/wiki*'))
+    files = glob(os.path.join(data_dir, 'tokenized/*/wiki*json'))
     token_list = []
     for fl in tqdm(files, desc='Load files'):
         with open(fl, 'r') as f:
