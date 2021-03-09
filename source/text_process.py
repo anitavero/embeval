@@ -46,13 +46,13 @@ def pmi_for_words(words, token_list):
     print('Compute PMIs')
     pmis = finder.score_ngrams(bigram_measures.pmi)
     word_pmis = {}
-    for w in words:
+    for w in tqdm(words, desc='Store PMIs'):
         word_pmis[w] = [p for p in pmis if w in p[0]]
     return word_pmis
 
 
 def text2gensim(text, lang):
-    """Tokenize and filter stop words. Return list of str lists (sdt for gensim)
+    """Tokenize and filter stop words. Return list of str lists (std for gensim)
         where each str list is a sentence and each text is a list of these lists."""
     sents = sent_tokenize(text)
     return iter([list(tokenize(s, lang)) for s in sents])

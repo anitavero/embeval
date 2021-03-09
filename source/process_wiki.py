@@ -43,11 +43,21 @@ def process_files(data_dir):
             json.dump(sent_lists, f)
 
 
-def get_pmi_for_words(words, data_dir, process=False):
+def get_pmi_for_words(words_file, data_dir, process=False):
+    with open(os.path.join(data_dir, words_file), 'r') as f:
+        words = json.load(f)
     if process:
         process_files(data_dir)
     files = glob(os.path.join(data_dir, 'tokenized/*/wiki*'))
-    return pmi_for_words(words, ['token', 'list'])
+    token_list = []
+    for fl in tqdm(files, desc='Load files'):
+        with open(fl, 'r') as f:
+            token_list += list(chain.from_iterable(json.load(f)))
+
+    pmis = pmi_for_words(words, token_list)
+    print("Save PMIs")
+    with open(os.path.join(data_dir, words_file.replace('.', '_pmi.')), 'w') as f:
+        json.dump(pmis, f)
 
 
 @arg('--format', type=str, choices=['json', 'text'], default='json')
@@ -186,4 +196,4 @@ def w2v_for_quantities(data_dir, save_dir, w2v_dir, sample_num, trfile_num, size
 
 if __name__ == '__main__':
     argh.dispatch_commands([distribution, plot_distribution, process_files, w2v_for_quantity, w2v_for_quantities,
-                            create_context_files])
+                            create_context_files, get_pmi_for_words])
