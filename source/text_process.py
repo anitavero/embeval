@@ -35,18 +35,24 @@ def tokenize(text, lang):
     return words
 
 
-def pmi_for_words(words, token_list):
+def pmi_for_words(words, token_list=None, document_list=None):
     """Return PMI scores for words in a given tokenized corpus.
         :param words: string list.
         :param token_list: string list.
+        :param document_list: list of string lists
     """
     bigram_measures = collocations.BigramAssocMeasures()
     print('Bigram collection')
-    finder = BigramCollocationFinder.from_words(token_list)
+    if token_list:
+        finder = BigramCollocationFinder.from_words(token_list)
+    elif document_list:
+        finder = BigramCollocationFinder.from_documents(document_list)
+    else:
+        print('Error: Either token_list or document_list should be given.')
     print('Compute PMIs')
     pmis = finder.score_ngrams(bigram_measures.pmi)
     word_pmis = {}
-    for w in tqdm(words, desc='Store PMIs'):
+    for w in tqdm(words, desc='Store PMIs'):    # TODO: filter bigrams then compute PMI
         word_pmis[w] = [p for p in pmis if w in p[0]]
     return word_pmis
 

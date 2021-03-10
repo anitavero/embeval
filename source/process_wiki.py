@@ -59,9 +59,9 @@ def get_pmi_for_words(words_file, data_dir, process=False):
         with open(fl, 'r') as f:
             token_list += list(chain.from_iterable(json.load(f)))
 
-    pmis = pmi_for_words(words, token_list)
+    pmis = pmi_for_words(words, token_list=token_list)
     print("Save PMIs")
-    with open(os.path.join(data_dir, words_file.replace('.', '_pmi.')), 'w') as f:
+    with open(os.path.join(data_dir, words_file.replace('.', 'WIKI_pmi.')), 'w') as f:
         json.dump(pmis, f)
 
 

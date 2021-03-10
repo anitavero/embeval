@@ -27,6 +27,8 @@ import pandas as pd
 
 from source.utils import suffixate, tuple_list, pfont, latex_table_post_process, PrintFont, LaTeXFont
 from source.process_embeddings import Embeddings, mid_fusion, filter_by_vocab
+from source.text_process import pmi_for_words
+
 
 FIG_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'figs')
 
@@ -537,6 +539,21 @@ def vg_dists(datadir='/Users/anitavero/projects/data/visualgenome'):
         json.dump(Counter(words), f)
 
 
+def vg_pmis(words_file, datadir='/Users/anitavero/projects/data/visualgenome'):
+    """Save PMI scores for bigrams including words in file word_list.
+        :param words_file: json file name in data_dir, consisting of an str list
+        :param datadir: path to directory with data
+    """
+    with open(os.path.join(datadir, words_file), 'r') as f:
+        words = json.load(f)
+    with open(os.path.join(datadir, 'vg_contexts_rad3_lemmatised1.txt'), 'r') as f:
+        ctx = [pair.split() for pair in tqdm(f.read().split('\n'))]
+    pmis = pmi_for_words(words, document_list=ctx)
+    print("Save PMIs")
+    with open(os.path.join(datadir, words_file.replace('.', 'VG_pmi.')), 'w') as f:
+        json.dump(pmis, f)
+
+
 @arg('-mmembs', '--mm_embs_of', type=tuple_list)
 @arg('-vns', '--vecs_names', nargs='+', type=str, required=True)
 def run_clustering_experiments(datadir='/anfs/bigdisc/alv34/wikidump/extracted/models/',
@@ -670,7 +687,8 @@ if __name__ == '__main__':
     argh.dispatch_commands([run_clustering, run_clustering_experiments, print_cluster_results, plot_cluster_results,
                             n_nearest_neighbors, get_clustering_labels_metrics, inspect_clusters, run_inspect_clusters,
                             label_clusters_with_wordnet, run_print_clusters, cluster_similarities,
-                            avg_cluster_wordfrequency, vg_dists, similar_cluster_nums, save_closest_words_to_centroids])
+                            avg_cluster_wordfrequency, vg_dists, similar_cluster_nums, save_closest_words_to_centroids,
+                            vg_pmis])
     # vocab = np.array(['a', 'b', 'c', 'd', 'e'])
     # words = np.array(['a', 'c', 'e'])
     # E = np.array([[1, 0],
