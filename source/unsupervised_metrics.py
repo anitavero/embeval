@@ -550,8 +550,24 @@ def vg_pmis(words_file, datadir='/Users/anitavero/projects/data/visualgenome'):
         ctx = [pair.split() for pair in tqdm(f.read().split('\n'), desc='Read VG contexts')]
     pmis = pmi_for_words(words, document_list=ctx)
     print("Save PMIs")
-    with open(os.path.join(datadir, words_file.replace('.', 'VG_pmi.')), 'w') as f:
+    with open(os.path.join(datadir, words_file.replace('.', '_VG_pmi.')), 'w') as f:
         json.dump(pmis, f)
+
+
+def pmi_comparison(datadir='/Users/anitavero/projects/data/wikidump/models/results/', pmi_th=5):
+    with open(os.path.join(datadir, 'centroid_words_WIKI_pmi.json'), 'r') as f:
+        wiki_pmis = json.load(f)
+    with open(os.path.join(datadir, 'centroid_words_VG_pmi.json'), 'r') as f:
+        vg_pmis = json.load(f)
+
+    out = ''
+    for w in wiki_pmis.keys():
+        z = zip(wiki_pmis[w][:pmi_th], vg_pmis[w][:pmi_th])
+        out += w + '\n'
+        out += '\n'.join(list(map(str, map(list, z)))) + '\n'
+
+    with open(os.path.join(datadir, f'wiki_vg_highest_{pmi_th}_pmi.txt'), 'w') as f:
+        f.write(out)
 
 
 @arg('-mmembs', '--mm_embs_of', type=tuple_list)
@@ -688,7 +704,7 @@ if __name__ == '__main__':
                             n_nearest_neighbors, get_clustering_labels_metrics, inspect_clusters, run_inspect_clusters,
                             label_clusters_with_wordnet, run_print_clusters, cluster_similarities,
                             avg_cluster_wordfrequency, vg_dists, similar_cluster_nums, save_closest_words_to_centroids,
-                            vg_pmis])
+                            vg_pmis, pmi_comparison])
     # vocab = np.array(['a', 'b', 'c', 'd', 'e'])
     # words = np.array(['a', 'c', 'e'])
     # E = np.array([[1, 0],
