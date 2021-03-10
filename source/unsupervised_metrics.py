@@ -560,9 +560,13 @@ def pmi_comparison(datadir='/Users/anitavero/projects/data/wikidump/models/resul
     with open(os.path.join(datadir, 'centroid_words_VG_pmi.json'), 'r') as f:
         vg_pmis = json.load(f)
 
+    def pmis_print(w, pmis):
+        not_w = lambda x: x[0] if x[1] == w else x[1]
+        return [f'{not_w(ws)}: {round(pmi, 3)}' for ws, pmi in pmis]
+
     out = ''
     for w in wiki_pmis.keys():
-        z = zip(wiki_pmis[w][:pmi_th], vg_pmis[w][:pmi_th])
+        z = zip(pmis_print(w, wiki_pmis[w][:pmi_th]), pmis_print(w, vg_pmis[w][:pmi_th]))
         out += w + '\n'
         out += '\n'.join(list(map(str, map(list, z)))) + '\n'
 
