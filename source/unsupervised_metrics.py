@@ -547,7 +547,7 @@ def vg_pmis(words_file, datadir='/Users/anitavero/projects/data/visualgenome'):
     with open(os.path.join(datadir, words_file), 'r') as f:
         words = json.load(f)
     with open(os.path.join(datadir, 'vg_contexts_rad3_lemmatised1.txt'), 'r') as f:
-        ctx = [pair.split() for pair in tqdm(f.read().split('\n'))]
+        ctx = [pair.split() for pair in tqdm(f.read().split('\n'), desc='Read VG contexts')]
     pmis = pmi_for_words(words, document_list=ctx)
     print("Save PMIs")
     with open(os.path.join(datadir, words_file.replace('.', 'VG_pmi.')), 'w') as f:
