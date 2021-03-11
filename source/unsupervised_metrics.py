@@ -526,32 +526,32 @@ def avg_cluster_wordfrequency(datadir='/Users/anitavero/projects/data/', clmetho
             json.dump(fqcls, f)
 
 
-def vg_dists(datadir='/Users/anitavero/projects/data/visualgenome'):
-    with open(os.path.join(datadir, 'vg_contexts_rad3_lemmatised1.txt'), 'r') as f:
-        ctx = [pair.split() for pair in tqdm(f.read().split('\n'))]
-    words = []
-    for pair in ctx:
-        if len(pair) < 2:
-            print('MISSING', pair)
-        else:
-            words.append(pair[0])
-    with open(os.path.join(datadir, 'vg_contexts_rad3_lemmatised1_dists.json'), 'w') as f:
-        json.dump(Counter(words), f)
-
-
-def vg_pmis(words_file, datadir='/Users/anitavero/projects/data/visualgenome'):
-    """Save PMI scores for bigrams including words in file word_list.
-        :param words_file: json file name in data_dir, consisting of an str list
-        :param datadir: path to directory with data
-    """
-    with open(os.path.join(datadir, words_file), 'r') as f:
-        words = json.load(f)
-    with open(os.path.join(datadir, 'vg_contexts_rad3_lemmatised1.txt'), 'r') as f:
-        ctx = [pair.split() for pair in tqdm(f.read().split('\n'), desc='Read VG contexts')]
-    pmis = pmi_for_words(words, document_list=ctx)
-    print("Save PMIs")
-    with open(os.path.join(datadir, words_file.replace('.', '_VG_pmi.')), 'w') as f:
-        json.dump(pmis, f)
+# def vg_dists(datadir='/Users/anitavero/projects/data/visualgenome'):
+#     with open(os.path.join(datadir, 'vg_contexts_rad3_lemmatised1.txt'), 'r') as f:
+#         ctx = [pair.split() for pair in tqdm(f.read().split('\n'))]
+#     words = []
+#     for pair in ctx:
+#         if len(pair) < 2:
+#             print('MISSING', pair)
+#         else:
+#             words.append(pair[0])
+#     with open(os.path.join(datadir, 'vg_contexts_rad3_lemmatised1_dists.json'), 'w') as f:
+#         json.dump(Counter(words), f)
+#
+#
+# def vg_pmis(words_file, datadir='/Users/anitavero/projects/data/visualgenome'):
+#     """Save PMI scores for bigrams including words in file word_list.
+#         :param words_file: json file name in data_dir, consisting of an str list
+#         :param datadir: path to directory with data
+#     """
+#     with open(os.path.join(datadir, words_file), 'r') as f:
+#         words = json.load(f)
+#     with open(os.path.join(datadir, 'vg_contexts_rad3_lemmatised1.txt'), 'r') as f:
+#         ctx = [pair.split() for pair in tqdm(f.read().split('\n'), desc='Read VG contexts')]
+#     pmis = pmi_for_words(words, document_list=ctx)
+#     print("Save PMIs")
+#     with open(os.path.join(datadir, words_file.replace('.', '_VG_pmi.')), 'w') as f:
+#         json.dump(pmis, f)
 
 
 def pmi_comparison(datadir='/Users/anitavero/projects/data/wikidump/models/results/', pmi_th=5):
@@ -707,8 +707,8 @@ if __name__ == '__main__':
     argh.dispatch_commands([run_clustering, run_clustering_experiments, print_cluster_results, plot_cluster_results,
                             n_nearest_neighbors, get_clustering_labels_metrics, inspect_clusters, run_inspect_clusters,
                             label_clusters_with_wordnet, run_print_clusters, cluster_similarities,
-                            avg_cluster_wordfrequency, vg_dists, similar_cluster_nums, save_closest_words_to_centroids,
-                            vg_pmis, pmi_comparison])
+                            avg_cluster_wordfrequency, similar_cluster_nums, save_closest_words_to_centroids,
+                            pmi_comparison])
     # vocab = np.array(['a', 'b', 'c', 'd', 'e'])
     # words = np.array(['a', 'c', 'e'])
     # E = np.array([[1, 0],
