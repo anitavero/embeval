@@ -59,7 +59,7 @@ def get_pmi_for_words(words_file, data_dir, process=False, bigram_file=None, var
         with open(fl, 'r') as f:
             token_list += list(chain.from_iterable(json.load(f)))
 
-    pmis = pmi_for_words(words, finder_file=bigram_file, token_list=token_list, variant=variant)
+    pmis = pmi_for_words(words, finder_file=os.path.join(data_dir, bigram_file), token_list=token_list, variant=variant)
     print(f"Save {variant}s")
     with open(os.path.join(data_dir, words_file.replace('.', f'_WIKI_{variant}.')), 'w') as f:
         json.dump(pmis, f)

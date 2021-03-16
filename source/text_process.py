@@ -81,7 +81,7 @@ def pmi_for_words(words, finder_file, token_list=None, document_list=None, varia
         with open(finder_file, 'wb') as f:
             pkl.dump(finder, f)
 
-    print('Compute PMIs')
+    print(f'Compute {variant}s')
     pmi_measures = BigramPMIVariants()
     pmis = finder.score_ngrams(getattr(pmi_measures, variant))
     word_pmis = {}
