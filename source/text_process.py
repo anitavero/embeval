@@ -5,21 +5,42 @@ from collections import Counter
 from nltk.corpus import stopwords
 from nltk.tokenize import sent_tokenize
 from nltk import collocations
+from nltk.metrics.association import NGRAM, TOTAL, _log2, UNIGRAMS
 from nltk.collocations import *
 from unidecode import unidecode
 import string
 from tqdm import tqdm
 from glob import glob
-import argh
 from multiprocessing import Process
 import math
 from itertools import chain
+from functools import reduce
 
 
 hun_stopwords = stopwords.words('hungarian') + \
                 ['is', 'ha', 'szerintem', 'szoval', 'na', 'hat', 'kicsit', 'ugye', 'amugy']
 stopwords_lang = {'hungarian': hun_stopwords, 'english': stopwords.words('english'),
                   'hunglish': hun_stopwords + stopwords.words('english') + [unidecode(w) for w in hun_stopwords]}
+
+_w_sum = lambda s, a: reduce(lambda x, y: x**a + y**a, s)
+
+
+class BigramPMIVariants(collocations.BigramAssocMeasures):
+
+    @classmethod
+    def ppmi(cls, *marginals):
+        """Scores ngrams by positive pointwise mutual information.
+        """
+        return max(cls.pmi(*marginals), 0)
+
+    @classmethod
+    def w_ppmi(cls, *marginals, alpha=.75):
+        """Scores ngrams by weighted positive pointwise mutual information.
+        """
+        return max(_log2(marginals[NGRAM] / marginals[TOTAL]) -
+                   _log2((marginals[UNIGRAMS][0] / marginals[TOTAL]) *
+                         (marginals[UNIGRAMS][1] ** alpha / _w_sum(marginals[UNIGRAMS], alpha))),
+                   0)
 
 
 def tokenize(text, lang):
@@ -37,13 +58,12 @@ def tokenize(text, lang):
     return words
 
 
-def pmi_for_words(words, finder_file, token_list=None, document_list=None):
+def pmi_for_words(words, finder_file, token_list=None, document_list=None, variant='pmi'):
     """Return PMI scores for words in a given tokenized corpus.
         :param words: string list.
         :param token_list: string list.
         :param document_list: list of string lists
     """
-    bigram_measures = collocations.BigramAssocMeasures()
     if os.path.exists(finder_file):
         print('Load Bigram file')
         with open(finder_file, 'rb') as f:
@@ -62,9 +82,10 @@ def pmi_for_words(words, finder_file, token_list=None, document_list=None):
             pkl.dump(finder, f)
 
     print('Compute PMIs')
-    pmis = finder.score_ngrams(bigram_measures.pmi)
+    pmi_measures = BigramPMIVariants()
+    pmis = finder.score_ngrams(getattr(pmi_measures, variant))
     word_pmis = {}
-    for w in tqdm(words, desc='Store PMIs'):
+    for w in tqdm(words, desc=f'Store {variant}s'):
         word_pmis[w] = [p for p in pmis if w in p[0]]
     return word_pmis
 
@@ -187,4 +208,7 @@ def context_pairs(text, contexts_file, lang='english'):
 
 
 if __name__== '__main__':
-    argh.dispatch_commands([concatenate_files])
+    # argh.dispatch_commands([concatenate_files])
+
+    # Debug
+    print(pmi_for_words(['a', 'b'], '../test/PMI.pkl', token_list=['a', 'a', 'b', 'a'], variant='w_ppmi'))

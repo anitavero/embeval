@@ -43,7 +43,7 @@ def process_files(data_dir):
             json.dump(sent_lists, f)
 
 
-def get_pmi_for_words(words_file, data_dir, process=False, bigram_file=None):
+def get_pmi_for_words(words_file, data_dir, process=False, bigram_file=None, variant='ppmi'):
     """Save PMI scores for bigrams including words in file word_list.
         :param words_file: json file name in data_dir, consisting of an str list
         :param data_dir: path to directory with data
@@ -59,9 +59,9 @@ def get_pmi_for_words(words_file, data_dir, process=False, bigram_file=None):
         with open(fl, 'r') as f:
             token_list += list(chain.from_iterable(json.load(f)))
 
-    pmis = pmi_for_words(words, finder_file=bigram_file, token_list=token_list)
-    print("Save PMIs")
-    with open(os.path.join(data_dir, words_file.replace('.', '_WIKI_pmi.')), 'w') as f:
+    pmis = pmi_for_words(words, finder_file=bigram_file, token_list=token_list, variant=variant)
+    print(f"Save {variant}s")
+    with open(os.path.join(data_dir, words_file.replace('.', f'_WIKI_{variant}.')), 'w') as f:
         json.dump(pmis, f)
 
 
