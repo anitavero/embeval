@@ -1,3 +1,5 @@
+import json
+import pickle as pkl
 import os
 from collections import Counter
 from nltk.corpus import stopwords
@@ -35,24 +37,34 @@ def tokenize(text, lang):
     return words
 
 
-def pmi_for_words(words, token_list=None, document_list=None):
+def pmi_for_words(words, finder_file, token_list=None, document_list=None):
     """Return PMI scores for words in a given tokenized corpus.
         :param words: string list.
         :param token_list: string list.
         :param document_list: list of string lists
     """
     bigram_measures = collocations.BigramAssocMeasures()
-    print('Bigram collection')
-    if token_list:
-        finder = BigramCollocationFinder.from_words(token_list)
-    elif document_list:
-        finder = BigramCollocationFinder.from_documents(document_list)
+    if os.path.exists(finder_file):
+        print('Load Bigram file')
+        with open(finder_file, 'rb') as f:
+            finder = pkl.load(f)
     else:
-        print('Error: Either token_list or document_list should be given.')
+        print('Bigram collection')
+        if token_list:
+            finder = BigramCollocationFinder.from_words(token_list)
+        elif document_list:
+            finder = BigramCollocationFinder.from_documents(document_list)
+        else:
+            raise Exception('Either token_list or document_list should be given.')
+
+        print('Save Bigram file')
+        with open(finder_file, 'wb') as f:
+            pkl.dump(finder, f)
+
     print('Compute PMIs')
     pmis = finder.score_ngrams(bigram_measures.pmi)
     word_pmis = {}
-    for w in tqdm(words, desc='Store PMIs'):    # TODO: filter bigrams then compute PMI
+    for w in tqdm(words, desc='Store PMIs'):
         word_pmis[w] = [p for p in pmis if w in p[0]]
     return word_pmis
 
