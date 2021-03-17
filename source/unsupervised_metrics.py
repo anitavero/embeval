@@ -554,10 +554,10 @@ def avg_cluster_wordfrequency(datadir='/Users/anitavero/projects/data/', clmetho
 #         json.dump(pmis, f)
 
 
-def pmi_comparison(datadir='/Users/anitavero/projects/data/wikidump/models/results/', pmi_th=5):
-    with open(os.path.join(datadir, 'centroid_words_WIKI_pmi.json'), 'r') as f:
+def pmi_comparison(datadir='/Users/anitavero/projects/data/wikidump/models/results/', pmi_th=5, variant='ppmi'):
+    with open(os.path.join(datadir, f'centroid_words_WIKI_{variant}.json'), 'r') as f:
         wiki_pmis = json.load(f)
-    with open(os.path.join(datadir, 'centroid_words_VG_pmi.json'), 'r') as f:
+    with open(os.path.join(datadir, f'centroid_words_VG_{variant}.json'), 'r') as f:
         vg_pmis = json.load(f)
 
     def pmis_print(w, pmis):
@@ -570,7 +570,7 @@ def pmi_comparison(datadir='/Users/anitavero/projects/data/wikidump/models/resul
         out += w + '\n'
         out += '\n'.join(list(map(str, map(list, z)))) + '\n'
 
-    with open(os.path.join(datadir, f'wiki_vg_highest_{pmi_th}_pmi.txt'), 'w') as f:
+    with open(os.path.join(datadir, f'wiki_vg_highest_{pmi_th}_{variant}.txt'), 'w') as f:
         f.write(out)
 
 
