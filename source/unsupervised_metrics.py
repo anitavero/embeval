@@ -557,7 +557,7 @@ def avg_cluster_wordfrequency(datadir='/Users/anitavero/projects/data/', clmetho
 def pmi_comparison(datadir='/Users/anitavero/projects/data/wikidump/models/results/', pmi_th=5, variants='ppmi'):
     with open(os.path.join(datadir, f'centroid_words_WIKI_{variants}.json'), 'r') as f:
         wiki_pmis = json.load(f)
-    with open(os.path.join(datadir, f'centroid_words_WIKI_{variants}.json'), 'r') as f:
+    with open(os.path.join(datadir, f'centroid_words_VG_{variants}.json'), 'r') as f:
         vg_pmis = json.load(f)
 
     def pmis_print(w, pmis):

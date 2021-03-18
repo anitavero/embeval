@@ -2,6 +2,7 @@ import os
 import json
 from collections import Counter
 import argh
+from argh import arg
 import spacy
 from tqdm import tqdm
 
@@ -21,19 +22,23 @@ def vg_dists(datadir='/Users/anitavero/projects/data/visualgenome'):
         json.dump(Counter(words), f)
 
 
+@arg('-vs', '--variants', nargs='+', type=str, required=True)
 def vg_pmis(words_file, datadir='/Users/anitavero/projects/data/visualgenome',
-            bigram_file='bigram_vg.pkl', variant='ppmi'):
+            bigram_file='bigram_vg.pkl', variants=['ppmi']):
     """Save PMI scores for bigrams including words in file word_list.
         :param words_file: json file name in data_dir, consisting of an str list
         :param datadir: path to directory with data
     """
     with open(os.path.join(datadir, words_file), 'r') as f:
         words = json.load(f)
-    with open(os.path.join(datadir, 'vg_contexts_rad3_lemmatised1.txt'), 'r') as f:
-        ctx = [pair.split() for pair in tqdm(f.read().split('\n'), desc='Read VG contexts')]
-    pmis = pmi_for_words(words, finder_file=os.path.join(datadir, bigram_file), document_list=ctx, variant=variant)
-    print(f"Save {variant}s")
-    with open(os.path.join(datadir, words_file.replace('.', f'_VG_{variant}.')), 'w') as f:
+    ctx = []
+    if bigram_file == None:
+        with open(os.path.join(datadir, 'vg_contexts_rad3_lemmatised1.txt'), 'r') as f:
+            ctx = [pair.split() for pair in tqdm(f.read().split('\n'), desc='Read VG contexts')]
+
+    pmis = pmi_for_words(words, finder_file=os.path.join(datadir, bigram_file), document_list=ctx, variants=variants)
+    print(f'Save {", ".join(variants)}')
+    with open(os.path.join(datadir, words_file.replace('.', f'_VG_{"_".join(variants)}.')), 'w') as f:
         json.dump(pmis, f)
 
 
