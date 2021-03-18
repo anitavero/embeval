@@ -554,10 +554,10 @@ def avg_cluster_wordfrequency(datadir='/Users/anitavero/projects/data/', clmetho
 #         json.dump(pmis, f)
 
 
-def pmi_comparison(datadir='/Users/anitavero/projects/data/wikidump/models/results/', pmi_th=5, variant='ppmi'):
-    with open(os.path.join(datadir, f'centroid_words_WIKI_{variant}.json'), 'r') as f:
+def pmi_comparison(datadir='/Users/anitavero/projects/data/wikidump/models/results/', pmi_th=5, variants='ppmi'):
+    with open(os.path.join(datadir, f'centroid_words_WIKI_{variants}.json'), 'r') as f:
         wiki_pmis = json.load(f)
-    with open(os.path.join(datadir, f'centroid_words_VG_{variant}.json'), 'r') as f:
+    with open(os.path.join(datadir, f'centroid_words_WIKI_{variants}.json'), 'r') as f:
         vg_pmis = json.load(f)
 
     def pmis_print(w, pmis):
@@ -565,13 +565,14 @@ def pmi_comparison(datadir='/Users/anitavero/projects/data/wikidump/models/resul
         return [f'{not_w(ws)}: {round(pmi, 3)}' for ws, pmi in pmis]
 
     out = ''
-    for w in wiki_pmis.keys():
-        z = zip(pmis_print(w, wiki_pmis[w][:pmi_th]), pmis_print(w, vg_pmis[w][:pmi_th]))
-        out += w + '\n'
-        out += '\n'.join(list(map(str, map(list, z)))) + '\n'
+    for var, scores in wiki_pmis.items():
+        for w in scores.keys():
+            z = zip(pmis_print(w, wiki_pmis[var][w][:pmi_th]), pmis_print(w, vg_pmis[var][w][:pmi_th]))
+            out += w + '\n'
+            out += '\n'.join(list(map(str, map(list, z)))) + '\n'
 
-    with open(os.path.join(datadir, f'wiki_vg_highest_{pmi_th}_{variant}.txt'), 'w') as f:
-        f.write(out)
+        with open(os.path.join(datadir, f'wiki_vg_highest_{pmi_th}_{var}.txt'), 'w') as f:
+            f.write(out)
 
 
 @arg('-mmembs', '--mm_embs_of', type=tuple_list)

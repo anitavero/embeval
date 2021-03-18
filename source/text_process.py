@@ -58,7 +58,7 @@ def tokenize(text, lang):
     return words
 
 
-def pmi_for_words(words, finder_file, token_list=None, document_list=None, variant='pmi'):
+def pmi_for_words(words, finder_file, token_list=None, document_list=None, variants=['pmi']):
     """Return PMI scores for words in a given tokenized corpus.
         :param words: string list.
         :param token_list: string list.
@@ -81,12 +81,15 @@ def pmi_for_words(words, finder_file, token_list=None, document_list=None, varia
         with open(finder_file, 'wb') as f:
             pkl.dump(finder, f)
 
-    print(f'Compute {variant}s')
+    print(f'Compute {", ".join(variants)}')
     pmi_measures = BigramPMIVariants()
-    pmis = finder.score_ngrams(getattr(pmi_measures, variant))
-    word_pmis = {}
-    for w in tqdm(words, desc=f'Store {variant}s'):
-        word_pmis[w] = [p for p in pmis if w in p[0]]
+    pmi_vars = {}
+    for variant in variants:
+        pmi_vars[variant] = finder.score_ngrams(getattr(pmi_measures, variant))
+    word_pmis = {variant: {} for variant in variants}
+    for w in tqdm(words, desc=f'Store {", ".join(variants)}'):
+        for variant, vpmis in pmi_vars.items():
+            word_pmis[variant][w] = [p for p in vpmis if w in p[0]]
     return word_pmis
 
 
