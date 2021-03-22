@@ -564,8 +564,8 @@ def pmi_comparison(datadir='/Users/anitavero/projects/data/wikidump/models/resul
         not_w = lambda x: x[0] if x[1] == w else x[1]
         return [f'{not_w(ws)}: {round(pmi, 3)}' for ws, pmi in pmis]
 
-    out = ''
     for var, scores in wiki_pmis.items():
+        out = ''
         for w in scores.keys():
             z = zip(pmis_print(w, wiki_pmis[var][w][:pmi_th]), pmis_print(w, vg_pmis[var][w][:pmi_th]))
             out += w + '\n'
