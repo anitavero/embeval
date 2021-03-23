@@ -13,6 +13,7 @@ from tqdm import tqdm
 import json
 from glob import glob
 from tabulate import tabulate
+from pylatexenc.latexencode import unicode_to_latex
 import matplotlib
 
 matplotlib.rcParams["savefig.dpi"] = 300
@@ -27,7 +28,6 @@ import pandas as pd
 
 from source.utils import suffixate, tuple_list, pfont, latex_table_post_process, PrintFont, LaTeXFont
 from source.process_embeddings import Embeddings, mid_fusion, filter_by_vocab
-from source.text_process import pmi_for_words
 
 
 FIG_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'figs')
@@ -554,25 +554,47 @@ def avg_cluster_wordfrequency(datadir='/Users/anitavero/projects/data/', clmetho
 #         json.dump(pmis, f)
 
 
-def pmi_comparison(datadir='/Users/anitavero/projects/data/wikidump/models/results/', pmi_th=5, variants='ppmi'):
+def pmi_comparison(datadir='/Users/anitavero/projects/data/wikidump/models/results/', pmi_th=5, variants='ppmi',
+                   format='latex'):
     with open(os.path.join(datadir, f'centroid_words_WIKI_{variants}.json'), 'r') as f:
         wiki_pmis = json.load(f)
     with open(os.path.join(datadir, f'centroid_words_VG_{variants}.json'), 'r') as f:
         vg_pmis = json.load(f)
 
+    not_w = lambda x, w: x[0] if x[1] == w else x[1]
+
     def pmis_print(w, pmis):
-        not_w = lambda x: x[0] if x[1] == w else x[1]
-        return [f'{not_w(ws)}: {round(pmi, 3)}' for ws, pmi in pmis]
+        return [f'{not_w(ws, w)}: {round(pmi, 3)}' for ws, pmi in pmis]
+
+    def pmis_latex(w, pmis):
+        return unicode_to_latex(', '.join([not_w(ws, w) for ws, pmi in pmis]))
+
 
     for var, scores in wiki_pmis.items():
-        out = ''
-        for w in scores.keys():
-            z = zip(pmis_print(w, wiki_pmis[var][w][:pmi_th]), pmis_print(w, vg_pmis[var][w][:pmi_th]))
-            out += w + '\n'
-            out += '\n'.join(list(map(str, map(list, z)))) + '\n'
+        if format == 'latex':
+            rows = []
+            for w in scores.keys():
+                rows.append((w, pmis_latex(w, wiki_pmis[var][w][:pmi_th]),
+                           pmis_latex(w, vg_pmis[var][w][:pmi_th])
+                            ))
 
-        with open(os.path.join(datadir, f'wiki_vg_highest_{pmi_th}_{var}.txt'), 'w') as f:
-            f.write(out)
+            table = tabulate(rows, headers=[pfont(['BOLD'], x, LaTeXFont) for x in ['Centroid', 'Wikipedia', 'VG']],
+                             tablefmt='latex_raw')
+
+            table = latex_table_post_process(table, range(0, len(rows) - 1),
+                                             f'Context words of cluster centroids with the {pmi_th} highest {var} score.',
+                                             label=f'wiki_vg_highest_{pmi_th}_{var}')
+            with open(os.path.join(datadir, f'wiki_vg_highest_{pmi_th}_{var}.tex'), 'w') as f:
+                f.write(table)
+        else:
+            out = ''
+            for w in scores.keys():
+                z = zip(pmis_print(w, wiki_pmis[var][w][:pmi_th]), pmis_print(w, vg_pmis[var][w][:pmi_th]))
+                out += w + '\n'
+                out += '\n'.join(list(map(str, map(list, z)))) + '\n'
+
+            with open(os.path.join(datadir, f'wiki_vg_highest_{pmi_th}_{var}.txt'), 'w') as f:
+                f.write(out)
 
 
 @arg('-mmembs', '--mm_embs_of', type=tuple_list)
