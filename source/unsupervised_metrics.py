@@ -567,7 +567,10 @@ def pmi_comparison(datadir='/Users/anitavero/projects/data/wikidump/models/resul
         return [f'{not_w(ws, w)}: {round(pmi, 3)}' for ws, pmi in pmis]
 
     def pmis_latex(w, pmis):
-        return unicode_to_latex(', '.join([not_w(ws, w) for ws, pmi in pmis]))
+        ctx = (not_w(ws, w) for ws, pmi in pmis)
+        seen = set()
+        unique_ctx = [w for w in ctx if not (w in seen or seen.add(w))]
+        return unicode_to_latex(', '.join(unique_ctx))
 
 
     for var, scores in wiki_pmis.items():
