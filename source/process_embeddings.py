@@ -119,6 +119,21 @@ class Embeddings:
         else:
             return label(name)
 
+    @staticmethod
+    def get_emb_type_label(fn):
+        if 'model' in fn and 'resnet' in fn:
+            return r'$E_L + E_V$'
+        elif 'model' in fn and 'vecs3lem' in fn:
+            return r'$E_L + E_S$'
+        elif 'resnet' in fn and 'model' not in fn:
+            return r'$E_V$'
+        elif 'vecs3lem' in fn and 'model' not in fn:
+            return r'$E_S$'
+        elif 'model' in fn and 'resnet' not in fn and 'vecs3lem' not in fn:
+            return r'$E_L$'
+        elif 'Random' in fn:
+            return 'Random'
+
     def load_fasttext(self, fname: str) -> Tuple[np.ndarray, np.ndarray]:
         fin = io.open(fname, 'r', encoding='utf-8', newline='\n', errors='ignore')
         n, d = map(int, fin.readline().split())

@@ -561,13 +561,14 @@ def plot_for_quantities(scores: np.ndarray, gt_divisor, common_subset=False, leg
 
     def coverage_texts(xpos, means, covs, errs):
         for xp, y, cov, err in zip(xpos, means, covs, errs):
-            ax.text(xp, y + err + 0.01, str(int(cov)), fontweight='bold', fontsize=7, horizontalalignment='center')
+            ax.text(xp, y + err + 0.01, str(int(cov)), fontsize=13, horizontalalignment='center', rotation=90)
 
     fig, ax = plt.subplots()
     bar_width = 0.2
+    fontsize = 18
     xpos = np.linspace(1, 2 + 2 * len(vis_names), len(quantities))
 
-    ax.bar(np.array(xpos), ling_means, yerr=ling_errs, width=bar_width, label='Linguistic')
+    ax.bar(np.array(xpos), ling_means, yerr=ling_errs, width=bar_width, label='$E_L$')
     coverage_texts(xpos, ling_means, ling_covs, ling_errs)
     pi = 1
     for vn in vis_names:
@@ -576,12 +577,12 @@ def plot_for_quantities(scores: np.ndarray, gt_divisor, common_subset=False, leg
         vcorrs = [vcorr for i in xpos]
         verrs = [0 for i in xpos]
         vcoverage = 100 * vcoverage / pair_num
-        ax.bar(vxpos, vcorrs, yerr=verrs, width=bar_width, label=Embeddings.get_label(vn))
+        ax.bar(vxpos, vcorrs, yerr=verrs, width=bar_width, label=Embeddings.get_emb_type_label(vn))
         coverage_texts(vxpos, vcorrs, [vcoverage for i in xpos], verrs)
         pi += 1
     # separate MM for vis_names too
     for mmn, vn in zip(mm_names, vis_names):
-        mmlabel = 'MM - ' + Embeddings.get_label(vn)
+        mmlabel = '$E_L$ - ' + Embeddings.get_emb_type_label(vn)
         mmn_means, mmn_errs, mmn_covs = bar_data(mmn)
         mmn_xpos = np.array(xpos) + pi * bar_width
         ax.bar(mmn_xpos, mmn_means, yerr=mmn_errs, width=bar_width, label=mmlabel)
@@ -589,10 +590,11 @@ def plot_for_quantities(scores: np.ndarray, gt_divisor, common_subset=False, leg
         pi += 1
 
     ax.set_xticks(xpos)
-    ax.set_xticklabels(['8M', '1G', '2G', '5G', '13G'])
-    ax.set_ylabel('Spearman correlation')
+    ax.set_xticklabels(['8M', '1G', '2G', '5G', '13G'], fontsize=fontsize)
+    ax.set_ylabel('Spearman correlation', fontsize=fontsize)
+    plt.tick_params(axis='both', labelsize=fontsize)
     if legend:
-        ax.legend(loc='best', fontsize='x-small')
+        ax.legend(loc=(0, 1.02), fontsize=15, ncol=5, columnspacing=1)
 
 
 def plot_for_freqranges(scores: np.ndarray, gt_divisor, quantity=-1, common_subset=False, pair_num=None,
@@ -916,7 +918,7 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
         for name in list(scores.keys()):
             scrs = deepcopy(scores[name])
             plot_for_quantities(scrs, gt_divisor=datasets.normalizers[name], common_subset=common_subset,
-                                legend=True if name == 'MEN' else False, pair_num=datasets.pair_num[name])
+                                legend=True, pair_num=datasets.pair_num[name])
             plt.savefig('../figs/quantities_' + name + '.png', bbox_inches='tight')
 
     if 'plot_freqrange' in actions:
