@@ -661,7 +661,7 @@ def emb_labels(fn):
     elif 'model' in fn and 'resnet' not in fn and 'vecs3lem' not in fn:
         return r'$E_L$'
     elif 'Random' in fn:
-        return 'Random'
+        return 'Rand'
 
 
 def print_cluster_results(resdir='/Users/anitavero/projects/data/wikidump/models/'):
@@ -701,16 +701,18 @@ def plot_cluster_results(resdir='/Users/anitavero/projects/data/wikidump/models/
                 score_lines[metric][label].append(score)
         ncb = False
 
+    fontsize = 20
     for metric, lines in score_lines.items():
         fig, ax = plt.subplots()
         for lb, ln in lines.items():
             ax.plot(ln, label=lb, marker='o')
         ax.set_xticks(range(len(ncls)))
-        ax.set_xticklabels(ncls)
-        ax.set_ylabel(metric)
-        ax.set_xlabel('Number of clusters')
-        ax.legend(loc='best')
-        plt.savefig(os.path.join(FIG_DIR, f'{metric}'), bbox_inches='tight')
+        ax.set_xticklabels(ncls, fontsize=fontsize)
+        ax.set_ylabel(metric, fontsize=fontsize)
+        ax.set_xlabel('Number of clusters', fontsize=fontsize)
+        ax.legend(loc=(0.35, 0.7), ncol=2, columnspacing=0.5, fontsize=fontsize)
+        plt.tick_params(axis='both', labelsize=fontsize)
+        plt.savefig(os.path.join(FIG_DIR, f'{metric.replace(" ", "_")}_visible'), bbox_inches='tight')
 
 
 def wn_category(word):
