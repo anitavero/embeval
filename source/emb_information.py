@@ -204,6 +204,8 @@ def run_mi_experiments(exp_names='quantity', cost_name='MIShannon_DKL', pca_n_co
 
 
 LABELS = {'vecs3lem1': r'I($E_L,E_S$)', 'google_resnet152': r'I($E_L,E_V$)'}
+bar_width = 0.4
+fontsize = 20
 
 def plot_for_quantities(file_path, vis_names=['vecs3lem1', 'google_resnet152'], legend=True, fname='', suffix=''):
     with open(file_path, 'r') as f:
@@ -223,7 +225,6 @@ def plot_for_quantities(file_path, vis_names=['vecs3lem1', 'google_resnet152'], 
         return means, errs
 
     fig, ax = plt.subplots()
-    bar_width = 0.2
     xpos = np.linspace(1, 2 + 2 * len(vis_names), len(quantities))
 
     for i, vn in enumerate(vis_names):
@@ -232,11 +233,12 @@ def plot_for_quantities(file_path, vis_names=['vecs3lem1', 'google_resnet152'], 
         ax.bar(np.array(xpos) + i * bar_width, means, yerr=errs, width=bar_width, label=LABELS[vn])
 
     ax.set_xticks(xpos)
-    ax.set_xticklabels(['8M', '1G', '2G', '5G', '13G'])
-    ax.set_ylabel('Mutual Information')
+    ax.set_xticklabels(['8M', '1G', '2G', '5G', '13G'], fontsize=fontsize)
+    ax.set_ylabel('Mutual Information', fontsize=fontsize)
     if legend:
-        ax.legend(loc='best')
+        ax.legend(loc='best', fontsize=fontsize)
     if suffix != '' and suffix[0] != '_': suffix = '_' + suffix
+    plt.tick_params(axis='both', labelsize=fontsize)
     plt.savefig(os.path.join(FIG_DIR, f'{fname}{suffix}'), bbox_inches='tight')
 
 
@@ -264,7 +266,6 @@ def plot_for_freqranges(file_path, vis_names=['vecs3lem1', 'google_resnet152'], 
         return means, errs
 
     fig, ax = plt.subplots()
-    bar_width = 0.2
     xpos = np.linspace(1, 2 + 2 * len(vis_names), len(freq_ranges) + 1)
 
     for i, vn in enumerate(vis_names):
@@ -273,11 +274,12 @@ def plot_for_freqranges(file_path, vis_names=['vecs3lem1', 'google_resnet152'], 
         ax.bar(np.array(xpos) + i * bar_width, means, yerr=errs, width=bar_width, label=LABELS[vn])
 
     ax.set_xticks(xpos)
-    ax.set_xticklabels(['LOW', 'MEDIUM', 'HIGH', 'MIXED'])
-    ax.set_ylabel('Mutual Information')
+    ax.set_xticklabels(['LOW', 'MEDIUM', 'HIGH', 'MIXED'], fontsize=fontsize)
+    ax.set_ylabel('Mutual Information', fontsize=fontsize)
     if legend:
-        ax.legend(loc='best')
+        ax.legend(loc='best', fontsize=fontsize)
     if suffix != '' and suffix[0] != '_': suffix = '_' + suffix
+    plt.tick_params(axis='both', labelsize=fontsize)
     plt.savefig(os.path.join(FIG_DIR, f'{fname}{suffix}'), bbox_inches='tight')
 
 
