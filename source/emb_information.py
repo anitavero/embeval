@@ -288,11 +288,11 @@ def plots(file_pattern, vis_names=['vecs3lem1', 'google_resnet152'], fqrng_quant
     qfiles = [f for f in files if 'quantities' in f]
     ffiles = [f for f in files if 'freqranges' in f]
 
-    for f in qfiles:
+    for f in tqdm(qfiles, desc='Quantities'):
         print(f)
         fname = os.path.basename(f).split('.')[0]
         plot_for_quantities(f, vis_names=vis_names, legend=legend, fname=fname, suffix=suffix)
-    for f in ffiles:
+    for f in tqdm(ffiles, desc='Freq ranges'):
         print(f)
         fname = os.path.basename(f).split('.')[0]
         plot_for_freqranges(f, vis_names=vis_names, legend=legend, fname=fname, suffix=suffix, quantity=fqrng_quantity)
