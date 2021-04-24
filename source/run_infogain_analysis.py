@@ -20,14 +20,16 @@ def main(actions='printcorr', name='', tablefmt='simple'):
         task_eval.main(datadir, actions=['plot_quantity'],
                        loadpath=embdir + name,
                        print_corr_for='gt',
-                       tablefmt=tablefmt)
+                       tablefmt=tablefmt,
+                       common_subset=True)
 
     if 'plot_freqrange' in actions:
         task_eval.main(datadir, actions=['plot_freqrange'],
                        loadpath=embdir + name,
                        print_corr_for='gt',
                        tablefmt=tablefmt,
-                       quantity=-1)
+                       quantity=-1,
+                       common_subset=True)
 
 
 if __name__ == '__main__':
