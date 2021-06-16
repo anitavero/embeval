@@ -1,4 +1,4 @@
-import eval
+import task_eval
 import argh
 
 
@@ -11,19 +11,19 @@ def main(action):
         # print('\nSEMSIM\n')
 
         # print('\nPadding\n')
-        eval.main(datadir, actions=['printcorr'],
+        task_eval.main(datadir, actions=['printcorr'],
                   loadpath=embdir + 'padding',
                   print_corr_for='gt',
                   tablefmt='latex_raw')
 
         # print('\nNo Padding\n')
-        eval.main(datadir, actions=['printcorr'],
+        task_eval.main(datadir, actions=['printcorr'],
                   loadpath=embdir + 'nopadding',
                   print_corr_for='gt',
                   tablefmt='latex_raw')
 
         # print('\nPadding - common subset\n')
-        eval.main(datadir, actions=['printcorr'],
+        task_eval.main(datadir, actions=['printcorr'],
                   loadpath=embdir + 'nopadding',
                   print_corr_for='gt',
                   tablefmt='latex_raw',
@@ -32,13 +32,13 @@ def main(action):
         # print('\nBRAIN\n')
 
         # print('\nNo padding Brain\n')
-        eval.main(datadir, actions=['printbraincorr'],
+        task_eval.main(datadir, actions=['printbraincorr'],
                   loadpath=embdir + 'nopadding_mitchell',
                   print_corr_for='gt',
                   tablefmt='latex_raw')
 
         # print('\nNo padding Brain - common subset\n')
-        eval.main(datadir, actions=['printbraincorr'],
+        task_eval.main(datadir, actions=['printbraincorr'],
                   loadpath=embdir + 'nopadding_mitchell_commonsubset',
                   print_corr_for='gt',
                   tablefmt='latex_raw')
@@ -58,14 +58,14 @@ def main(action):
             print(f'\n------------ {pair_agg} ------------')
 
             print('\nPadding')
-            eval.main(datadir, actions=['concreteness'],
+            task_eval.main(datadir, actions=['concreteness'],
                       loadpath=embdir + 'padding',
                       concrete_num=100,
                       plot_vecs=[],
                       pair_score_agg=pair_agg)
 
             print('\nPadding - common subset')
-            eval.main(datadir, actions=['concreteness'],
+            task_eval.main(datadir, actions=['concreteness'],
                       loadpath=embdir + 'padding',
                       concrete_num=100,
                       plot_vecs=[],
@@ -74,14 +74,14 @@ def main(action):
 
 
             print('\nNo Padding')
-            eval.main(datadir, actions=['concreteness'],
+            task_eval.main(datadir, actions=['concreteness'],
                       loadpath=embdir + 'nopadding',
                       concrete_num=100,
                       plot_vecs=[],
                       pair_score_agg=pair_agg)
 
             print('\nNo Padding - common subset')
-            eval.main(datadir, actions=['concreteness'],
+            task_eval.main(datadir, actions=['concreteness'],
                       loadpath=embdir + 'nopadding',
                       concrete_num=100,
                       plot_vecs=[],
@@ -94,11 +94,11 @@ def main(action):
             f.write('')
 
         print('\nNo Padding Brain Words')
-        eval.main(datadir, actions=['brainwords'],
+        task_eval.main(datadir, actions=['brainwords'],
                   loadpath=embdir + 'nopadding_mitchell')
 
         print('\nNo Padding Brain Words - common subset')
-        eval.main(datadir, actions=['brainwords'],
+        task_eval.main(datadir, actions=['brainwords'],
                   loadpath=embdir + 'nopadding_mitchell_commonsubset')
 
 
