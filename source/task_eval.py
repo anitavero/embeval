@@ -10,6 +10,7 @@ import json
 import argh
 from argh import arg
 import math
+import random
 from typing import List, Tuple
 
 import matplotlib
@@ -151,11 +152,12 @@ def divide_eval_vocab_by_freqranges(distribution_file, eval_data_dir, dataset_na
 
 
 def compute_correlations(scores: (np.ndarray, list), name_pairs: List[Tuple[str, str]] = None,
-                         common_subset: bool = False):
-    """Computer correlation between score series.
+                         common_subset: bool = False, leave_out=False):
+    """Compute correlation between score series.
         :param scores: Structured array of scores with embedding/ground_truth names.
         :param name_pairs: pairs of scores to correlate. If None, every pair will be computed.
                           if 'gt', everything will be plot against the ground_truth.
+       :param leave_out: Leave out 1/leave_out portion of pairs, chosen randomly. Does not leave out if it is False.
     """
     if name_pairs == 'gt':
         name_pairs = [('ground_truth', nm) for nm in scores[0].dtype.names
@@ -176,6 +178,10 @@ def compute_correlations(scores: (np.ndarray, list), name_pairs: List[Tuple[str,
         scs = scores
 
     correlations = {}
+    if leave_out:
+        keep = 1 - 1/leave_out
+        random.shuffle(name_pairs)
+        name_pairs = name_pairs[:math.ceil(len(name_pairs) * keep)]
     for nm1, nm2 in name_pairs:
         # Filter pairs which the scores, coming from any of the two embeddings, don't cover
         if (scs[nm1] == MISSING).all():
