@@ -178,10 +178,6 @@ def compute_correlations(scores: (np.ndarray, list), name_pairs: List[Tuple[str,
         scs = scores
 
     correlations = {}
-    if leave_out:
-        keep = 1 - 1/leave_out
-        random.shuffle(name_pairs)
-        name_pairs = name_pairs[:math.ceil(len(name_pairs) * keep)]
     for nm1, nm2 in name_pairs:
         # Filter pairs which the scores, coming from any of the two embeddings, don't cover
         if (scs[nm1] == MISSING).all():
@@ -194,6 +190,14 @@ def compute_correlations(scores: (np.ndarray, list), name_pairs: List[Tuple[str,
             scores1, scores2 = zip(*[(s1, s2) for s1, s2 in
                                      zip(scs[nm1], scs[nm2]) if s1 != MISSING and s2 != MISSING])
             assert len(scores1) == len(scores2)
+            if leave_out:
+                lp = len(scores1)
+                keep = 1 - 1 / leave_out
+                idx = list(range(lp))
+                random.shuffle(idx)
+                idx = idx[:int(lp * keep)]
+                scores1 = [s for i, s in enumerate(scores1) if i in idx]
+                scores2 = [s for i, s in enumerate(scores2) if i in idx]
             corr = spearmanr(scores1, scores2)
             correlations[' | '.join([nm1, nm2])] = (corr.correlation, corr.pvalue, len(scores1))
 
@@ -256,6 +260,43 @@ def print_correlations(scores: np.ndarray, name_pairs='gt',
                        round(pvalue, ROUND),
                        length)
                       for nm, (corr, pvalue, length) in correlations.items()],
+                     headers=[pfont(['BOLD'], x, font) for x in
+                              ['Name pairs', 'Spearman', 'P-value', 'Coverage']],
+                     tablefmt=tablefmt)
+    if 'latex' in tablefmt:
+        table = latex_table_post_process(table, [3, 9], caption, label=label)
+
+    print(table)
+
+
+def print_subsampled_correlations(scores: np.ndarray, name_pairs='gt',
+                       common_subset: bool = False, tablefmt: str = "simple", caption='', label='', n_sample=3):
+    correlation_smpl = {}
+    for i in range(n_sample):
+        correlations = compute_correlations(scores, name_pairs, common_subset=common_subset, leave_out=3)
+        if i == 0:
+            for k, (corr, pval, len) in correlations.items():
+                correlation_smpl[k] = ([corr], [pval], [len])
+        else:
+            for k, (corrs, pvals, lens) in correlation_smpl.items():
+                corr, pval, len = correlations[k]
+                correlation_smpl[k] = (corrs + [corr], pvals + [pval], lens + [len])
+    maxcorr = max(list(zip(*correlations.values()))[0])
+
+    # def mm_o_uni(name):
+    #     return mm_over_uni(name, correlations)
+
+    if 'latex' in tablefmt:
+        escape = latex_escape
+        font = LaTeXFont
+    else:
+        escape = lambda x: x
+        font = PrintFont
+    table = tabulate([(pfont(['ITALIC'], escape(Embeddings.get_label(nm)), font),
+                       f'{round(np.mean(corrs), ROUND)} ({round(np.std(corrs), ROUND)})',
+                       f'{round(np.mean(pvals), ROUND)} ({round(np.std(pvals), ROUND)})',
+                       lens[0])
+                      for nm, (corrs, pvals, lens) in correlation_smpl.items()],
                      headers=[pfont(['BOLD'], x, font) for x in
                               ['Name pairs', 'Spearman', 'P-value', 'Coverage']],
                      tablefmt=tablefmt)
@@ -1050,6 +1091,20 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
                 print_correlations(scrs, name_pairs=print_corr_for, common_subset=common_subset,
                                    tablefmt=tablefmt, caption=caption + score_explanation,
                                    label='_'.join([name, commonsub, fname_pad]))
+
+    if 'printcorr_subsample' in actions:
+        if scores != {}:
+            for name, scrs in scores.items():
+                # print(f'\n-------- {name} scores -------\n')
+                if common_subset:
+                    caption = f'Subsampled Spearman correlations on the common subset of the {name} dataset. '
+                    commonsub = 'commonsubset'
+                else:
+                    caption = f'Subsampled Spearman correlations on the {name} dataset. '
+                    commonsub = 'full'
+                print_subsampled_correlations(scrs, name_pairs=print_corr_for, common_subset=common_subset,
+                                   tablefmt=tablefmt, caption=caption + score_explanation,
+                                   label='_'.join([name, commonsub, fname_pad]), n_sample=3)
 
     if 'printbraincorr' in actions:
         if 'commonsubset' in loadpath:

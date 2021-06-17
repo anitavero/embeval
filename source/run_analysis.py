@@ -6,24 +6,24 @@ def main(action):
     datadir = '/Users/anitavero/projects/data'
     embdir = '/Users/anitavero/projects/data/mmdeed/'
 
-    if action == 'printcorr':
+    if action == 'printcorr' or action == 'printcorr_subsample':
 
         # print('\nSEMSIM\n')
 
         # print('\nPadding\n')
-        task_eval.main(datadir, actions=['printcorr'],
+        task_eval.main(datadir, actions=[action],
                   loadpath=embdir + 'padding',
                   print_corr_for='gt',
                   tablefmt='latex_raw')
 
         # print('\nNo Padding\n')
-        task_eval.main(datadir, actions=['printcorr'],
+        task_eval.main(datadir, actions=[action],
                   loadpath=embdir + 'nopadding',
                   print_corr_for='gt',
                   tablefmt='latex_raw')
 
         # print('\nPadding - common subset\n')
-        task_eval.main(datadir, actions=['printcorr'],
+        task_eval.main(datadir, actions=[action],
                   loadpath=embdir + 'nopadding',
                   print_corr_for='gt',
                   tablefmt='latex_raw',
