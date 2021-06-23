@@ -34,7 +34,7 @@ sys.path.append('../2v2_software_privatefork/')
 import two_vs_two
 
 MISSING = -2  # Signify word pairs which aren't covered by and embedding's vocabulary
-ROUND = 3  # Round scores in print
+ROUND = 2  # Round scores in print
 NAME_DELIM = ' | '
 linewidth = 3
 
@@ -231,7 +231,7 @@ def mm_over_uni(name, score_dict):
         prefix = ''
     if MM_TOKEN in vname:
         nm1, nm2 = vname.split(MM_TOKEN)
-        get_score = lambda x: x if isinstance(x, float) else x[0]
+        get_score = lambda x: round(x, ROUND) if isinstance(x, float) else round(x[0], ROUND)
         return get_score(score_dict[name]) > get_score(score_dict[prefix + nm1]) and \
                get_score(score_dict[name]) > get_score(score_dict[prefix + nm2])
     return False
