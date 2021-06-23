@@ -34,7 +34,7 @@ sys.path.append('../2v2_software_privatefork/')
 import two_vs_two
 
 MISSING = -2  # Signify word pairs which aren't covered by and embedding's vocabulary
-ROUND = 4  # Round scores in print
+ROUND = 3  # Round scores in print
 NAME_DELIM = ' | '
 linewidth = 3
 
@@ -214,11 +214,11 @@ def highlight(val, conditions: dict, tablefmt):
     for color, cond in conditions.items():
         if tablefmt == 'simple':
             if cond:
-                return pfont([color, 'BOLD'], round(val, ROUND), PrintFont)
+                return pfont([color, 'BOLD'], format(round(val, ROUND), f".{ROUND}f"), PrintFont)
         elif tablefmt in ['latex', 'latex_raw']:  # needs to be amended by hand
             if cond:
-                return pfont([color, 'BOLD'], str(round(val, ROUND)), LaTeXFont)
-    return val
+                return pfont([color, 'BOLD'], str(format(round(val, ROUND), f".{ROUND}f")), LaTeXFont)
+    return format(val, f".{ROUND}f")
 
 
 def mm_over_uni(name, score_dict):
@@ -257,7 +257,7 @@ def print_correlations(scores: np.ndarray, name_pairs='gt',
         font = PrintFont
     table = tabulate([(pfont(['ITALIC'], escape(Embeddings.get_label(nm)), font),
                        highlight(corr, {'red': corr == maxcorr, 'blue': mm_o_uni(nm)}, tablefmt),
-                       round(pvalue, ROUND),
+                       format(pvalue, f".{ROUND}f"),
                        length)
                       for nm, (corr, pvalue, length) in correlations.items()],
                      headers=[pfont(['BOLD'], x, font) for x in
@@ -293,8 +293,8 @@ def print_subsampled_correlations(scores: np.ndarray, name_pairs='gt',
         escape = lambda x: x
         font = PrintFont
     table = tabulate([(pfont(['ITALIC'], escape(Embeddings.get_label(nm)), font),
-                       f'{round(np.mean(corrs), ROUND)} ({round(np.std(corrs), ROUND)})',
-                       f'{round(np.mean(pvals), ROUND)} ({round(np.std(pvals), ROUND)})',
+                       f'{format(round(np.mean(corrs), ROUND), f".{ROUND}f")} ({format(round(np.std(corrs), ROUND), f".{ROUND}f")})',
+                       f'{format(round(np.mean(pvals), ROUND), f".{ROUND}f")} ({format(round(np.std(pvals), ROUND), f".{ROUND}f")})',
                        lens[0])
                       for nm, (corrs, pvals, lens) in correlation_smpl.items()],
                      headers=[pfont(['BOLD'], x, font) for x in

@@ -96,6 +96,9 @@ class Embeddings:
                     else:
                         _, data, cnn = nm.split('_')
                         return f'{data.capitalize()} {cnn_format[cnn]}'
+                elif '_' in nm and nm.split('_')[1] in cnn_format.keys():
+                    data, cnn = nm.split('_')
+                    return f'{data.capitalize()} {cnn_format[cnn]}'
                 elif 'men' in nm:
                     _, context = nm.split('-')
                     return f'VG-{context}'
