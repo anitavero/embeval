@@ -1104,7 +1104,7 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
                 else:
                     caption = f'Cross-validated Spearman correlations on the {name} dataset. '
                     commonsub = 'full'
-                caption += 'Spearman and P-value columns report <mean (STD)> of three samples after leaving out the third of the evaluation pairs. '
+                caption += 'Spearman and P-value columns report $<$mean (STD)$>$ of three samples after leaving out the third of the evaluation pairs. '
                 print_subsampled_correlations(scrs, name_pairs=print_corr_for, common_subset=common_subset,
                                    tablefmt=tablefmt, caption=caption + score_explanation0,
                                    label='_'.join([name, commonsub, fname_pad, 'crossval']), n_sample=3)
