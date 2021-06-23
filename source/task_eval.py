@@ -972,8 +972,10 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
             title_pad = 'Padding'
             fname_pad = 'padding'
 
-        score_explanation = f'Multi-modal embeddings are created using the {title_pad} technique. ' + \
-                            'The table sections contain linguistic, visual and multi-modal embeddings in this order. ' + \
+        score_explanation0 = f'Multi-modal embeddings are created using the {title_pad} technique. ' + \
+                            'The table sections contain linguistic, visual and multi-modal embeddings in this order. '
+
+        score_explanation = score_explanation0 + \
                             'Red colour signifies the best performance, blue means that the multi-modal ' + \
                             'embedding outperformed the corresponding uni-modal ones.'
     else:
@@ -1097,14 +1099,15 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
             for name, scrs in scores.items():
                 # print(f'\n-------- {name} scores -------\n')
                 if common_subset:
-                    caption = f'Subsampled Spearman correlations on the common subset of the {name} dataset. '
+                    caption = f'Cross-validated Spearman correlations on the common subset of the {name} dataset. '
                     commonsub = 'commonsubset'
                 else:
-                    caption = f'Subsampled Spearman correlations on the {name} dataset. '
+                    caption = f'Cross-validated Spearman correlations on the {name} dataset. '
                     commonsub = 'full'
+                caption += 'Spearman and P-value columns report <mean (STD)> of three samples after leaving out the third of the evaluation pairs. '
                 print_subsampled_correlations(scrs, name_pairs=print_corr_for, common_subset=common_subset,
-                                   tablefmt=tablefmt, caption=caption + score_explanation,
-                                   label='_'.join([name, commonsub, fname_pad]), n_sample=3)
+                                   tablefmt=tablefmt, caption=caption + score_explanation0,
+                                   label='_'.join([name, commonsub, fname_pad, 'crossval']), n_sample=3)
 
     if 'printbraincorr' in actions:
         if 'commonsubset' in loadpath:

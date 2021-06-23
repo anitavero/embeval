@@ -31,17 +31,18 @@ def main(action):
 
         # print('\nBRAIN\n')
 
-        # print('\nNo padding Brain\n')
-        task_eval.main(datadir, actions=['printbraincorr'],
-                  loadpath=embdir + 'nopadding_mitchell',
-                  print_corr_for='gt',
-                  tablefmt='latex_raw')
+        if action != 'printcorr_subsample':
+            # print('\nNo padding Brain\n')
+            task_eval.main(datadir, actions=['printbraincorr'],
+                      loadpath=embdir + 'nopadding_mitchell',
+                      print_corr_for='gt',
+                      tablefmt='latex_raw')
 
-        # print('\nNo padding Brain - common subset\n')
-        task_eval.main(datadir, actions=['printbraincorr'],
-                  loadpath=embdir + 'nopadding_mitchell_commonsubset',
-                  print_corr_for='gt',
-                  tablefmt='latex_raw')
+            # print('\nNo padding Brain - common subset\n')
+            task_eval.main(datadir, actions=['printbraincorr'],
+                      loadpath=embdir + 'nopadding_mitchell_commonsubset',
+                      print_corr_for='gt',
+                      tablefmt='latex_raw')
 
         # ###### Test ######
         # eval.main(datadir, actions=['brainwords'],
