@@ -52,7 +52,7 @@ def main(action):
 
     if action == 'concreteness':
 
-        with open('figs/figs.tex', 'w') as f:
+        with open('figs/figs_concreteness.tex', 'w') as f:
             f.write('')
 
         for pair_agg in ['sum', 'diff']:

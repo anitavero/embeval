@@ -406,9 +406,13 @@ class PlotColour:
             lst = '-'
             al = 0.8
             if MM_TOKEN in l or 'MM' in l:
-                colours.append('#e6b830')
-                lst = ':'
-                al = 0.5
+                if 'VG SceneGraph' in l:
+                    colours.append('#ff3e96')
+                    al = 0.5
+                else:
+                    colours.append('#e6b830')
+                    lst = ':'
+                    al = 0.5
             elif l in ['wikinews', 'wikinews_sub', 'crawl', 'crawl_sub', 'w2v13']:
                 colours.append('green')
             elif 'VG-' in l:
@@ -426,17 +430,19 @@ class PlotColour:
     def get_legend():
         linewidth = 3
         legends = [Line2D([0], [0], color='blue', lw=linewidth),
+                   Line2D([0], [0], color='#ff3e96', lw=linewidth),
                    Line2D([0], [0], color='#e6b830', lw=linewidth),
                    Line2D([0], [0], color='green', lw=linewidth),
                    Line2D([0], [0], color='purple', lw=linewidth),
                    Line2D([0], [0], color='cyan', lw=linewidth),
                    Line2D([0], [0], color='red', lw=linewidth)]
         leglabels = ['WordNet concreteness',
-                     'Multi-modal',
-                     'Linguistic',
-                     'Visual Genome',
-                     'VG SceneGraph',
-                     'Visual']
+                     '$E_L + E_S$',
+                     '$E_L + E_V$',
+                     '$E_L$',
+                     '$E_{VG}$',
+                     '$E_S$',
+                     '$E_V$']
         return legends, leglabels
 
 
@@ -516,7 +522,7 @@ def plot_brain_words(brain_scores, plot_order):
         plot_data(axs[1], 'MEG', DataSets.fmri_vocab, plot_order)
 
     legs, leglabels = PlotColour.get_legend()   # Leave out WordNet concreteness [1:]
-    fig.legend(legs[1:], leglabels[1:], loc=9, edgecolor='inherit', ncol=6, borderaxespad=-0.2, numpoints=1)
+    fig.legend(legs[1:], leglabels[1:], loc=9, edgecolor='inherit', ncol=7, borderaxespad=-0.2, numpoints=1, fontsize=16)
     fig.tight_layout(pad=1.0)
 
     return fig
@@ -1047,7 +1053,7 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
                                  show=False)
 
         legs, leglabels = PlotColour.get_legend()
-        fig.legend(legs, leglabels, loc=9, edgecolor='inherit', ncol=6, borderaxespad=-0.2, numpoints=1)
+        fig.legend(legs, leglabels, loc=9, edgecolor='inherit', ncol=7, borderaxespad=-0.2, numpoints=1)
         fig.tight_layout(pad=1.0)
 
         agg = {'sum': 'sum', 'diff': 'difference'}[pair_score_agg]
@@ -1062,7 +1068,7 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
                     '\n\end{figure}\n\n'
         # Save figure and figures tex file
         plt.savefig(fpath, bbox_inches='tight')
-        with open('figs/figs.tex', 'a+') as f:
+        with open('figs/figs_concreteness.tex', 'a+') as f:
             f.write(latex_fig)
 
     if 'brainwords' in actions:
