@@ -310,15 +310,21 @@ def print_brain_scores(brain_scores, tablefmt: str = "simple", caption='', suffi
     # Map for printable labels
     labels = dict((Embeddings.get_label(name), name) for name in brain_scores.keys())
     lingvnames = list(set(list(Embeddings.fasttext_vss.keys())).intersection(set(labels.keys())))
-    mmvnames = [n for n in labels.keys() if 'MM' in n or MM_TOKEN in n]
-    visvnames = set(labels.keys()).difference(set(lingvnames + mmvnames))
+    VGvnames = [n for n in labels.keys() if n == 'VG SceneGraph']
+    mm_vis_names = [n for n in labels.keys() if 'MM' in n or MM_TOKEN in n and 'VG SceneGraph' not in n]
+    mm_VG_names = [n for n in labels.keys() if MM_TOKEN in n and 'VG SceneGraph' in n]
+    visvnames = set(labels.keys()).difference(set(lingvnames + VGvnames + mm_VG_names + mm_vis_names))
     brain_scores_ordered = []
-    # Groupe linguistic, visual, and multi-modal vecs
+    # Group E_L, E_V, E_S, E_L + E_V, E_L + E_S vecs
     for n in lingvnames:
         brain_scores_ordered.append((n, brain_scores[labels[n]]))
     for n in visvnames:
         brain_scores_ordered.append((n, brain_scores[labels[n]]))
-    for n in mmvnames:
+    for n in VGvnames:
+        brain_scores_ordered.append((n, brain_scores[labels[n]]))
+    for n in mm_vis_names:
+        brain_scores_ordered.append((n, brain_scores[labels[n]]))
+    for n in mm_VG_names:
         brain_scores_ordered.append((n, brain_scores[labels[n]]))
 
     vals = list(zip(*[v.values() for v in brain_scores.values()]))
@@ -359,14 +365,18 @@ def print_brain_scores(brain_scores, tablefmt: str = "simple", caption='', suffi
         # Table of scores averaged for participants over all models per modality
         ling_avg_P = [np.mean([v for k, v in dictP.items() if k in lingvnames]) for dictP in score_dicts]
         vis_avg_P = [np.mean([v for k, v in dictP.items() if k in visvnames]) for dictP in score_dicts]
-        mm_avg_P = [np.mean([v for k, v in dictP.items() if k in mmvnames]) for dictP in score_dicts]
-        maxes = [max(p) for p in zip(ling_avg_P, vis_avg_P, mm_avg_P)]
+        VG_avg_P = [np.mean([v for k, v in dictP.items() if k in VGvnames]) for dictP in score_dicts]
+        mm_vis_avg_P = [np.mean([v for k, v in dictP.items() if k in mm_vis_names]) for dictP in score_dicts]
+        mm_VG_avg_P = [np.mean([v for k, v in dictP.items() if k in mm_VG_names]) for dictP in score_dicts]
+        maxes = [max(p) for p in zip(ling_avg_P, vis_avg_P, VG_avg_P, mm_vis_avg_P, mm_VG_avg_P)]
 
         table_P = tabulate([[pfont(['ITALIC'], mod, font)] +
                             [highlight(x, {'BOLD': x == mx}, tablefmt) for x, mx in zip(avgPs, maxes)]
-                            for mod, avgPs in [('Linguistic', ling_avg_P),
-                                               ('Visual', vis_avg_P),
-                                               ('Multi-modal', mm_avg_P)]],
+                            for mod, avgPs in [('$E_L$', ling_avg_P),
+                                               ('$E_V$', vis_avg_P),
+                                               ('$E_S$', VG_avg_P),
+                                               ('$E_L + E_V$', mm_vis_avg_P),
+                                               ('$E_L + E_S$', mm_VG_avg_P)]],
                            headers=[pfont(['BOLD'], x, font) for x in
                                     ['Modality'] + [f'P{i + 1}' for i in range(part_num)]],
                            tablefmt=tablefmt)
