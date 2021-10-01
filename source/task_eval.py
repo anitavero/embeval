@@ -442,7 +442,7 @@ class PlotColour:
                      '$E_L$',
                      '$E_{VG}$',
                      '$E_S$',
-                     '$E_V$']
+                     '$E_{Google}$']
         return legends, leglabels
 
 
