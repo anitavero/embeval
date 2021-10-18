@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>test package &mdash; EmbEval 18 October 2021 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="source package" href="source.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> EmbEval
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dependencies.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example.html">Example Usage</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">EmbEval Modules Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="source.html">source package</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">test package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-test.test_process_embeddings">test.test_process_embeddings module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-test.test_process_wiki">test.test_process_wiki module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-test.test_text_process">test.test_text_process module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-test.test_unsupervised_metrics">test.test_unsupervised_metrics module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">EmbEval</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="modules.html">EmbEval Modules Documentation</a> &raquo;</li>
+      <li>test package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/test.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="test-package">
+<h1>test package<a class="headerlink" href="#test-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-test.test_process_embeddings">
+<span id="test-test-process-embeddings-module"></span><h2>test.test_process_embeddings module<a class="headerlink" href="#module-test.test_process_embeddings" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="test.test_process_embeddings.test_divide_vocab_by_freqranges">
+<code class="sig-prename descclassname">test.test_process_embeddings.</code><code class="sig-name descname">test_divide_vocab_by_freqranges</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/test/test_process_embeddings.html#test_divide_vocab_by_freqranges"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test.test_process_embeddings.test_divide_vocab_by_freqranges" title="Permalink to this definition">¶</a></dt>
+<dd><dl>
+<dt>Test data which is loaded from ‘test/data’:</dt><dd><dl class="simple">
+<dt>test_model = np.array([[1, 1, 1],</dt><dd><p>[2, 2, 2],
+[3, 3, 3],
+[4, 4, 4]])</p>
+</dd>
+</dl>
+<p>test_vocab = [‘a’, ‘b’, ‘c’, ‘d’]
+dist = {“a”: 1, “b”: 10, “c”: 20, “d”: 40}
+dist_shuffled = {“d”: 40, ,”b”: 10,”a”: 1, “c”: 20}
+dist1 = {“a”: 1, “b”: 5, “c”: 10, “d”: 15, “e”: 21, “f”: 25}</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="test.test_process_embeddings.test_filter_by_vocab">
+<code class="sig-prename descclassname">test.test_process_embeddings.</code><code class="sig-name descname">test_filter_by_vocab</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/test/test_process_embeddings.html#test_filter_by_vocab"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test.test_process_embeddings.test_filter_by_vocab" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="test.test_process_embeddings.test_mid_fusion">
+<code class="sig-prename descclassname">test.test_process_embeddings.</code><code class="sig-name descname">test_mid_fusion</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/test/test_process_embeddings.html#test_mid_fusion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test.test_process_embeddings.test_mid_fusion" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-test.test_process_wiki">
+<span id="test-test-process-wiki-module"></span><h2>test.test_process_wiki module<a class="headerlink" href="#module-test.test_process_wiki" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-test.test_text_process">
+<span id="test-test-text-process-module"></span><h2>test.test_text_process module<a class="headerlink" href="#module-test.test_text_process" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="test.test_text_process.test_w_ppmi">
+<code class="sig-prename descclassname">test.test_text_process.</code><code class="sig-name descname">test_w_ppmi</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/test/test_text_process.html#test_w_ppmi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test.test_text_process.test_w_ppmi" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-test.test_unsupervised_metrics">
+<span id="test-test-unsupervised-metrics-module"></span><h2>test.test_unsupervised_metrics module<a class="headerlink" href="#module-test.test_unsupervised_metrics" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="test.test_unsupervised_metrics.test_distances_from_centroids">
+<code class="sig-prename descclassname">test.test_unsupervised_metrics.</code><code class="sig-name descname">test_distances_from_centroids</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/test/test_unsupervised_metrics.html#test_distances_from_centroids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test.test_unsupervised_metrics.test_distances_from_centroids" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="test.test_unsupervised_metrics.test_get_clustering_labels_metrics">
+<code class="sig-prename descclassname">test.test_unsupervised_metrics.</code><code class="sig-name descname">test_get_clustering_labels_metrics</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/test/test_unsupervised_metrics.html#test_get_clustering_labels_metrics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test.test_unsupervised_metrics.test_get_clustering_labels_metrics" title="Permalink to this definition">¶</a></dt>
+<dd><dl>
+<dt>Test data which is loaded from ‘test/data’:</dt><dd><dl class="simple">
+<dt>test_model = np.array([[1, 1, 1],</dt><dd><p>[2, 2, 2],
+[3, 3, 3],
+[4, 4, 4]])</p>
+</dd>
+</dl>
+<p>test_vocab = [‘a’, ‘b’, ‘c’, ‘d’]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="test.test_unsupervised_metrics.test_n_nearest_neighbors">
+<code class="sig-prename descclassname">test.test_unsupervised_metrics.</code><code class="sig-name descname">test_n_nearest_neighbors</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/test/test_unsupervised_metrics.html#test_n_nearest_neighbors"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test.test_unsupervised_metrics.test_n_nearest_neighbors" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="test.test_unsupervised_metrics.test_order_words_by_centroid_distance">
+<code class="sig-prename descclassname">test.test_unsupervised_metrics.</code><code class="sig-name descname">test_order_words_by_centroid_distance</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/test/test_unsupervised_metrics.html#test_order_words_by_centroid_distance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#test.test_unsupervised_metrics.test_order_words_by_centroid_distance" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="source.html" class="btn btn-neutral float-left" title="source package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Anita Lilla Verő.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

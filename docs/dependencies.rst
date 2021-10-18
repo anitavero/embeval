@@ -1,0 +1,14 @@
+Dependencies
+============
+
+* matplotlib
+* numpy
+* scikit-learn
+* nltk
+* scipy
+* pytorch torchvision
+* gluoncv
+* argh
+* spacy
+* tabulate
+* tqdm
