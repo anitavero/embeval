@@ -869,6 +869,7 @@ def eval_concreteness(scores: np.ndarray, word_pairs, num=100, gt_divisor=10, ve
 def compute_scores(actions, embeddings, scores, datasets, pairs, brain_scores=None, pre_score_files: str = None,
                    ling_vecs_names=[], vecs_names=[], mm_lingvis=False, mm_embs_of: List[Tuple[str]] = None,
                    mm_padding=False, common_subset=False):
+    """Compute scores on all evaluation datasets."""
     print(actions)
     embs = embeddings.embeddings
     vocabs = embeddings.vocabs
@@ -939,24 +940,37 @@ def main(datadir, embdir: str = None, vecs_names=[], savepath=None, loadpath=Non
          mm_lingvis=False, mm_padding=False, print_corr_for=None, common_subset=False,
          tablefmt: str = "simple", concrete_num=100, pair_score_agg='sum', quantity=-1):
     """
-    :param pair_score_agg:
-    :param mm_lingvis:
+    :param actions: Choose from the following:
+        'printcorr': Print correlation in tables on MEN and SimLex.
+        'plotscores': Plot correlations on MEN and SimLex.
+        'concreteness': Scores on caption_comsub Semantic Similarity dataset splits, ordered by pair_score_agg of
+                        WordNet concreteness scores of the two words in every word pair.
+                        Optional: mm_padding
+        'coverage': Save coverages on similarity/relatedness/brain data.
+        'compscores': Compute scores on similarity/relatedness evaluation datasets.
+        'compbrain': Compute scores on brain evaluation datasets.
+        'brainwords': Plot Qualitative analysis on words in the brain data.
+        'printbraincorr': Print correlations on brain data.
+        'plot_quantity': Plot similarity/relatedness result for text quantity ranges.
+        'plot_freqrange': Plot similarity/relatedness result for wor frequency ranges.
+    :param pair_score_agg: 'sum' or 'diff' of concreteness scores of word pairs.
+    :param mm_lingvis: if True, create multi-modal embeddings, otherwise specific embedding pairs should be given.
     :param tablefmt: printed table format. 'simple' - terminal, 'latex_raw' - latex table.
-    :param concrete_num:
+    :param concrete_num: Plot of WordNet concreteness splits by concrete_num number of pairs.
     :param datadir: Path to directory which contains evaluation data (and embedding data if embdir is not given)
     :param vecs_names: List[str] Names of embeddings
     :param embdir: Path to directory which contains embedding files.
     :param savepath: Full path to the file to save scores without extension. None if there's no saving.
     :param loadpath: Full path to the files to load scores and brain results from without extension.
                      If None, they'll be computed.
-    :param actions:
-    :param plot_orders:
-    :param plot_vecs:
+    :param plot_orders: Performance plot ordered by similarity scores of these datasets or embeddings.
+    :param plot_vecs: List[str] Names of embeddings to plot scores for.
     :param ling_vecs_names: List[str] Names of linguistic embeddings.
     :param pre_score_files: Previously saved score file path without extension, which the new scores will be merged with
     :param mm_embs_of: List of str tuples, where the tuples contain names of embeddings which are to
                        be concatenated into a multi-modal mid-fusion embedding.
-    :param mm_padding:
+    :param mm_padding: Default False. Multi-modal mid-fusion method. If true, all the vectors are kept from the embeddings' vocabularies.
+                       Vector representations without a vector from another modality are padded with zeros.
     :param print_corr_for: 'gt' prints correlations scores for ground truth, 'all' prints scores between all
                             pairs of scores.
     :param common_subset: action printcorr: Print results for subests of the eval datasets which are covered by all
