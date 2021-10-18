@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>source.utils &mdash; EmbEval 18 October 2021 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> EmbEval
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dependencies.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../example.html">Example Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">EmbEval Modules Documentation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">EmbEval</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      <li>source.utils</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for source.utils</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">List</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">argparse</span>
+
+
+<div class="viewcode-block" id="suffixate"><a class="viewcode-back" href="../../source.html#source.utils.suffixate">[docs]</a><span class="k">def</span> <span class="nf">suffixate</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">s</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span> <span class="ow">and</span> <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;_&#39;</span><span class="p">:</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">s</span>
+    <span class="k">return</span> <span class="n">s</span></div>
+
+
+<div class="viewcode-block" id="tuple_list"><a class="viewcode-back" href="../../source.html#source.utils.tuple_list">[docs]</a><span class="k">def</span> <span class="nf">tuple_list</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;List[Tuple[str]] argument type.</span>
+<span class="sd">        format: whitespace separated str lists, separated by |. eg. &#39;embs1 embs2 | embs2 embs3 embs4&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s1">&#39;|&#39;</span> <span class="ow">in</span> <span class="n">arg</span><span class="p">:</span>
+            <span class="n">tplist</span> <span class="o">=</span> <span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">split</span><span class="p">())</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">arg</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;|&#39;</span><span class="p">)]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">tplist</span> <span class="o">=</span> <span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">arg</span><span class="o">.</span><span class="n">split</span><span class="p">())]</span>
+        <span class="k">return</span> <span class="n">tplist</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentTypeError</span><span class="p">(</span><span class="s2">&quot;Tuple list must be whitespace separated str lists, &quot;</span> <span class="o">+</span>
+                                         <span class="s2">&quot;separated by |. eg. embs1 embs2 | embs2 embs3 embs4&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="hr_time"><a class="viewcode-back" href="../../source.html#source.utils.hr_time">[docs]</a><span class="k">def</span> <span class="nf">hr_time</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">round_n</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Human readable time.&quot;&quot;&quot;</span>
+    <span class="n">hours</span> <span class="o">=</span> <span class="n">time</span> <span class="o">//</span> <span class="mi">3600</span> <span class="o">%</span> <span class="mi">24</span>
+    <span class="n">minutes</span> <span class="o">=</span> <span class="n">time</span> <span class="o">//</span> <span class="mi">60</span> <span class="o">%</span> <span class="mi">60</span>
+    <span class="n">seconds</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">time</span> <span class="o">%</span> <span class="mi">60</span><span class="p">,</span> <span class="n">round_n</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">f</span><span class="s1">&#39;</span><span class="si">{hours}</span><span class="s1">h </span><span class="si">{minutes}</span><span class="s1">m </span><span class="si">{seconds}</span><span class="s1">s&#39;</span></div>
+
+
+<div class="viewcode-block" id="create_dir"><a class="viewcode-back" href="../../source.html#source.utils.create_dir">[docs]</a><span class="k">def</span> <span class="nf">create_dir</span><span class="p">(</span><span class="n">directory</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">directory</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Error: Creating directory. &#39;</span> <span class="o">+</span> <span class="n">directory</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_file_name"><a class="viewcode-back" href="../../source.html#source.utils.get_file_name">[docs]</a><span class="k">def</span> <span class="nf">get_file_name</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">path</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="read_jl"><a class="viewcode-back" href="../../source.html#source.utils.read_jl">[docs]</a><span class="k">def</span> <span class="nf">read_jl</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+    <span class="n">articles</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">):</span>
+        <span class="n">article</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+        <span class="n">articles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">article</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">articles</span></div>
+
+
+<div class="viewcode-block" id="pkl2json"><a class="viewcode-back" href="../../source.html#source.utils.pkl2json">[docs]</a><span class="k">def</span> <span class="nf">pkl2json</span><span class="p">(</span><span class="n">pkl_file</span><span class="p">,</span> <span class="n">savedir</span><span class="p">):</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">pkl_file</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="n">fname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">pkl_file</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">savedir</span><span class="p">,</span> <span class="n">fname</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span><span class="s1">&#39;.json&#39;</span><span class="p">),</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="join_struct_arrays"><a class="viewcode-back" href="../../source.html#source.utils.join_struct_arrays">[docs]</a><span class="k">def</span> <span class="nf">join_struct_arrays</span><span class="p">(</span><span class="n">arrays</span><span class="p">):</span>
+    <span class="n">new_dt</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="nb">sum</span><span class="p">([</span><span class="n">a</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">descr</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">arrays</span><span class="p">],</span> <span class="p">[])))</span>
+    <span class="n">joint</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">arrays</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">new_dt</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">arrays</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">nm</span> <span class="ow">in</span> <span class="n">a</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
+            <span class="n">joint</span><span class="p">[</span><span class="n">nm</span><span class="p">]</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="n">nm</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">joint</span></div>
+
+
+<div class="viewcode-block" id="dict2struct_array"><a class="viewcode-back" href="../../source.html#source.utils.dict2struct_array">[docs]</a><span class="k">def</span> <span class="nf">dict2struct_array</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert dict to structured array.&quot;&quot;&quot;</span>
+    <span class="n">dtype</span> <span class="o">=</span> <span class="p">[(</span><span class="n">k</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">keys</span><span class="p">()]</span>
+    <span class="n">dim</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">ar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">dim</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">ar</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ar</span></div>
+
+
+<div class="viewcode-block" id="get_vec"><a class="viewcode-back" href="../../source.html#source.utils.get_vec">[docs]</a><span class="k">def</span> <span class="nf">get_vec</span><span class="p">(</span><span class="n">word</span><span class="p">,</span> <span class="n">embeddings</span><span class="p">,</span> <span class="n">vocab</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">embeddings</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">vocab</span> <span class="o">==</span> <span class="n">word</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span></div>
+
+
+<span class="c1">#### Terminal Font ####</span>
+
+<span class="n">PrintFont</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;PURPLE&#39;</span><span class="p">:</span> <span class="s1">&#39;</span><span class="se">\033</span><span class="s1">[95m&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;CYAN&#39;</span><span class="p">:</span> <span class="s1">&#39;</span><span class="se">\033</span><span class="s1">[96m&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;DARKCYAN&#39;</span><span class="p">:</span> <span class="s1">&#39;</span><span class="se">\033</span><span class="s1">[36m&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;BLUE&#39;</span><span class="p">:</span> <span class="s1">&#39;</span><span class="se">\033</span><span class="s1">[94m&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;GREEN&#39;</span><span class="p">:</span> <span class="s1">&#39;</span><span class="se">\033</span><span class="s1">[92m&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;YELLOW&#39;</span><span class="p">:</span> <span class="s1">&#39;</span><span class="se">\033</span><span class="s1">[93m&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;RED&#39;</span><span class="p">:</span> <span class="s1">&#39;</span><span class="se">\033</span><span class="s1">[91m&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;BOLD&#39;</span><span class="p">:</span> <span class="s1">&#39;</span><span class="se">\033</span><span class="s1">[1m&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;ITALIC&#39;</span><span class="p">:</span> <span class="s1">&#39;</span><span class="se">\33</span><span class="s1">[3m&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;UNDERLINE&#39;</span><span class="p">:</span> <span class="s1">&#39;</span><span class="se">\033</span><span class="s1">[4m&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;END&#39;</span><span class="p">:</span> <span class="s1">&#39;</span><span class="se">\033</span><span class="s1">[0m&#39;</span><span class="p">}</span>
+
+
+<span class="c1"># def pfont(font, value):</span>
+<span class="c1">#     return PrintFont[font.upper()] + str(value) + PrintFont[&#39;END&#39;]</span>
+
+
+<span class="c1">#### LaTeX Font ####</span>
+
+<span class="n">LaTeXFont</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;BLUE&#39;</span><span class="p">:</span> <span class="s1">&#39;\color</span><span class="si">{blue}</span><span class="s1">{&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;RED&#39;</span><span class="p">:</span> <span class="s1">&#39;\color</span><span class="si">{red}</span><span class="s1">{&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;BOLD&#39;</span><span class="p">:</span> <span class="s1">&#39;</span><span class="se">\\</span><span class="s1">textbf{&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;ITALIC&#39;</span><span class="p">:</span> <span class="s1">&#39;</span><span class="se">\\</span><span class="s1">textit{&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;END&#39;</span><span class="p">:</span> <span class="s1">&#39;}&#39;</span><span class="p">}</span>
+
+
+<div class="viewcode-block" id="pfont"><a class="viewcode-back" href="../../source.html#source.utils.pfont">[docs]</a><span class="k">def</span> <span class="nf">pfont</span><span class="p">(</span><span class="n">fonts</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">format</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Wrap string in font code.</span>
+<span class="sd">    :param format: PrintFont or LaTeXFont</span>
+<span class="sd">    :param fonts: list of font names, eg. [&#39;red&#39;, &#39;bold&#39;]</span>
+<span class="sd">    :param value: string to wrap in font</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">font</span> <span class="ow">in</span> <span class="n">fonts</span><span class="p">:</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="nb">format</span><span class="p">[</span><span class="n">font</span><span class="o">.</span><span class="n">upper</span><span class="p">()]</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">+</span> <span class="nb">format</span><span class="p">[</span><span class="s1">&#39;END&#39;</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">value</span></div>
+
+
+<div class="viewcode-block" id="latex_table_wrapper"><a class="viewcode-back" href="../../source.html#source.utils.latex_table_wrapper">[docs]</a><span class="k">def</span> <span class="nf">latex_table_wrapper</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">fit_to_page</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
+    <span class="n">prefix</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\\</span><span class="s1">begin</span><span class="si">{table}</span><span class="s1">[]</span><span class="se">\n</span><span class="s1">\centering</span><span class="se">\n</span><span class="s1">&#39;</span>
+    <span class="k">if</span> <span class="n">fit_to_page</span><span class="p">:</span>
+        <span class="n">prefix</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="se">\\</span><span class="s1">resizebox{</span><span class="se">\\</span><span class="s1">textwidth}{!}{</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="n">table</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">\end</span><span class="si">{tabular}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\\</span><span class="s1">\end</span><span class="si">{tabular}</span><span class="s1">}&#39;</span><span class="p">,</span> <span class="n">table</span><span class="p">)</span>
+    <span class="n">suffix</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">\caption{&#39;</span> <span class="o">+</span> <span class="n">title</span> <span class="o">+</span> <span class="s1">&#39;}&#39;</span>
+    <span class="n">suffix</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">\label{t:&#39;</span> <span class="o">+</span> <span class="n">label</span> <span class="o">+</span> <span class="s1">&#39;}</span><span class="se">\n</span><span class="s1">\end</span><span class="si">{table}</span><span class="se">\n</span><span class="s1">&#39;</span>
+    <span class="k">return</span> <span class="n">prefix</span> <span class="o">+</span> <span class="n">table</span> <span class="o">+</span> <span class="n">suffix</span></div>
+
+
+<div class="viewcode-block" id="latex_table_post_process"><a class="viewcode-back" href="../../source.html#source.utils.latex_table_post_process">[docs]</a><span class="k">def</span> <span class="nf">latex_table_post_process</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">bottomrule_row_ids</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[],</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">fit_to_page</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Add separator lines and align width to page.</span>
+<span class="sd">    :param bottomrule_row_ids: Row indices (without header) below which we put a separator line.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">table</span> <span class="o">=</span> <span class="n">latex_table_wrapper</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">fit_to_page</span><span class="p">,</span> <span class="n">label</span><span class="p">)</span>
+
+    <span class="n">newline</span> <span class="o">=</span> <span class="s1">&#39; </span><span class="se">\\\\</span><span class="s1">&#39;</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">newline</span><span class="p">)</span>
+    <span class="n">rows</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\\\\</span><span class="s1">hline&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\\\\</span><span class="s1">toprule&#39;</span><span class="p">,</span> <span class="n">rows</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">rows</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\\\\</span><span class="s1">hline&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\\\\</span><span class="s1">midrule&#39;</span><span class="p">,</span> <span class="n">rows</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="c1"># Insert lines between rows belonging to different modalities (Ling, Vis, MM)</span>
+    <span class="k">if</span> <span class="n">bottomrule_row_ids</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">bottomrule_row_ids</span><span class="p">:</span>
+            <span class="n">r</span> <span class="o">+=</span> <span class="mi">1</span>  <span class="c1"># Omit header</span>
+            <span class="n">rows</span><span class="p">[</span><span class="n">r</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n\\</span><span class="s1">hline&#39;</span> <span class="o">+</span> <span class="n">rows</span><span class="p">[</span><span class="n">r</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="n">table</span> <span class="o">=</span> <span class="n">newline</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">table</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Anita Lilla Verő.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

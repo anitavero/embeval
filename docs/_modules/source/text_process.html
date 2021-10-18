@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>source.text_process &mdash; EmbEval 18 October 2021 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> EmbEval
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dependencies.html">Dependencies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../example.html">Example Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">EmbEval Modules Documentation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">EmbEval</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      <li>source.text_process</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for source.text_process</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">pickle</span> <span class="k">as</span> <span class="nn">pkl</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">Counter</span>
+<span class="kn">from</span> <span class="nn">nltk.corpus</span> <span class="k">import</span> <span class="n">stopwords</span>
+<span class="kn">from</span> <span class="nn">nltk.tokenize</span> <span class="k">import</span> <span class="n">sent_tokenize</span>
+<span class="kn">from</span> <span class="nn">nltk</span> <span class="k">import</span> <span class="n">collocations</span>
+<span class="kn">from</span> <span class="nn">nltk.metrics.association</span> <span class="k">import</span> <span class="n">NGRAM</span><span class="p">,</span> <span class="n">TOTAL</span><span class="p">,</span> <span class="n">_log2</span><span class="p">,</span> <span class="n">UNIGRAMS</span>
+<span class="kn">from</span> <span class="nn">nltk.collocations</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">unidecode</span> <span class="k">import</span> <span class="n">unidecode</span>
+<span class="kn">import</span> <span class="nn">string</span>
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="k">import</span> <span class="n">tqdm</span>
+<span class="kn">from</span> <span class="nn">glob</span> <span class="k">import</span> <span class="n">glob</span>
+<span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="k">import</span> <span class="n">Process</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="k">import</span> <span class="n">chain</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">reduce</span>
+
+
+<span class="n">hun_stopwords</span> <span class="o">=</span> <span class="n">stopwords</span><span class="o">.</span><span class="n">words</span><span class="p">(</span><span class="s1">&#39;hungarian&#39;</span><span class="p">)</span> <span class="o">+</span> \
+                <span class="p">[</span><span class="s1">&#39;is&#39;</span><span class="p">,</span> <span class="s1">&#39;ha&#39;</span><span class="p">,</span> <span class="s1">&#39;szerintem&#39;</span><span class="p">,</span> <span class="s1">&#39;szoval&#39;</span><span class="p">,</span> <span class="s1">&#39;na&#39;</span><span class="p">,</span> <span class="s1">&#39;hat&#39;</span><span class="p">,</span> <span class="s1">&#39;kicsit&#39;</span><span class="p">,</span> <span class="s1">&#39;ugye&#39;</span><span class="p">,</span> <span class="s1">&#39;amugy&#39;</span><span class="p">]</span>
+<span class="n">stopwords_lang</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;hungarian&#39;</span><span class="p">:</span> <span class="n">hun_stopwords</span><span class="p">,</span> <span class="s1">&#39;english&#39;</span><span class="p">:</span> <span class="n">stopwords</span><span class="o">.</span><span class="n">words</span><span class="p">(</span><span class="s1">&#39;english&#39;</span><span class="p">),</span>
+                  <span class="s1">&#39;hunglish&#39;</span><span class="p">:</span> <span class="n">hun_stopwords</span> <span class="o">+</span> <span class="n">stopwords</span><span class="o">.</span><span class="n">words</span><span class="p">(</span><span class="s1">&#39;english&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="n">unidecode</span><span class="p">(</span><span class="n">w</span><span class="p">)</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">hun_stopwords</span><span class="p">]}</span>
+
+<span class="n">_w_sum</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">s</span><span class="p">,</span> <span class="n">a</span><span class="p">:</span> <span class="n">reduce</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">x</span><span class="o">**</span><span class="n">a</span> <span class="o">+</span> <span class="n">y</span><span class="o">**</span><span class="n">a</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="BigramPMIVariants"><a class="viewcode-back" href="../../source.html#source.text_process.BigramPMIVariants">[docs]</a><span class="k">class</span> <span class="nc">BigramPMIVariants</span><span class="p">(</span><span class="n">collocations</span><span class="o">.</span><span class="n">BigramAssocMeasures</span><span class="p">):</span>
+
+<div class="viewcode-block" id="BigramPMIVariants.ppmi"><a class="viewcode-back" href="../../source.html#source.text_process.BigramPMIVariants.ppmi">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">ppmi</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">marginals</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Scores ngrams by positive pointwise mutual information.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">pmi</span><span class="p">(</span><span class="o">*</span><span class="n">marginals</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BigramPMIVariants.w_ppmi"><a class="viewcode-back" href="../../source.html#source.text_process.BigramPMIVariants.w_ppmi">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">w_ppmi</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">marginals</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=.</span><span class="mi">75</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Scores ngrams by weighted positive pointwise mutual information.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="n">_log2</span><span class="p">(</span><span class="n">marginals</span><span class="p">[</span><span class="n">NGRAM</span><span class="p">]</span> <span class="o">/</span> <span class="n">marginals</span><span class="p">[</span><span class="n">TOTAL</span><span class="p">])</span> <span class="o">-</span>
+                   <span class="n">_log2</span><span class="p">((</span><span class="n">marginals</span><span class="p">[</span><span class="n">UNIGRAMS</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">marginals</span><span class="p">[</span><span class="n">TOTAL</span><span class="p">])</span> <span class="o">*</span>
+                         <span class="p">(</span><span class="n">marginals</span><span class="p">[</span><span class="n">UNIGRAMS</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">**</span> <span class="n">alpha</span> <span class="o">/</span> <span class="n">_w_sum</span><span class="p">(</span><span class="n">marginals</span><span class="p">[</span><span class="n">UNIGRAMS</span><span class="p">],</span> <span class="n">alpha</span><span class="p">))),</span>
+                   <span class="mi">0</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="tokenize"><a class="viewcode-back" href="../../source.html#source.text_process.tokenize">[docs]</a><span class="k">def</span> <span class="nf">tokenize</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">lang</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Lower, tokenize, filter punctuation and stopwords.</span>
+<span class="sd">    :param text: str</span>
+<span class="sd">    :param lang: {hungarian|english|hunglish}</span>
+<span class="sd">    :return: str list iterator</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># TODO: stemming</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="n">trtab</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">maketrans</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">punctuation</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39; &#39;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">punctuation</span><span class="p">))]))</span>
+    <span class="n">words</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="n">trtab</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+    <span class="n">words</span> <span class="o">=</span> <span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">w</span><span class="p">:</span> <span class="n">w</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">stopwords_lang</span><span class="p">[</span><span class="n">lang</span><span class="p">],</span> <span class="n">words</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">words</span></div>
+
+
+<div class="viewcode-block" id="pmi_for_words"><a class="viewcode-back" href="../../source.html#source.text_process.pmi_for_words">[docs]</a><span class="k">def</span> <span class="nf">pmi_for_words</span><span class="p">(</span><span class="n">words</span><span class="p">,</span> <span class="n">finder_file</span><span class="p">,</span> <span class="n">token_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">document_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">variants</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;pmi&#39;</span><span class="p">]):</span>
+    <span class="sd">&quot;&quot;&quot;Return PMI scores for words in a given tokenized corpus.</span>
+<span class="sd">        :param words: string list.</span>
+<span class="sd">        :param token_list: string list.</span>
+<span class="sd">        :param document_list: list of string lists</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">finder_file</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Load Bigram file&#39;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">finder_file</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">finder</span> <span class="o">=</span> <span class="n">pkl</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Bigram collection&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">token_list</span><span class="p">:</span>
+            <span class="n">finder</span> <span class="o">=</span> <span class="n">BigramCollocationFinder</span><span class="o">.</span><span class="n">from_words</span><span class="p">(</span><span class="n">token_list</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">document_list</span><span class="p">:</span>
+            <span class="n">finder</span> <span class="o">=</span> <span class="n">BigramCollocationFinder</span><span class="o">.</span><span class="n">from_documents</span><span class="p">(</span><span class="n">document_list</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Either token_list or document_list should be given.&#39;</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Save Bigram file&#39;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">finder_file</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">pkl</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">finder</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Compute {&quot;, &quot;.join(variants)}&#39;</span><span class="p">)</span>
+    <span class="n">pmi_measures</span> <span class="o">=</span> <span class="n">BigramPMIVariants</span><span class="p">()</span>
+    <span class="n">pmi_vars</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">variant</span> <span class="ow">in</span> <span class="n">variants</span><span class="p">:</span>
+        <span class="n">pmi_vars</span><span class="p">[</span><span class="n">variant</span><span class="p">]</span> <span class="o">=</span> <span class="n">finder</span><span class="o">.</span><span class="n">score_ngrams</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">pmi_measures</span><span class="p">,</span> <span class="n">variant</span><span class="p">))</span>
+    <span class="n">word_pmis</span> <span class="o">=</span> <span class="p">{</span><span class="n">variant</span><span class="p">:</span> <span class="p">{}</span> <span class="k">for</span> <span class="n">variant</span> <span class="ow">in</span> <span class="n">variants</span><span class="p">}</span>
+    <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">words</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;Store {&quot;, &quot;.join(variants)}&#39;</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">variant</span><span class="p">,</span> <span class="n">vpmis</span> <span class="ow">in</span> <span class="n">pmi_vars</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">word_pmis</span><span class="p">[</span><span class="n">variant</span><span class="p">][</span><span class="n">w</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">vpmis</span> <span class="k">if</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+    <span class="k">return</span> <span class="n">word_pmis</span></div>
+
+
+<div class="viewcode-block" id="text2gensim"><a class="viewcode-back" href="../../source.html#source.text_process.text2gensim">[docs]</a><span class="k">def</span> <span class="nf">text2gensim</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">lang</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Tokenize and filter stop words. Return list of str lists (std for gensim)</span>
+<span class="sd">        where each str list is a sentence and each text is a list of these lists.&quot;&quot;&quot;</span>
+    <span class="n">sents</span> <span class="o">=</span> <span class="n">sent_tokenize</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">iter</span><span class="p">([</span><span class="nb">list</span><span class="p">(</span><span class="n">tokenize</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">lang</span><span class="p">))</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sents</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="hapax_legomena"><a class="viewcode-back" href="../../source.html#source.text_process.hapax_legomena">[docs]</a><span class="k">def</span> <span class="nf">hapax_legomena</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return words that occur only once within a text.</span>
+<span class="sd">    :param text: str list or Counter</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cnt</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="n">text</span><span class="p">)</span> <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">text</span><span class="p">)</span> <span class="o">==</span> <span class="nb">list</span> <span class="k">else</span> <span class="n">text</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">w</span> <span class="k">for</span> <span class="n">w</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cnt</span><span class="o">.</span><span class="n">most_common</span><span class="p">()</span> <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="text2w2vf"><a class="viewcode-back" href="../../source.html#source.text_process.text2w2vf">[docs]</a><span class="k">def</span> <span class="nf">text2w2vf</span><span class="p">(</span><span class="n">corpus_tup</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">vocab</span><span class="o">=</span><span class="p">[],</span> <span class="n">processes</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">merge</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">filename_suffix</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Prepare contexts word2vecf using their context format:</span>
+<span class="sd">       textual file of word-context pairs.</span>
+<span class="sd">       each pair takes a separate line.</span>
+<span class="sd">       the format of a pair is &quot;&lt;word&gt; &lt;context&gt;&quot;, i.e. space delimited, where &lt;word&gt; and &lt;context&gt; are strings.</span>
+<span class="sd">       The context is all non stop words in the same sentence or around the token if it&#39;s not sent_tokenized.</span>
+<span class="sd">       :param corpus_tup: list with elements of: token (str) list or sentence list (list of str lists)</span>
+<span class="sd">       :param data_dir: directory to write context pairs to</span>
+<span class="sd">       :param window: Window for w2v. If 0 and text is a sentence list the context of all words are all the other</span>
+<span class="sd">                      words in the same sentence.</span>
+<span class="sd">       :param vocab: list of str, vocab to filter with in extract_neighbours.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;#vocab to filter with:&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">vocab</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">contexts</span><span class="p">(</span><span class="n">corp_tup</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">fn</span><span class="p">,</span> <span class="n">txt</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">corp_tup</span><span class="p">):</span>
+            <span class="n">cont_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">fn</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">f</span><span class="s1">&#39;</span><span class="si">{filename_suffix}</span><span class="s1">_window-</span><span class="si">{window}</span><span class="s1">.contexts&#39;</span>
+            <span class="k">if</span> <span class="n">window</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">txt</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="nb">str</span><span class="p">:</span>   <span class="c1"># space separated tokens</span>
+                    <span class="n">extract_neighbours</span><span class="p">(</span><span class="n">txt</span><span class="p">,</span> <span class="n">cont_file</span><span class="p">,</span> <span class="n">vocab</span><span class="p">,</span> <span class="n">window</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">txt</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="nb">list</span><span class="p">:</span>    <span class="c1"># list of str list format</span>
+                    <span class="c1"># for sent in txt:</span>
+                    <span class="n">tokens</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">from_iterable</span><span class="p">(</span><span class="n">txt</span><span class="p">))</span>
+                    <span class="n">extract_neighbours</span><span class="p">(</span><span class="n">tokens</span><span class="p">,</span> <span class="n">cont_file</span><span class="p">,</span> <span class="n">vocab</span><span class="p">,</span> <span class="n">window</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">txt</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="nb">list</span><span class="p">:</span>
+                <span class="n">context_pairs</span><span class="p">(</span><span class="n">txt</span><span class="p">,</span> <span class="n">cont_file</span><span class="p">,</span> <span class="n">lang</span><span class="o">=</span><span class="s1">&#39;english&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Sentence context works only with list of str lists input.&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">processes</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="c1"># Multiprocessing</span>
+        <span class="k">def</span> <span class="nf">chunks</span><span class="p">(</span><span class="n">lst</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Yield successive n chunks from lst.&quot;&quot;&quot;</span>
+            <span class="n">size</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span> <span class="o">/</span> <span class="n">n</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">lst</span><span class="p">),</span> <span class="n">size</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="n">lst</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span> <span class="o">+</span> <span class="n">size</span><span class="p">]</span>
+
+        <span class="n">file_chunks</span> <span class="o">=</span> <span class="n">chunks</span><span class="p">(</span><span class="n">corpus_tup</span><span class="p">,</span> <span class="n">processes</span><span class="p">)</span>
+        <span class="n">queue</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">c_tups</span> <span class="ow">in</span> <span class="n">file_chunks</span><span class="p">:</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">Process</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">contexts</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">c_tups</span><span class="p">,</span> <span class="p">))</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+            <span class="n">queue</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">queue</span><span class="p">:</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">contexts</span><span class="p">(</span><span class="n">corpus_tup</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">merge</span><span class="p">:</span>
+        <span class="n">concatenate_files</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">f</span><span class="s1">&#39;</span><span class="si">{filename_suffix}</span><span class="s1">.contexts&#39;</span><span class="p">,</span>
+                          <span class="n">f</span><span class="s1">&#39;{filename_suffix + &quot;_&quot; if filename_suffix else &quot;&quot;}window-</span><span class="si">{window}</span><span class="s1">_contexts.txt&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="concatenate_files"><a class="viewcode-back" href="../../source.html#source.text_process.concatenate_files">[docs]</a><span class="k">def</span> <span class="nf">concatenate_files</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">file_pattern</span><span class="p">,</span> <span class="n">outfile</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Concatenate files into one big file. &quot;&quot;&quot;</span>
+    <span class="n">whole_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">outfile</span><span class="p">)</span>
+    <span class="n">files</span> <span class="o">=</span> <span class="n">glob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">f</span><span class="s1">&#39;*/*</span><span class="si">{file_pattern}</span><span class="s1">&#39;</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">fn</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">files</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;Concatenating </span><span class="si">{file_pattern}</span><span class="s1"> files&#39;</span><span class="p">):</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">pairs</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">pairs</span> <span class="ow">and</span> <span class="n">pairs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">:</span>
+                <span class="n">pairs</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">whole_file</span><span class="p">):</span>
+            <span class="n">append_write</span> <span class="o">=</span> <span class="s1">&#39;a&#39;</span>  <span class="c1"># append if already exists</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">append_write</span> <span class="o">=</span> <span class="s1">&#39;w&#39;</span>  <span class="c1"># make a new file if not</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">whole_file</span><span class="p">,</span> <span class="n">append_write</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">pairs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="extract_neighbours"><a class="viewcode-back" href="../../source.html#source.text_process.extract_neighbours">[docs]</a><span class="k">def</span> <span class="nf">extract_neighbours</span><span class="p">(</span><span class="n">tokens</span><span class="p">,</span> <span class="n">contexts_file</span><span class="p">,</span> <span class="n">vocab</span><span class="o">=</span><span class="p">[],</span> <span class="n">window</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+    <span class="n">positions</span> <span class="o">=</span> <span class="p">[(</span><span class="n">x</span><span class="p">,</span> <span class="s2">&quot;l</span><span class="si">%s</span><span class="s2">_&quot;</span> <span class="o">%</span> <span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="o">-</span><span class="n">window</span><span class="p">,</span> <span class="o">+</span><span class="n">window</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">x</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">contexts_file</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">tok</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tokens</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">vocab</span> <span class="ow">and</span> <span class="n">tok</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">vocab</span><span class="p">:</span> <span class="k">continue</span>
+            <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">positions</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="o">+</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span> <span class="k">continue</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="o">+</span> <span class="n">j</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">):</span> <span class="k">continue</span>
+                <span class="n">c</span> <span class="o">=</span> <span class="n">tokens</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="n">j</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">vocab</span> <span class="ow">and</span> <span class="n">c</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">vocab</span><span class="p">:</span> <span class="k">continue</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{tok}</span><span class="s1"> </span><span class="si">{s}{c}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span></div>
+
+<span class="c1"># TODO: filter by a given vocab here too</span>
+<div class="viewcode-block" id="context_pairs"><a class="viewcode-back" href="../../source.html#source.text_process.context_pairs">[docs]</a><span class="k">def</span> <span class="nf">context_pairs</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">contexts_file</span><span class="p">,</span> <span class="n">lang</span><span class="o">=</span><span class="s1">&#39;english&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Prepare contexts word2vecf without their context format:</span>
+<span class="sd">       textual file of word-context pairs.</span>
+<span class="sd">       each pair takes a separate line.</span>
+<span class="sd">       the format of a pair is &quot;&lt;word&gt; &lt;context&gt;&quot;, i.e. space delimited, where &lt;word&gt; and &lt;context&gt; are strings.</span>
+<span class="sd">       The context is all non stop words in the same sentence.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">text</span><span class="p">)</span> <span class="o">==</span> <span class="nb">str</span><span class="p">:</span>   <span class="c1"># raw text</span>
+        <span class="n">sents</span> <span class="o">=</span> <span class="n">text2gensim</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">lang</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">text</span><span class="p">)</span> <span class="o">==</span> <span class="nb">list</span><span class="p">:</span>    <span class="c1"># Already in list of str list format</span>
+        <span class="n">sents</span> <span class="o">=</span> <span class="n">text</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">contexts_file</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sents</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">s</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">s</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">w</span> <span class="o">!=</span> <span class="n">c</span><span class="p">:</span>
+                        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{w}</span><span class="s1"> </span><span class="si">{c}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span><span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="c1"># argh.dispatch_commands([concatenate_files])</span>
+
+    <span class="c1"># Debug</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">pmi_for_words</span><span class="p">([</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">],</span> <span class="s1">&#39;../test/PMI.pkl&#39;</span><span class="p">,</span> <span class="n">token_list</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">],</span> <span class="n">variant</span><span class="o">=</span><span class="s1">&#39;w_ppmi&#39;</span><span class="p">))</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Anita Lilla Verő.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
