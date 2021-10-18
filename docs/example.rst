@@ -16,6 +16,6 @@ Fore more examples see:
 
 :py:mod:`source.run_infogain_experiments`
 
-:py:mod:`emb_information`
+:py:mod:`source.emb_information`
 
-:py:mod:`unsupervised_metrics`
+:py:mod:`source.unsupervised_metrics`
