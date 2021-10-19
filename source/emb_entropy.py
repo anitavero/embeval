@@ -17,7 +17,7 @@ from ite.cost.x_analytical_values import analytical_value_d_kullback_leibler
 
 
 def run_benchmark(dim, k, num_of_samples=10000):
-    """"
+    """
     :param dim: dimension of the distribution
     :param k: number of nearest neighbours
     :param num_of_samples: number of data points

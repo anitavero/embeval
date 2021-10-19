@@ -41,7 +41,8 @@ linewidth = 3
 
 # We could use dataclass decorator in case of python 3.7
 class DataSets:
-    """Class for storing evaluation datasets and linguistic embeddings."""
+    """
+Class for storing evaluation datasets and linguistic embeddings."""
     # Evaluation datasets
     men: List[Tuple[str, str, float]]
     simlex: List[Tuple[str, str, float]]
@@ -153,7 +154,8 @@ def divide_eval_vocab_by_freqranges(distribution_file, eval_data_dir, dataset_na
 
 def compute_correlations(scores: (np.ndarray, list), name_pairs: List[Tuple[str, str]] = None,
                          common_subset: bool = False, leave_out=False):
-    """Compute correlation between score series.
+    """
+Compute correlation between score series.
         :param scores: Structured array of scores with embedding/ground_truth names.
         :param name_pairs: pairs of scores to correlate. If None, every pair will be computed.
                           if 'gt', everything will be plot against the ground_truth.
@@ -205,7 +207,8 @@ def compute_correlations(scores: (np.ndarray, list), name_pairs: List[Tuple[str,
 
 
 def highlight(val, conditions: dict, tablefmt):
-    """Highlight value in a table column.
+    """
+Highlight value in a table column.
     :param val: number, value
     :param conditions: dict of {colour: condition}
     :param tablefmt: 'simple' is terminal, 'latex-raw' is LaTeX
@@ -447,7 +450,8 @@ class PlotColour:
 
 
 def plot_brain_words(brain_scores, plot_order):
-    """Plot hit counts for word in Brain data.
+    """
+Plot hit counts for word in Brain data.
     :param brain_scores: brain score dict
     :param plot_order: 'concreteness' orders words for Wordnet conreteness
                        <emb_name> orders plot for an embedding's scores
@@ -554,7 +558,8 @@ def eval_dataset(dataset: List[Tuple[str, str, float]],
 
 def plot_scores(scores: np.ndarray, gt_divisor=10, vecs_names=None, labels=None, colours=None, linestyles=None,
                 title=None, type='plot', alphas=None, xtick_labels=None, ax=None, show=True, swapaxes=False):
-    """Scatter plot of a structured array."""
+    """
+Scatter plot of a structured array."""
     scs = deepcopy(scores)
     if 'ground_truth' in scores.dtype.names:
         scs['ground_truth'] /= gt_divisor
@@ -765,7 +770,8 @@ def plot_for_freqranges(scores: np.ndarray, gt_divisor, quantity=-1, common_subs
 
 
 def wn_concreteness(word, similarity_fn=wn.path_similarity):
-    """WordNet distance of a word from its root hypernym."""
+    """
+WordNet distance of a word from its root hypernym."""
     syns = wn.synsets(word)
     dists = [1 - similarity_fn(s, s.root_hypernyms()[0]) for s in syns]
     return np.median(dists), max(dists)
@@ -773,7 +779,8 @@ def wn_concreteness(word, similarity_fn=wn.path_similarity):
 
 def wn_concreteness_for_pairs(word_pairs, synset_agg: str, similarity_fn=wn.path_similarity,
                               pair_score_agg='sum') -> (np.ndarray, np.ndarray):
-    """Sort scores by first and second word's concreteness scores.
+    """
+Sort scores by first and second word's concreteness scores.
     :param pair_score_agg: 'sum' adds scores for the two words, 'diff' computes their absolute difference.
     :return (ids, scores): sorted score indices and concreteness scores.
     """
@@ -793,7 +800,8 @@ def wn_concreteness_for_pairs(word_pairs, synset_agg: str, similarity_fn=wn.path
 
 def plot_by_concreteness(scores: np.ndarray, word_pairs, ax1, ax2, common_subset=False, vecs_names=None,
                          concrete_num=100, title_prefix='', pair_score_agg='sum', show=False):
-    """Plot scores for data splits with increasing concreteness."""
+    """
+Plot scores for data splits with increasing concreteness."""
     for synset_agg, ax in zip(['median', 'most_conc'], [ax1, ax2]):
         corrs_by_conc = defaultdict(list)
         ids12, concs = wn_concreteness_for_pairs(word_pairs, synset_agg, pair_score_agg=pair_score_agg)
@@ -847,7 +855,8 @@ def plot_by_concreteness(scores: np.ndarray, word_pairs, ax1, ax2, common_subset
 
 
 def eval_concreteness(scores: np.ndarray, word_pairs, num=100, gt_divisor=10, vecs_names=None, tablefmt='simple'):
-    """Eval dataset instances based on WordNet synsets."""
+    """
+Eval dataset instances based on WordNet synsets."""
 
     # Sort scores by first and second word's concreteness scores
     def print_conc(synset_agg, title):
@@ -869,7 +878,8 @@ def eval_concreteness(scores: np.ndarray, word_pairs, num=100, gt_divisor=10, ve
 def compute_scores(actions, embeddings, scores, datasets, pairs, brain_scores=None, pre_score_files: str = None,
                    ling_vecs_names=[], vecs_names=[], mm_lingvis=False, mm_embs_of: List[Tuple[str]] = None,
                    mm_padding=False, common_subset=False):
-    """Compute scores on all evaluation datasets."""
+    """
+Compute scores on all evaluation datasets."""
     print(actions)
     embs = embeddings.embeddings
     vocabs = embeddings.vocabs

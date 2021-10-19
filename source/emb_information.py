@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 
-""" Demo for (Shannon) mutual information estimators.
-
-Analytical vs estimated value is illustrated for normal random variables.
-
 """
+Module for (Shannon) mutual information estimators.
+"""
+
 import os
 from numpy.random import rand, multivariate_normal
 from numpy import array, arange, zeros, dot, ones, sum
@@ -114,7 +113,8 @@ def benchmark(dim=10, cost_name='MIShannon_DKL', num_of_samples=-1, max_num_of_s
 @arg('-vns', '--vecs_names', nargs='+', type=str, required=True)
 def estimate_embeddings_mi(datadir: str, vecs_names=[], mm_embs_of=[], cost_name='MIShannon_DKL',
                            pca_n_components=None):
-    """Return estimated Mutual Information for a Embeddings with vecs_names in datadir.
+    """
+Return estimated Mutual Information for a Embeddings with vecs_names in datadir.
         :param datadir: Path to directory which contains embedding data.
         :param vecs_names: List[str] Names of embeddings
         :param mm_embs_of: List of str tuples, where the tuples contain names of embeddings which are to
