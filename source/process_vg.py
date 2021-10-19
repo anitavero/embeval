@@ -25,7 +25,8 @@ def vg_dists(datadir='/Users/anitavero/projects/data/visualgenome'):
 @arg('-vs', '--variants', nargs='+', type=str, required=True)
 def vg_pmis(words_file, datadir='/Users/anitavero/projects/data/visualgenome',
             bigram_file='bigram_vg.pkl', variants=['ppmi']):
-    """Save PMI scores for bigrams including words in file word_list.
+    """
+Save PMI scores for bigrams including words in file word_list.
         :param words_file: json file name in data_dir, consisting of an str list
         :param datadir: path to directory with data
     """
@@ -43,7 +44,8 @@ def vg_pmis(words_file, datadir='/Users/anitavero/projects/data/visualgenome',
 
 
 def description_corpus(region_descriptions, lemmatise):
-    """Return all descriptions as a corpus in form of list of strings (sentences)."""
+    """
+Return all descriptions as a corpus in form of list of strings (sentences)."""
     nlp = spacy.load('en')
     corpus = []
     for rg in tqdm(region_descriptions):

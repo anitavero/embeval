@@ -17,7 +17,8 @@ from source.utils import get_file_name
 
 
 class Embeddings:
-    """Data class for storing embeddings."""
+    """
+Data class for storing embeddings."""
     # Embeddings
     embeddings = List[np.ndarray]
     vocabs = List[List[str]]
@@ -75,7 +76,8 @@ class Embeddings:
 
     @staticmethod
     def get_label(name):
-        """Return a printable label for embedding names."""
+        """
+Return a printable label for embedding names."""
         name = re.sub('ground_truth [-|\|] ', '', name)  # Remove ground_truth prefix
 
         def label(nm):
@@ -149,7 +151,8 @@ class Embeddings:
         return np.array(fasttext_vecs), np.array(fasttext_vocab)
 
     def load_vecs(self, vecs_name: str, datadir: str, filter_vocab=[]):
-        """Load npy vector files and vocab files. If they are not present load try loading gensim model."""
+        """
+Load npy vector files and vocab files. If they are not present load try loading gensim model."""
         path = datadir + f'/{vecs_name}'
         try:
             if os.path.exists(path + '.vocab'):
@@ -171,7 +174,8 @@ class Embeddings:
 
 
 def serialize2npy(filepath: str, savedir: str, maxnum: int = 10):
-    """Save embedding files from pickle containing dictionary of {word: np.ndarray}
+    """
+Save embedding files from pickle containing dictionary of {word: np.ndarray}
         into embedding.npy, embedding.vocab, for eval.
         The embedding is a numpy array of shape(vocab size, vector dim)
         Vocabulary is a text file including words separated by new line.
@@ -208,7 +212,8 @@ def serialize2npy(filepath: str, savedir: str, maxnum: int = 10):
 
 
 def agg_img_embeddings(values: dict, maxnum: int = 10) -> np.ndarray:
-    """Aggregate image vectors from a dictionary of to numpy embeddings and vocabulary.
+    """
+Aggregate image vectors from a dictionary of to numpy embeddings and vocabulary.
         The embedding is a numpy array of shape(vocab size, vector dim)
         Vocabulary is a text file including words separated by new line.
     """
@@ -224,7 +229,8 @@ MM_TOKEN = '+'  # Connects embedding names for labelling, e.g. 'linguistic+visua
 
 def mid_fusion(embeddings, vocabs, labels,
                padding: bool, combnum: int = 2) -> (List[np.ndarray], List[np.ndarray], List[str]):
-    """Concatenate embeddings pairwise for words in the intersection or union (with padding) of their vocabulary.
+    """
+Concatenate embeddings pairwise for words in the intersection or union (with padding) of their vocabulary.
         :param embeddings: List[np.ndarray] or List[Tuple[np.ndarray]]
         :param vocabs: List[np.ndarray] or List[Tuple[np.ndarray]]
         :param labels: List[np.ndarray] or List[Tuple[np.ndarray]]
@@ -293,7 +299,8 @@ def mid_fusion(embeddings, vocabs, labels,
 
 
 def filter_by_vocab(vecs, vocab, filter_vocab):
-    """Filter numpy array and corresponding vocab, so they contain words and vectors for
+    """
+Filter numpy array and corresponding vocab, so they contain words and vectors for
         words in filter_vocab."""
     if filter_vocab == []:
         return [], []
@@ -309,7 +316,8 @@ def filter_by_vocab(vecs, vocab, filter_vocab):
 
 @arg('-fpt', '--file_patterns', nargs='+', type=str)
 def filter_for_freqranges(datadir, fqvocabs_file, file_patterns=None):
-    """Filter embedding files with the given file pattern."""
+    """
+Filter embedding files with the given file pattern."""
     with open(fqvocabs_file, 'r') as f:
         fqvocabs = json.load(f)
     evalds, splitnum = fqvocabs_file.split('.')[0].split('_')[1:]

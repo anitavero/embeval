@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-""" Demo for KL divergence estimators.
+"""
+ Demo for KL divergence estimators.
 
 Aanalytical vs estimated value is illustrated for normal random variables.
 

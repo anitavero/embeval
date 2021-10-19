@@ -1,4 +1,5 @@
-"""Prepare COCO datasets
+"""
+Prepare COCO datasets
 ==============================
 
 `COCO <http://cocodataset.org/#home>`_ is a large-scale object detection, segmentation, and captioning datasetself.

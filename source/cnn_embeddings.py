@@ -22,7 +22,8 @@ cnn_models = ['alexnet', 'resnet18', 'resnet34', 'resnet50', 'resnet101',
 @arg('-cnn', '--cnn_model', choices=cnn_models, default='resnet18')
 def get_cnn(image_dir, word_index_file, savedir=None, cnn_model='resnet18', agg_maxnum=10, gpu=False,
             filename_prefix=''):
-    """Extract CNN representations for images in a directory and saves it into a dictionary file."""
+    """
+Extract CNN representations for images in a directory and saves it into a dictionary file."""
     img2vec = Img2Vec(model=cnn_model, cuda=gpu)
 
     # Dictionary of {words: {img_name: img_representation}}

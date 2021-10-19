@@ -7,7 +7,8 @@ import source.vecs2nps as vecs2nps
 
 
 def train(contexts_file, save_dir, w2v_dir, filename_suffix='', min_count=10, size=300, negative=15, threads=4):
-    """Perform the stepst to train word2vecf on a given corpus:
+    """
+Perform the stepst to train word2vecf on a given corpus:
 
         2. Create word and context vocabularies:
 

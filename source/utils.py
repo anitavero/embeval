@@ -14,7 +14,8 @@ def suffixate(s):
 
 
 def tuple_list(arg):
-    """List[Tuple[str]] argument type.
+    """
+List[Tuple[str]] argument type.
         format: whitespace separated str lists, separated by |. eg. 'embs1 embs2 | embs2 embs3 embs4'
     """
     try:
@@ -29,7 +30,8 @@ def tuple_list(arg):
 
 
 def hr_time(time, round_n=2):
-    """Human readable time."""
+    """
+Human readable time."""
     hours = time // 3600 % 24
     minutes = time // 60 % 60
     seconds = round(time % 60, round_n)
@@ -74,7 +76,8 @@ def join_struct_arrays(arrays):
 
 
 def dict2struct_array(d):
-    """Convert dict to structured array."""
+    """
+Convert dict to structured array."""
     dtype = [(k, np.ndarray) for k in d.keys()]
     dim = len(list(d.values())[0])
     ar = np.array(np.empty(dim), dtype=dtype)
@@ -116,7 +119,8 @@ LaTeXFont = {'BLUE': '\color{blue}{',
 
 
 def pfont(fonts: List[str], value: str, format):
-    """Wrap string in font code.
+    """
+Wrap string in font code.
     :param format: PrintFont or LaTeXFont
     :param fonts: list of font names, eg. ['red', 'bold']
     :param value: string to wrap in font
@@ -137,7 +141,8 @@ def latex_table_wrapper(table, title, fit_to_page, label):
 
 
 def latex_table_post_process(table, bottomrule_row_ids: List[int] = [], title='', fit_to_page=False, label=''):
-    """Add separator lines and align width to page.
+    """
+Add separator lines and align width to page.
     :param bottomrule_row_ids: Row indices (without header) below which we put a separator line.
     """
     table = latex_table_wrapper(table, title, fit_to_page, label)

@@ -37,7 +37,8 @@ FIG_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'figs')
 
 
 def get_n_nearest_neighbors(words: np.ndarray, E: np.ndarray, vocab: np.ndarray, n: int = 10):
-    """n nearest neighbors for words based on cosine distance in Embedding E."""
+    """
+n nearest neighbors for words based on cosine distance in Embedding E."""
     w_idx = np.where(np.in1d(vocab, np.array(words)))[0]  # Words indices in Vocab and Embedding E
     C = cosine_distances(E)
     np.fill_diagonal(C, np.inf)
@@ -48,7 +49,8 @@ def get_n_nearest_neighbors(words: np.ndarray, E: np.ndarray, vocab: np.ndarray,
 
 @arg('-w', '--words', nargs='+', type=str)
 def n_nearest_neighbors(data_dir, model_name, words=[], n: int = 10):
-    """n nearest neighbors for words based on model <vecs_names>."""
+    """
+n nearest neighbors for words based on model <vecs_names>."""
     embs = Embeddings(data_dir, [model_name])
     E, vocab = embs.embeddings[0], embs.vocabs[0]
     return get_n_nearest_neighbors(np.array(words), E, vocab, n).transpose()
@@ -94,7 +96,8 @@ def agglomerative_clustering(model, n_clusters=3, linkage='ward'):
 
 
 def cluster_eval(vectors, labels):
-    """Unsupervised clustering metrics."""
+    """
+Unsupervised clustering metrics."""
     results = {}
 
     def safe_metric(metric):
@@ -172,7 +175,8 @@ def distances_from_centroids(emb, vocab, label_dict, centroids):
 
 
 def order_words_by_centroid_distance(clusters, cluster_label_filepath):
-    """Order words by their distance from the centroid"""
+    """
+Order words by their distance from the centroid"""
     path, fn = os.path.split(cluster_label_filepath)
     dist_file = os.path.join(path, '_'.join(['dists_from_centr'] + fn.split('_')[2:]))
     with open(dist_file, 'r') as f:
@@ -183,7 +187,8 @@ def order_words_by_centroid_distance(clusters, cluster_label_filepath):
 
 
 def save_closest_words_to_centroids():
-    """Save words from each cluster, which are closest to the centroid."""
+    """
+Save words from each cluster, which are closest to the centroid."""
     with open('cluster_files.json', 'r') as f:
         cf = json.load(f)
     cwords = []
@@ -215,7 +220,8 @@ def wn_label_for_words(words, depth=3):
 
 
 def label_clusters_with_wordnet(depth=3, max_label_num=3):
-    """First max_label_num most common synset names."""
+    """
+First max_label_num most common synset names."""
     with open('cluster_files.json', 'r') as f:
         cf = json.load(f)
     for clfile in cf['clfiles']:
@@ -299,7 +305,8 @@ def print_clusters(clusters_WN_filepath, tablefmt, barfontsize=20):
 
 
 def cluster_sizes_avgfreq(clusters, cl_freqs, embtype=None, method=None, barfontsize=20, suffix=''):
-    """Historgram of cluster sizes"""
+    """
+Historgram of cluster sizes"""
     cluster_num = len(clusters)
 
     fig, ax1 = plt.subplots(figsize=(12, 6))
@@ -540,7 +547,8 @@ def avg_cluster_wordfrequency(datadir='/Users/anitavero/projects/data/', clmetho
 #
 #
 # def vg_pmis(words_file, datadir='/Users/anitavero/projects/data/visualgenome'):
-#     """Save PMI scores for bigrams including words in file word_list.
+#     """
+Save PMI scores for bigrams including words in file word_list.
 #         :param words_file: json file name in data_dir, consisting of an str list
 #         :param datadir: path to directory with data
 #     """
@@ -716,7 +724,8 @@ def plot_cluster_results(resdir='/Users/anitavero/projects/data/wikidump/models/
 
 
 def wn_category(word):
-    """Map a word to categories based on WordNet closures."""
+    """
+Map a word to categories based on WordNet closures."""
     cats = ['transport', 'food', 'building', 'animal', 'appliance', 'action', 'clothes', 'utensil', 'body', 'color',
             'electronics', 'number', 'human']
     cat_synsets = dict(zip(cats, map(wn.synsets, cats)))

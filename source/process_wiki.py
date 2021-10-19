@@ -1,4 +1,5 @@
-"""Module for processing a Wikipedia dump previously extracted using
+"""
+Module for processing a Wikipedia dump previously extracted using
     WikiExtractor (https://github.com/attardi/wikiextractor)
 """
 
@@ -21,7 +22,8 @@ LANG = 'english'
 
 
 def process_files(data_dir):
-    """Sentence tokenize and stop word filter all text files
+    """
+Sentence tokenize and stop word filter all text files
     and save the tokenized texts to json files into the 'tokenized' directory."""
     save_dir = os.path.join(data_dir, 'tokenized')
     create_dir(save_dir)
@@ -45,7 +47,8 @@ def process_files(data_dir):
 
 @arg('-vs', '--variants', nargs='+', type=str, required=True)
 def get_pmi_for_words(words_file, data_dir, process=False, bigram_file=None, variants=['pmi']):
-    """Save PMI scores for bigrams including words in file word_list.
+    """
+Save PMI scores for bigrams including words in file word_list.
         :param words_file: json file name in data_dir, consisting of an str list
         :param data_dir: path to directory with data
         :param process: bool, if True it preprocesses wiki files if False it loads preprocessed jsons.
@@ -69,7 +72,8 @@ def get_pmi_for_words(words_file, data_dir, process=False, bigram_file=None, var
 
 @arg('--format', type=str, choices=['json', 'text'], default='json')
 def distribution(data_dir, format='json', file_suffix=''):
-    """Count word frequencies from text files or json files, containing list of str lists."""
+    """
+Count word frequencies from text files or json files, containing list of str lists."""
     counter = Counter()
     files = glob(os.path.join(data_dir, '*/wiki*'))
     for fl in tqdm(files):
@@ -116,7 +120,8 @@ def create_context_files(data_dir=None, jsons=None, window=5, vocab=[], processe
 
 def contexts_for_quantity(data_dir, save_dir, num, filename_suffix='', contexts_pattern='',
                           window=5, vocab=[], processes=1):
-    """Loads randomly chosen, given number of context files and concatenates them into one file.
+    """
+Loads randomly chosen, given number of context files and concatenates them into one file.
         If there are no .contexts files under data_dir/* subdirectories, but one .contexts file exists under
         data_dir directly, it will just return this file name.
     """
@@ -163,7 +168,8 @@ def contexts_for_quantity(data_dir, save_dir, num, filename_suffix='', contexts_
 @arg('num', type=int)
 def w2v_for_quantity(data_dir, save_dir, w2v_dir, num, size=300, min_count=10, workers=4,
                     negative=15, filename_suffix='', contexts_pattern='', window=5, vocab=[]):
-    """Train Word2Vec on a random number of tokenized json files.
+    """
+Train Word2Vec on a random number of tokenized json files.
     :param data_dir: 'tokenized' directory with subdirectories of .context files."""
     cont_file = contexts_for_quantity(data_dir, save_dir, num, filename_suffix, contexts_pattern=contexts_pattern,
                                       window=window, vocab=vocab, processes=workers)
@@ -178,7 +184,8 @@ def w2v_for_quantity(data_dir, save_dir, w2v_dir, num, size=300, min_count=10, w
 @arg('sample-num', type=int)
 def w2v_for_quantities(data_dir, save_dir, w2v_dir, sample_num, trfile_num, size=300, min_count=10, workers=4,
                        negative=15, exp_name='', contexts_pattern='', window=5, vocab=[]):
-    """Train several Word2Vecs in parallel for the same data quantity, multiple times on random subsets.
+    """
+Train several Word2Vecs in parallel for the same data quantity, multiple times on random subsets.
     :param data_dir: 'tokenized' directory with subdirectories of jsons.
     :param save_dir: directory where we save the model and log files.
     :param sample_num: number of random trainings for the same number of files.

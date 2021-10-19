@@ -29,13 +29,15 @@ class BigramPMIVariants(collocations.BigramAssocMeasures):
 
     @classmethod
     def ppmi(cls, *marginals):
-        """Scores ngrams by positive pointwise mutual information.
+        """
+Scores ngrams by positive pointwise mutual information.
         """
         return max(cls.pmi(*marginals), 0)
 
     @classmethod
     def w_ppmi(cls, *marginals, alpha=.75):
-        """Scores ngrams by weighted positive pointwise mutual information.
+        """
+Scores ngrams by weighted positive pointwise mutual information.
         """
         return max(_log2(marginals[NGRAM] / marginals[TOTAL]) -
                    _log2((marginals[UNIGRAMS][0] / marginals[TOTAL]) *
@@ -59,7 +61,8 @@ def tokenize(text, lang):
 
 
 def pmi_for_words(words, finder_file, token_list=None, document_list=None, variants=['pmi']):
-    """Return PMI scores for words in a given tokenized corpus.
+    """
+Return PMI scores for words in a given tokenized corpus.
         :param words: string list.
         :param token_list: string list.
         :param document_list: list of string lists
@@ -94,14 +97,16 @@ def pmi_for_words(words, finder_file, token_list=None, document_list=None, varia
 
 
 def text2gensim(text, lang):
-    """Tokenize and filter stop words. Return list of str lists (std for gensim)
+    """
+Tokenize and filter stop words. Return list of str lists (std for gensim)
         where each str list is a sentence and each text is a list of these lists."""
     sents = sent_tokenize(text)
     return iter([list(tokenize(s, lang)) for s in sents])
 
 
 def hapax_legomena(text):
-    """Return words that occur only once within a text.
+    """
+Return words that occur only once within a text.
     :param text: str list or Counter
     """
     cnt = Counter(text) if type(text) == list else text
@@ -109,7 +114,8 @@ def hapax_legomena(text):
 
 
 def text2w2vf(corpus_tup, data_dir, window=5, vocab=[], processes=1, merge=False, filename_suffix=''):
-    """Prepare contexts word2vecf using their context format:
+    """
+Prepare contexts word2vecf using their context format:
        textual file of word-context pairs.
        each pair takes a separate line.
        the format of a pair is "<word> <context>", i.e. space delimited, where <word> and <context> are strings.
@@ -140,7 +146,8 @@ def text2w2vf(corpus_tup, data_dir, window=5, vocab=[], processes=1, merge=False
     if processes > 1:
         # Multiprocessing
         def chunks(lst, n):
-            """Yield successive n chunks from lst."""
+            """
+Yield successive n chunks from lst."""
             size = math.ceil(len(lst) / n)
             for i in range(0, len(lst), size):
                 yield lst[i:i + size]
@@ -162,7 +169,8 @@ def text2w2vf(corpus_tup, data_dir, window=5, vocab=[], processes=1, merge=False
 
 
 def concatenate_files(data_dir, file_pattern, outfile):
-    """ Concatenate files into one big file. """
+    """
+ Concatenate files into one big file. """
     whole_file = os.path.join(data_dir, outfile)
     files = glob(os.path.join(data_dir, f'*/*{file_pattern}'))
     for fn in tqdm(files, desc=f'Concatenating {file_pattern} files'):
@@ -192,7 +200,8 @@ def extract_neighbours(tokens, contexts_file, vocab=[], window=5):
 
 # TODO: filter by a given vocab here too
 def context_pairs(text, contexts_file, lang='english'):
-    """Prepare contexts word2vecf without their context format:
+    """
+Prepare contexts word2vecf without their context format:
        textual file of word-context pairs.
        each pair takes a separate line.
        the format of a pair is "<word> <context>", i.e. space delimited, where <word> and <context> are strings.

@@ -10,7 +10,8 @@ logger = logging.getLogger(__name__)
 
 
 class LossLogger(CallbackAny2Vec):
-    """Callback to print loss after each epoch."""
+    """
+Callback to print loss after each epoch."""
 
     def __init__(self, show=False):
         """
