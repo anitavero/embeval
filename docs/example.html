@@ -72,7 +72,7 @@
 <h1>Example Usage<a class="headerlink" href="#example-usage" title="Permalink to this headline">¶</a></h1>
 <p>Print performance scores on semantic similarity and relatedness tasks:</p>
 <p><code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">source.task_eval.py</span> <span class="pre">datadir</span> <span class="pre">compscores</span> <span class="pre">embdir</span> <span class="pre">--vecs-names</span> <span class="pre">model1</span> <span class="pre">model2</span> <span class="pre">--ling-vecs-names</span> <span class="pre">text_model1</span> <span class="pre">text_model2</span> <span class="pre">--mm_padding=True</span></code></p>
-<p>Run Mutual Information Experiments for word frequency ranges using HSIC kernel method:</p>
+<p>Run Mutual Information Experiments for word frequency ranges using HSIC kernel method after projecting the spaces to a 100 dimensional basis with PCA:</p>
 <p><code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">source.run_mi_experiments</span> <span class="pre">--exp-names='quantity'</span>&#160; <span class="pre">cost-name='BIHSIC_IChol'</span>&#160; <span class="pre">--pca_n_components=100</span></code></p>
 <p>Fore more examples see:</p>
 <p><a class="reference internal" href="source.html#module-source.run_infogain_analysis" title="source.run_infogain_analysis"><code class="xref py py-mod docutils literal notranslate"><span class="pre">source.run_infogain_analysis</span></code></a></p>
