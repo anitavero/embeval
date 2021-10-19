@@ -48,9 +48,9 @@ Scores ngrams by weighted positive pointwise mutual information.
 def tokenize(text, lang):
     """
     Lower, tokenize, filter punctuation and stopwords.
-    :param text: str
-    :param lang: {hungarian|english|hunglish}
-    :return: str list iterator
+        :param text: str
+        :param lang: {hungarian|english|hunglish}
+        :return: str list iterator
     """
     # TODO: stemming
     text = text.lower()
@@ -115,16 +115,16 @@ Return words that occur only once within a text.
 
 def text2w2vf(corpus_tup, data_dir, window=5, vocab=[], processes=1, merge=False, filename_suffix=''):
     """
-Prepare contexts word2vecf using their context format:
-       textual file of word-context pairs.
-       each pair takes a separate line.
-       the format of a pair is "<word> <context>", i.e. space delimited, where <word> and <context> are strings.
-       The context is all non stop words in the same sentence or around the token if it's not sent_tokenized.
-       :param corpus_tup: list with elements of: token (str) list or sentence list (list of str lists)
-       :param data_dir: directory to write context pairs to
-       :param window: Window for w2v. If 0 and text is a sentence list the context of all words are all the other
-                      words in the same sentence.
-       :param vocab: list of str, vocab to filter with in extract_neighbours.
+    Prepare contexts for word2vecf using their context format:
+    Textual file of word-context pairs.
+    Each pair takes a separate line.
+    The format of a pair is "<word> <context>", i.e. space delimited, where <word> and <context> are strings.
+    The context is all non stop words in the same sentence or around the token if it's not sent_tokenized.
+           :param corpus_tup: list with elements of: token (str) list or sentence list (list of str lists)
+           :param data_dir: directory to write context pairs to
+           :param window: Window for w2v. If 0 and text is a sentence list the context of all words are all the other
+                          words in the same sentence.
+           :param vocab: list of str, vocab to filter with in extract_neighbours.
     """
     print("#vocab to filter with:", len(vocab))
 

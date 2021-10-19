@@ -240,8 +240,7 @@ def inspect_clusters(cluster_label_filepath):
     """
     Convert cluster label file containing {word: label} dict to {cluster_id: wordlist} dict,
      ordered by the number of cluster members.
-    :param cluster_label_filepath:
-    :return:
+    :param cluster_label_filepath: Path to cluster label file.
     """
     with open(cluster_label_filepath, 'r') as f:
         cl_dict = json.load(f)
@@ -262,8 +261,8 @@ def print_clusters(clusters_WN_filepath, tablefmt, barfontsize=20):
 
     :param clusters_WN_filepath:
     :param tablefmt: printed table format. 'simple' - terminal, 'latex_raw' - latex table.
-    :param barfontsize:
-    :return:
+    :param barfontsize: font size in the figure.
+    :return: clusters, printed table
     """
     # Table of cluster members ordered by size
     embtype = emb_labels(os.path.split(clusters_WN_filepath)[-1])
@@ -336,8 +335,7 @@ Historgram of cluster sizes"""
 
 def jaccard_similarity_score(x, y):
     """
-    Jaccard Similarity J (A,B) = | Intersection (A,B) | /
-                                    | Union (A,B) |
+    Jaccard Similarity J (A,B) = | Intersection (A,B) | / | Union (A,B) |
     """
     intersection_cardinality = len(set(x).intersection(set(y)))
     union_cardinality = len(set(x).union(set(y)))
@@ -391,14 +389,14 @@ def cluster_similarities(order='default', clmethod='agglomerative', plot=True):
 
 def compute_cluster_similarities(emb_clusters1, emb_clusters2, compare, order, clmethod, plot):
     """
-
+Compute cluster similarities between two embedding cluster structure.
     :param emb_clusters1:
     :param emb_clusters2:
-    :param compare: 'cross' or 'dot'
-    :param order:
-    :param clmethod:
-    :param plot:
-    :return:
+    :param compare: comparison based on 'cross' or 'dot' product.
+    :param order: 'clustermap' or 'avgfreq'(average corpus frequency of cluster element words). Default: 'avgfreq'.
+    :param clmethod: 'kmeans' or 'agglomerative'.
+    :param plot: bool. If True similarity plot is created.
+    :return: jaccard_similarities: dict {<embedding pair label>: similarity matrix}.
     """
     def compute_sim(e, e1, cls, cls1):
         sims = np.empty((20, 20))
@@ -548,7 +546,7 @@ def avg_cluster_wordfrequency(datadir='/Users/anitavero/projects/data/', clmetho
 #
 # def vg_pmis(words_file, datadir='/Users/anitavero/projects/data/visualgenome'):
 #     """
-Save PMI scores for bigrams including words in file word_list.
+#       Save PMI scores for bigrams including words in file word_list.
 #         :param words_file: json file name in data_dir, consisting of an str list
 #         :param datadir: path to directory with data
 #     """

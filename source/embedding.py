@@ -52,9 +52,9 @@ def train(corpus, save_path, load_path=None,
           epochs=5, max_vocab_size=None, show_loss=False, save_loss=False):
     """
     Train w2v.
-    :param corpus: list of list strings
-    :param save_path: Model file path
-    :return: trained model
+        :param corpus: list of list strings
+        :param save_path: Model file path
+        :return: trained model
     """
     texts, texts_build, texts_l = tee(corpus, 3)
     loss_logger = LossLogger(show_loss)  # TODO: loss curve looks weird with multiple workers

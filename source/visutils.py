@@ -6,12 +6,9 @@ from PIL import Image
 def crop_bbox(image, x, y, w, h):
     """
     Crops out a bounding box from image.
-    :param image: PIL Image
-    :param x:
-    :param y:
-    :param w:
-    :param h:
-    :return: PIL Image
+        :param image: PIL Image
+        :param x, y, w, h: left, upper, right, lower coordinates 
+        :return: PIL Image
     """
     if isinstance(image, np.ndarray):
         image = Image.fromarray(np.uint8(image))

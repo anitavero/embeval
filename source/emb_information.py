@@ -36,11 +36,11 @@ FIG_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'figs')
 def benchmark(dim=10, cost_name='MIShannon_DKL', num_of_samples=-1, max_num_of_samples=10000):
     """
     Plot estimated vs analytical Mutual Information for random matrices.
-    :param dim: Data dimension (number of columns of the matrices)
-    :param cost_name: MI estimation algorithm, e.g, 'BIHSIC_IChol', 'MIShannon_DKL', 'MIShannon_HS' (for more see ite.cost)
-    :param num_of_samples: if -1 increases the number of data points by 1000 until max_num_of_samples,
-                           if >-1 it prints running time for this number of data points (matrix row num)
-    :param max_num_of_samples: maximum data point number in case of plotting for a series of sample nums.
+        :param dim: Data dimension (number of columns of the matrices)
+        :param cost_name: MI estimation algorithm, e.g, 'BIHSIC_IChol', 'MIShannon_DKL', 'MIShannon_HS' (for more see ite.cost)
+        :param num_of_samples: if -1 increases the number of data points by 1000 until max_num_of_samples,
+                               if >-1 it prints running time for this number of data points (matrix row num)
+        :param max_num_of_samples: maximum data point number in case of plotting for a series of sample nums.
     """
     ds = array([dim, dim])  # subspace dimensions: ds[0], ..., ds[M-1]
     if num_of_samples == -1:

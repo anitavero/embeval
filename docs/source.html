@@ -45,7 +45,7 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="#">source package</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#module-source.cnn_embeddings">source.cnn_embeddings module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#module-source.emb_entropy">source.emb_entropy module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#source-emb-entropy-module">source.emb_entropy module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#module-source.emb_information">source.emb_information module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#module-source.embedding">source.embedding module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#module-source.process_embeddings">source.process_embeddings module</a></li>
@@ -114,9 +114,8 @@
 </dd></dl>
 
 </div>
-<div class="section" id="module-source.emb_entropy">
-<span id="source-emb-entropy-module"></span><h2>source.emb_entropy module<a class="headerlink" href="#module-source.emb_entropy" title="Permalink to this headline">¶</a></h2>
-<p>Demo for KL divergence estimators.</p>
+<div class="section" id="source-emb-entropy-module">
+<h2>source.emb_entropy module<a class="headerlink" href="#source-emb-entropy-module" title="Permalink to this headline">¶</a></h2>
 <p>Aanalytical vs estimated value is illustrated for normal random variables.</p>
 <dl class="function">
 <dt id="source.emb_entropy.benchmark">
@@ -253,30 +252,40 @@ If no argument is given a single Python float is returned.</p>
 <dl class="function">
 <dt id="source.emb_entropy.run_benchmark">
 <code class="sig-prename descclassname">source.emb_entropy.</code><code class="sig-name descname">run_benchmark</code><span class="sig-paren">(</span><em class="sig-param">dim</em>, <em class="sig-param">k</em>, <em class="sig-param">num_of_samples=10000</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/emb_entropy.html#run_benchmark"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.emb_entropy.run_benchmark" title="Permalink to this definition">¶</a></dt>
-<dd><p>”
-:param dim: dimension of the distribution
-:param k: number of nearest neighbours
-:param num_of_samples: number of data points</p>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dim</strong> – dimension of the distribution</p></li>
+<li><p><strong>k</strong> – number of nearest neighbours</p></li>
+<li><p><strong>num_of_samples</strong> – number of data points</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 </div>
 <div class="section" id="module-source.emb_information">
 <span id="source-emb-information-module"></span><h2>source.emb_information module<a class="headerlink" href="#module-source.emb_information" title="Permalink to this headline">¶</a></h2>
-<p>Demo for (Shannon) mutual information estimators.</p>
-<p>Analytical vs estimated value is illustrated for normal random variables.</p>
+<p>Module for (Shannon) mutual information estimators.</p>
 <dl class="function">
 <dt id="source.emb_information.benchmark">
 <code class="sig-prename descclassname">source.emb_information.</code><code class="sig-name descname">benchmark</code><span class="sig-paren">(</span><em class="sig-param">dim=10</em>, <em class="sig-param">cost_name='MIShannon_DKL'</em>, <em class="sig-param">num_of_samples=-1</em>, <em class="sig-param">max_num_of_samples=10000</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/emb_information.html#benchmark"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.emb_information.benchmark" title="Permalink to this definition">¶</a></dt>
-<dd><p>Plot estimated vs analytical Mutual Information for random matrices.
-:param dim: Data dimension (number of columns of the matrices)
-:param cost_name: MI estimation algorithm, e.g, ‘BIHSIC_IChol’, ‘MIShannon_DKL’, ‘MIShannon_HS’ (for more see ite.cost)
-:param num_of_samples: if -1 increases the number of data points by 1000 until max_num_of_samples,</p>
-<blockquote>
-<div><p>if &gt;-1 it prints running time for this number of data points (matrix row num)</p>
-</div></blockquote>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>max_num_of_samples</strong> – maximum data point number in case of plotting for a series of sample nums.</p>
+<dd><dl class="simple">
+<dt>Plot estimated vs analytical Mutual Information for random matrices.</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param dim</dt>
+<dd class="field-odd"><p>Data dimension (number of columns of the matrices)</p>
+</dd>
+<dt class="field-even">param cost_name</dt>
+<dd class="field-even"><p>MI estimation algorithm, e.g, ‘BIHSIC_IChol’, ‘MIShannon_DKL’, ‘MIShannon_HS’ (for more see ite.cost)</p>
+</dd>
+<dt class="field-odd">param num_of_samples</dt>
+<dd class="field-odd"><p>if -1 increases the number of data points by 1000 until max_num_of_samples,
+if &gt;-1 it prints running time for this number of data points (matrix row num)</p>
+</dd>
+<dt class="field-even">param max_num_of_samples</dt>
+<dd class="field-even"><p>maximum data point number in case of plotting for a series of sample nums.</p>
+</dd>
+</dl>
 </dd>
 </dl>
 </dd></dl>
@@ -284,16 +293,22 @@ If no argument is given a single Python float is returned.</p>
 <dl class="function">
 <dt id="source.emb_information.estimate_embeddings_mi">
 <code class="sig-prename descclassname">source.emb_information.</code><code class="sig-name descname">estimate_embeddings_mi</code><span class="sig-paren">(</span><em class="sig-param">datadir: str</em>, <em class="sig-param">vecs_names=[]</em>, <em class="sig-param">mm_embs_of=[]</em>, <em class="sig-param">cost_name='MIShannon_DKL'</em>, <em class="sig-param">pca_n_components=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/emb_information.html#estimate_embeddings_mi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.emb_information.estimate_embeddings_mi" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return estimated Mutual Information for a Embeddings with vecs_names in datadir.
-:param datadir: Path to directory which contains embedding data.
-:param vecs_names: List[str] Names of embeddings
-:param mm_embs_of: List of str tuples, where the tuples contain names of embeddings which are to</p>
-<blockquote>
-<div><p>be concatenated into a multi-modal mid-fusion embedding.</p>
-</div></blockquote>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>cost_name</strong> – MI estimation algorithm, e.g, ‘BIHSIC_IChol’, ‘MIShannon_DKL’, ‘MIShannon_HS’ (for more see ite.cost)</p>
+<dd><dl class="simple">
+<dt>Return estimated Mutual Information for a Embeddings with vecs_names in datadir.</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param datadir</dt>
+<dd class="field-odd"><p>Path to directory which contains embedding data.</p>
+</dd>
+<dt class="field-even">param vecs_names</dt>
+<dd class="field-even"><p>List[str] Names of embeddings</p>
+</dd>
+<dt class="field-odd">param mm_embs_of</dt>
+<dd class="field-odd"><p>List of str tuples, where the tuples contain names of embeddings which are to
+be concatenated into a multi-modal mid-fusion embedding.</p>
+</dd>
+<dt class="field-even">param cost_name</dt>
+<dd class="field-even"><p>MI estimation algorithm, e.g, ‘BIHSIC_IChol’, ‘MIShannon_DKL’, ‘MIShannon_HS’ (for more see ite.cost)</p>
+</dd>
+</dl>
 </dd>
 </dl>
 </dd></dl>
@@ -509,10 +524,20 @@ KNN based linear:   ‘MIShannon_DKL’</p>
 <dl class="function">
 <dt id="source.embedding.train">
 <code class="sig-prename descclassname">source.embedding.</code><code class="sig-name descname">train</code><span class="sig-paren">(</span><em class="sig-param">corpus</em>, <em class="sig-param">save_path</em>, <em class="sig-param">load_path=None</em>, <em class="sig-param">size=300</em>, <em class="sig-param">window=5</em>, <em class="sig-param">min_count=10</em>, <em class="sig-param">workers=4</em>, <em class="sig-param">epochs=5</em>, <em class="sig-param">max_vocab_size=None</em>, <em class="sig-param">show_loss=False</em>, <em class="sig-param">save_loss=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/embedding.html#train"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.embedding.train" title="Permalink to this definition">¶</a></dt>
-<dd><p>Train w2v.
-:param corpus: list of list strings
-:param save_path: Model file path
-:return: trained model</p>
+<dd><dl class="simple">
+<dt>Train w2v.</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param corpus</dt>
+<dd class="field-odd"><p>list of list strings</p>
+</dd>
+<dt class="field-even">param save_path</dt>
+<dd class="field-even"><p>Model file path</p>
+</dd>
+<dt class="field-odd">return</dt>
+<dd class="field-odd"><p>trained model</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 </div>
@@ -580,9 +605,11 @@ KNN based linear:   ‘MIShannon_DKL’</p>
 <dl class="function">
 <dt id="source.process_embeddings.agg_img_embeddings">
 <code class="sig-prename descclassname">source.process_embeddings.</code><code class="sig-name descname">agg_img_embeddings</code><span class="sig-paren">(</span><em class="sig-param">values: dict</em>, <em class="sig-param">maxnum: int = 10</em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="reference internal" href="_modules/source/process_embeddings.html#agg_img_embeddings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.process_embeddings.agg_img_embeddings" title="Permalink to this definition">¶</a></dt>
-<dd><p>Aggregate image vectors from a dictionary of to numpy embeddings and vocabulary.
-The embedding is a numpy array of shape(vocab size, vector dim)
+<dd><dl class="simple">
+<dt>Aggregate image vectors from a dictionary of to numpy embeddings and vocabulary.</dt><dd><p>The embedding is a numpy array of shape(vocab size, vector dim)
 Vocabulary is a text file including words separated by new line.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="function">
@@ -593,8 +620,10 @@ Vocabulary is a text file including words separated by new line.</p>
 <dl class="function">
 <dt id="source.process_embeddings.filter_by_vocab">
 <code class="sig-prename descclassname">source.process_embeddings.</code><code class="sig-name descname">filter_by_vocab</code><span class="sig-paren">(</span><em class="sig-param">vecs</em>, <em class="sig-param">vocab</em>, <em class="sig-param">filter_vocab</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/process_embeddings.html#filter_by_vocab"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.process_embeddings.filter_by_vocab" title="Permalink to this definition">¶</a></dt>
-<dd><p>Filter numpy array and corresponding vocab, so they contain words and vectors for
-words in filter_vocab.</p>
+<dd><dl class="simple">
+<dt>Filter numpy array and corresponding vocab, so they contain words and vectors for</dt><dd><p>words in filter_vocab.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="function">
@@ -606,17 +635,25 @@ words in filter_vocab.</p>
 <dl class="function">
 <dt id="source.process_embeddings.mid_fusion">
 <code class="sig-prename descclassname">source.process_embeddings.</code><code class="sig-name descname">mid_fusion</code><span class="sig-paren">(</span><em class="sig-param">embeddings, vocabs, labels, padding: bool, combnum: int = 2) -&gt; (typing.List[numpy.ndarray], typing.List[numpy.ndarray], typing.List[str]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/process_embeddings.html#mid_fusion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.process_embeddings.mid_fusion" title="Permalink to this definition">¶</a></dt>
-<dd><p>Concatenate embeddings pairwise for words in the intersection or union (with padding) of their vocabulary.
-:param embeddings: List[np.ndarray] or List[Tuple[np.ndarray]]
-:param vocabs: List[np.ndarray] or List[Tuple[np.ndarray]]
-:param labels: List[np.ndarray] or List[Tuple[np.ndarray]]
-:param padding: If true, all the vectors are kept from the embeddings’ vocabularies.</p>
-<blockquote>
-<div><p>The vectors parts without a vector from another modality are padded with zeros.</p>
-</div></blockquote>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>combnum</strong> – number of modalities concatenated in the final multi-modal vector</p>
+<dd><dl class="simple">
+<dt>Concatenate embeddings pairwise for words in the intersection or union (with padding) of their vocabulary.</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param embeddings</dt>
+<dd class="field-odd"><p>List[np.ndarray] or List[Tuple[np.ndarray]]</p>
+</dd>
+<dt class="field-even">param vocabs</dt>
+<dd class="field-even"><p>List[np.ndarray] or List[Tuple[np.ndarray]]</p>
+</dd>
+<dt class="field-odd">param labels</dt>
+<dd class="field-odd"><p>List[np.ndarray] or List[Tuple[np.ndarray]]</p>
+</dd>
+<dt class="field-even">param padding</dt>
+<dd class="field-even"><p>If true, all the vectors are kept from the embeddings’ vocabularies.
+The vectors parts without a vector from another modality are padded with zeros.</p>
+</dd>
+<dt class="field-odd">param combnum</dt>
+<dd class="field-odd"><p>number of modalities concatenated in the final multi-modal vector</p>
+</dd>
+</dl>
 </dd>
 </dl>
 </dd></dl>
@@ -624,8 +661,8 @@ words in filter_vocab.</p>
 <dl class="function">
 <dt id="source.process_embeddings.serialize2npy">
 <code class="sig-prename descclassname">source.process_embeddings.</code><code class="sig-name descname">serialize2npy</code><span class="sig-paren">(</span><em class="sig-param">filepath: str</em>, <em class="sig-param">savedir: str</em>, <em class="sig-param">maxnum: int = 10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/process_embeddings.html#serialize2npy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.process_embeddings.serialize2npy" title="Permalink to this definition">¶</a></dt>
-<dd><p>Save embedding files from pickle containing dictionary of {word: np.ndarray}
-into embedding.npy, embedding.vocab, for eval.
+<dd><dl>
+<dt>Save embedding files from pickle containing dictionary of {word: np.ndarray}</dt><dd><p>into embedding.npy, embedding.vocab, for eval.
 The embedding is a numpy array of shape(vocab size, vector dim)
 Vocabulary is a text file including words separated by new line.
 :param filepath: Path to a pickle file containing a dict of</p>
@@ -633,6 +670,8 @@ Vocabulary is a text file including words separated by new line.
 <div><p>either {word: &lt;image embedding list&gt;}
 or     {word: &lt;image embedding&gt;}        (‘descriptors’ suffix in mmfeat file names)</p>
 </div></blockquote>
+</dd>
+</dl>
 </dd></dl>
 
 </div>
@@ -657,22 +696,34 @@ or     {word: &lt;image embedding&gt;}        (‘descriptors’ suffix in mmfea
 <dl class="function">
 <dt id="source.process_vg.vg_pmis">
 <code class="sig-prename descclassname">source.process_vg.</code><code class="sig-name descname">vg_pmis</code><span class="sig-paren">(</span><em class="sig-param">words_file, datadir='/Users/anitavero/projects/data/visualgenome', bigram_file='bigram_vg.pkl', variants=['ppmi']</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/process_vg.html#vg_pmis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.process_vg.vg_pmis" title="Permalink to this definition">¶</a></dt>
-<dd><p>Save PMI scores for bigrams including words in file word_list.
-:param words_file: json file name in data_dir, consisting of an str list
-:param datadir: path to directory with data</p>
+<dd><dl class="simple">
+<dt>Save PMI scores for bigrams including words in file word_list.</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param words_file</dt>
+<dd class="field-odd"><p>json file name in data_dir, consisting of an str list</p>
+</dd>
+<dt class="field-even">param datadir</dt>
+<dd class="field-even"><p>path to directory with data</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 </div>
 <div class="section" id="module-source.process_wiki">
 <span id="source-process-wiki-module"></span><h2>source.process_wiki module<a class="headerlink" href="#module-source.process_wiki" title="Permalink to this headline">¶</a></h2>
-<p>Module for processing a Wikipedia dump previously extracted using
-WikiExtractor (<a class="reference external" href="https://github.com/attardi/wikiextractor">https://github.com/attardi/wikiextractor</a>)</p>
+<dl class="simple">
+<dt>Module for processing a Wikipedia dump previously extracted using</dt><dd><p>WikiExtractor (<a class="reference external" href="https://github.com/attardi/wikiextractor">https://github.com/attardi/wikiextractor</a>)</p>
+</dd>
+</dl>
 <dl class="function">
 <dt id="source.process_wiki.contexts_for_quantity">
 <code class="sig-prename descclassname">source.process_wiki.</code><code class="sig-name descname">contexts_for_quantity</code><span class="sig-paren">(</span><em class="sig-param">data_dir</em>, <em class="sig-param">save_dir</em>, <em class="sig-param">num</em>, <em class="sig-param">filename_suffix=''</em>, <em class="sig-param">contexts_pattern=''</em>, <em class="sig-param">window=5</em>, <em class="sig-param">vocab=[]</em>, <em class="sig-param">processes=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/process_wiki.html#contexts_for_quantity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.process_wiki.contexts_for_quantity" title="Permalink to this definition">¶</a></dt>
-<dd><p>Loads randomly chosen, given number of context files and concatenates them into one file.
-If there are no .contexts files under data_dir/* subdirectories, but one .contexts file exists under
+<dd><dl class="simple">
+<dt>Loads randomly chosen, given number of context files and concatenates them into one file.</dt><dd><p>If there are no .contexts files under data_dir/* subdirectories, but one .contexts file exists under
 data_dir directly, it will just return this file name.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="function">
@@ -689,10 +740,20 @@ data_dir directly, it will just return this file name.</p>
 <dl class="function">
 <dt id="source.process_wiki.get_pmi_for_words">
 <code class="sig-prename descclassname">source.process_wiki.</code><code class="sig-name descname">get_pmi_for_words</code><span class="sig-paren">(</span><em class="sig-param">words_file, data_dir, process=False, bigram_file=None, variants=['pmi']</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/process_wiki.html#get_pmi_for_words"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.process_wiki.get_pmi_for_words" title="Permalink to this definition">¶</a></dt>
-<dd><p>Save PMI scores for bigrams including words in file word_list.
-:param words_file: json file name in data_dir, consisting of an str list
-:param data_dir: path to directory with data
-:param process: bool, if True it preprocesses wiki files if False it loads preprocessed jsons.</p>
+<dd><dl class="simple">
+<dt>Save PMI scores for bigrams including words in file word_list.</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param words_file</dt>
+<dd class="field-odd"><p>json file name in data_dir, consisting of an str list</p>
+</dd>
+<dt class="field-even">param data_dir</dt>
+<dd class="field-even"><p>path to directory with data</p>
+</dd>
+<dt class="field-odd">param process</dt>
+<dd class="field-odd"><p>bool, if True it preprocesses wiki files if False it loads preprocessed jsons.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="function">
@@ -710,19 +771,37 @@ and save the tokenized texts to json files into the ‘tokenized’ directory.</
 <dl class="function">
 <dt id="source.process_wiki.w2v_for_quantities">
 <code class="sig-prename descclassname">source.process_wiki.</code><code class="sig-name descname">w2v_for_quantities</code><span class="sig-paren">(</span><em class="sig-param">data_dir</em>, <em class="sig-param">save_dir</em>, <em class="sig-param">w2v_dir</em>, <em class="sig-param">sample_num</em>, <em class="sig-param">trfile_num</em>, <em class="sig-param">size=300</em>, <em class="sig-param">min_count=10</em>, <em class="sig-param">workers=4</em>, <em class="sig-param">negative=15</em>, <em class="sig-param">exp_name=''</em>, <em class="sig-param">contexts_pattern=''</em>, <em class="sig-param">window=5</em>, <em class="sig-param">vocab=[]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/process_wiki.html#w2v_for_quantities"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.process_wiki.w2v_for_quantities" title="Permalink to this definition">¶</a></dt>
-<dd><p>Train several Word2Vecs in parallel for the same data quantity, multiple times on random subsets.
-:param data_dir: ‘tokenized’ directory with subdirectories of jsons.
-:param save_dir: directory where we save the model and log files.
-:param sample_num: number of random trainings for the same number of files.
-:param trfile_num: number of sampled training files. If num &lt;= 0 we train on the whole corpus.
-Rest are Word2Vec training parameters.</p>
+<dd><dl>
+<dt>Train several Word2Vecs in parallel for the same data quantity, multiple times on random subsets.</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param data_dir</dt>
+<dd class="field-odd"><p>‘tokenized’ directory with subdirectories of jsons.</p>
+</dd>
+<dt class="field-even">param save_dir</dt>
+<dd class="field-even"><p>directory where we save the model and log files.</p>
+</dd>
+<dt class="field-odd">param sample_num</dt>
+<dd class="field-odd"><p>number of random trainings for the same number of files.</p>
+</dd>
+<dt class="field-even">param trfile_num</dt>
+<dd class="field-even"><p>number of sampled training files. If num &lt;= 0 we train on the whole corpus.</p>
+</dd>
+</dl>
+<p>Rest are Word2Vec training parameters.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="function">
 <dt id="source.process_wiki.w2v_for_quantity">
 <code class="sig-prename descclassname">source.process_wiki.</code><code class="sig-name descname">w2v_for_quantity</code><span class="sig-paren">(</span><em class="sig-param">data_dir</em>, <em class="sig-param">save_dir</em>, <em class="sig-param">w2v_dir</em>, <em class="sig-param">num</em>, <em class="sig-param">size=300</em>, <em class="sig-param">min_count=10</em>, <em class="sig-param">workers=4</em>, <em class="sig-param">negative=15</em>, <em class="sig-param">filename_suffix=''</em>, <em class="sig-param">contexts_pattern=''</em>, <em class="sig-param">window=5</em>, <em class="sig-param">vocab=[]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/process_wiki.html#w2v_for_quantity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.process_wiki.w2v_for_quantity" title="Permalink to this definition">¶</a></dt>
-<dd><p>Train Word2Vec on a random number of tokenized json files.
-:param data_dir: ‘tokenized’ directory with subdirectories of .context files.</p>
+<dd><dl class="simple">
+<dt>Train Word2Vec on a random number of tokenized json files.</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param data_dir</dt>
+<dd class="field-odd"><p>‘tokenized’ directory with subdirectories of .context files.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 </div>
@@ -801,8 +880,9 @@ Rest are Word2Vec training parameters.</p>
 <dl class="function">
 <dt id="source.task_eval.compute_correlations">
 <code class="sig-prename descclassname">source.task_eval.</code><code class="sig-name descname">compute_correlations</code><span class="sig-paren">(</span><em class="sig-param">scores: (&lt;class 'numpy.ndarray'&gt;</em>, <em class="sig-param">&lt;class 'list'&gt;)</em>, <em class="sig-param">name_pairs: List[Tuple[str</em>, <em class="sig-param">str]] = None</em>, <em class="sig-param">common_subset: bool = False</em>, <em class="sig-param">leave_out=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/task_eval.html#compute_correlations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.task_eval.compute_correlations" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="simple">
-<dt>Compute correlation between score series.</dt><dd><dl class="field-list simple">
+<dd><dl>
+<dt>Compute correlation between score series.</dt><dd><blockquote>
+<div><dl class="field-list simple">
 <dt class="field-odd">param scores</dt>
 <dd class="field-odd"><p>Structured array of scores with embedding/ground_truth names.</p>
 </dd>
@@ -811,11 +891,12 @@ Rest are Word2Vec training parameters.</p>
 if ‘gt’, everything will be plot against the ground_truth.</p>
 </dd>
 </dl>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">param leave_out</dt>
+<dd class="field-odd"><p>Leave out 1/leave_out portion of pairs, chosen randomly. Does not leave out if it is False.</p>
 </dd>
 </dl>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>leave_out</strong> – Leave out 1/leave_out portion of pairs, chosen randomly. Does not leave out if it is False.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -865,10 +946,20 @@ if ‘gt’, everything will be plot against the ground_truth.</p>
 <dl class="function">
 <dt id="source.task_eval.highlight">
 <code class="sig-prename descclassname">source.task_eval.</code><code class="sig-name descname">highlight</code><span class="sig-paren">(</span><em class="sig-param">val</em>, <em class="sig-param">conditions: dict</em>, <em class="sig-param">tablefmt</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/task_eval.html#highlight"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.task_eval.highlight" title="Permalink to this definition">¶</a></dt>
-<dd><p>Highlight value in a table column.
-:param val: number, value
-:param conditions: dict of {colour: condition}
-:param tablefmt: ‘simple’ is terminal, ‘latex-raw’ is LaTeX</p>
+<dd><dl class="simple">
+<dt>Highlight value in a table column.</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param val</dt>
+<dd class="field-odd"><p>number, value</p>
+</dd>
+<dt class="field-even">param conditions</dt>
+<dd class="field-even"><p>dict of {colour: condition}</p>
+</dd>
+<dt class="field-odd">param tablefmt</dt>
+<dd class="field-odd"><p>‘simple’ is terminal, ‘latex-raw’ is LaTeX</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="function">
@@ -939,12 +1030,18 @@ action compbarin: Compute brain scores for interection of vocabularies.</p></li>
 <dl class="function">
 <dt id="source.task_eval.plot_brain_words">
 <code class="sig-prename descclassname">source.task_eval.</code><code class="sig-name descname">plot_brain_words</code><span class="sig-paren">(</span><em class="sig-param">brain_scores</em>, <em class="sig-param">plot_order</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/task_eval.html#plot_brain_words"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.task_eval.plot_brain_words" title="Permalink to this definition">¶</a></dt>
-<dd><p>Plot hit counts for word in Brain data.
-:param brain_scores: brain score dict
-:param plot_order: ‘concreteness’ orders words for Wordnet conreteness</p>
-<blockquote>
-<div><p>&lt;emb_name&gt; orders plot for an embedding’s scores</p>
-</div></blockquote>
+<dd><dl class="simple">
+<dt>Plot hit counts for word in Brain data.</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param brain_scores</dt>
+<dd class="field-odd"><p>brain score dict</p>
+</dd>
+<dt class="field-even">param plot_order</dt>
+<dd class="field-even"><p>‘concreteness’ orders words for Wordnet conreteness
+&lt;emb_name&gt; orders plot for an embedding’s scores</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="function">
@@ -993,9 +1090,17 @@ action compbarin: Compute brain scores for interection of vocabularies.</p></li>
 <dl class="function">
 <dt id="source.task_eval.wn_concreteness_for_pairs">
 <code class="sig-prename descclassname">source.task_eval.</code><code class="sig-name descname">wn_concreteness_for_pairs</code><span class="sig-paren">(</span><em class="sig-param">word_pairs</em>, <em class="sig-param">synset_agg: str</em>, <em class="sig-param">similarity_fn=&lt;bound method WordNetCorpusReader.path_similarity of &lt;WordNetCorpusReader in '/Users/anitavero/nltk_data/corpora/wordnet'&gt;&gt;</em>, <em class="sig-param">pair_score_agg='sum') -&gt; (&lt;class 'numpy.ndarray'&gt;</em>, <em class="sig-param">&lt;class 'numpy.ndarray'&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/task_eval.html#wn_concreteness_for_pairs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.task_eval.wn_concreteness_for_pairs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Sort scores by first and second word’s concreteness scores.
-:param pair_score_agg: ‘sum’ adds scores for the two words, ‘diff’ computes their absolute difference.
-:return (ids, scores): sorted score indices and concreteness scores.</p>
+<dd><dl class="simple">
+<dt>Sort scores by first and second word’s concreteness scores.</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param pair_score_agg</dt>
+<dd class="field-odd"><p>‘sum’ adds scores for the two words, ‘diff’ computes their absolute difference.</p>
+</dd>
+<dt class="field-even">return (ids, scores)</dt>
+<dd class="field-even"><p>sorted score indices and concreteness scores.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 </div>
@@ -1028,11 +1133,13 @@ action compbarin: Compute brain scores for interection of vocabularies.</p></li>
 <dl class="function">
 <dt id="source.text_process.context_pairs">
 <code class="sig-prename descclassname">source.text_process.</code><code class="sig-name descname">context_pairs</code><span class="sig-paren">(</span><em class="sig-param">text</em>, <em class="sig-param">contexts_file</em>, <em class="sig-param">lang='english'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/text_process.html#context_pairs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.text_process.context_pairs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Prepare contexts word2vecf without their context format:
-textual file of word-context pairs.
+<dd><dl class="simple">
+<dt>Prepare contexts word2vecf without their context format:</dt><dd><p>textual file of word-context pairs.
 each pair takes a separate line.
 the format of a pair is “&lt;word&gt; &lt;context&gt;”, i.e. space delimited, where &lt;word&gt; and &lt;context&gt; are strings.
 The context is all non stop words in the same sentence.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="function">
@@ -1043,54 +1150,88 @@ The context is all non stop words in the same sentence.</p>
 <dl class="function">
 <dt id="source.text_process.hapax_legomena">
 <code class="sig-prename descclassname">source.text_process.</code><code class="sig-name descname">hapax_legomena</code><span class="sig-paren">(</span><em class="sig-param">text</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/text_process.html#hapax_legomena"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.text_process.hapax_legomena" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return words that occur only once within a text.
-:param text: str list or Counter</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="source.text_process.pmi_for_words">
-<code class="sig-prename descclassname">source.text_process.</code><code class="sig-name descname">pmi_for_words</code><span class="sig-paren">(</span><em class="sig-param">words, finder_file, token_list=None, document_list=None, variants=['pmi']</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/text_process.html#pmi_for_words"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.text_process.pmi_for_words" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return PMI scores for words in a given tokenized corpus.
-:param words: string list.
-:param token_list: string list.
-:param document_list: list of string lists</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="source.text_process.text2gensim">
-<code class="sig-prename descclassname">source.text_process.</code><code class="sig-name descname">text2gensim</code><span class="sig-paren">(</span><em class="sig-param">text</em>, <em class="sig-param">lang</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/text_process.html#text2gensim"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.text_process.text2gensim" title="Permalink to this definition">¶</a></dt>
-<dd><p>Tokenize and filter stop words. Return list of str lists (std for gensim)
-where each str list is a sentence and each text is a list of these lists.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="source.text_process.text2w2vf">
-<code class="sig-prename descclassname">source.text_process.</code><code class="sig-name descname">text2w2vf</code><span class="sig-paren">(</span><em class="sig-param">corpus_tup</em>, <em class="sig-param">data_dir</em>, <em class="sig-param">window=5</em>, <em class="sig-param">vocab=[]</em>, <em class="sig-param">processes=1</em>, <em class="sig-param">merge=False</em>, <em class="sig-param">filename_suffix=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/text_process.html#text2w2vf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.text_process.text2w2vf" title="Permalink to this definition">¶</a></dt>
-<dd><p>Prepare contexts word2vecf using their context format:
-textual file of word-context pairs.
-each pair takes a separate line.
-the format of a pair is “&lt;word&gt; &lt;context&gt;”, i.e. space delimited, where &lt;word&gt; and &lt;context&gt; are strings.
-The context is all non stop words in the same sentence or around the token if it’s not sent_tokenized.
-:param corpus_tup: list with elements of: token (str) list or sentence list (list of str lists)
-:param data_dir: directory to write context pairs to
-:param window: Window for w2v. If 0 and text is a sentence list the context of all words are all the other</p>
-<blockquote>
-<div><p>words in the same sentence.</p>
-</div></blockquote>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>vocab</strong> – list of str, vocab to filter with in extract_neighbours.</p>
+<dd><dl class="simple">
+<dt>Return words that occur only once within a text.</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param text</dt>
+<dd class="field-odd"><p>str list or Counter</p>
+</dd>
+</dl>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="function">
+<dt id="source.text_process.pmi_for_words">
+<code class="sig-prename descclassname">source.text_process.</code><code class="sig-name descname">pmi_for_words</code><span class="sig-paren">(</span><em class="sig-param">words, finder_file, token_list=None, document_list=None, variants=['pmi']</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/text_process.html#pmi_for_words"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.text_process.pmi_for_words" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Return PMI scores for words in a given tokenized corpus.</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param words</dt>
+<dd class="field-odd"><p>string list.</p>
+</dd>
+<dt class="field-even">param token_list</dt>
+<dd class="field-even"><p>string list.</p>
+</dd>
+<dt class="field-odd">param document_list</dt>
+<dd class="field-odd"><p>list of string lists</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="source.text_process.text2gensim">
+<code class="sig-prename descclassname">source.text_process.</code><code class="sig-name descname">text2gensim</code><span class="sig-paren">(</span><em class="sig-param">text</em>, <em class="sig-param">lang</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/text_process.html#text2gensim"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.text_process.text2gensim" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Tokenize and filter stop words. Return list of str lists (std for gensim)</dt><dd><p>where each str list is a sentence and each text is a list of these lists.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="source.text_process.text2w2vf">
+<code class="sig-prename descclassname">source.text_process.</code><code class="sig-name descname">text2w2vf</code><span class="sig-paren">(</span><em class="sig-param">corpus_tup</em>, <em class="sig-param">data_dir</em>, <em class="sig-param">window=5</em>, <em class="sig-param">vocab=[]</em>, <em class="sig-param">processes=1</em>, <em class="sig-param">merge=False</em>, <em class="sig-param">filename_suffix=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/text_process.html#text2w2vf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.text_process.text2w2vf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prepare contexts for word2vecf using their context format:
+Textual file of word-context pairs.
+Each pair takes a separate line.
+The format of a pair is “&lt;word&gt; &lt;context&gt;”, i.e. space delimited, where &lt;word&gt; and &lt;context&gt; are strings.
+The context is all non stop words in the same sentence or around the token if it’s not sent_tokenized.</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">param corpus_tup</dt>
+<dd class="field-odd"><p>list with elements of: token (str) list or sentence list (list of str lists)</p>
+</dd>
+<dt class="field-even">param data_dir</dt>
+<dd class="field-even"><p>directory to write context pairs to</p>
+</dd>
+<dt class="field-odd">param window</dt>
+<dd class="field-odd"><p>Window for w2v. If 0 and text is a sentence list the context of all words are all the other
+words in the same sentence.</p>
+</dd>
+<dt class="field-even">param vocab</dt>
+<dd class="field-even"><p>list of str, vocab to filter with in extract_neighbours.</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="function">
 <dt id="source.text_process.tokenize">
 <code class="sig-prename descclassname">source.text_process.</code><code class="sig-name descname">tokenize</code><span class="sig-paren">(</span><em class="sig-param">text</em>, <em class="sig-param">lang</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/text_process.html#tokenize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.text_process.tokenize" title="Permalink to this definition">¶</a></dt>
-<dd><p>Lower, tokenize, filter punctuation and stopwords.
-:param text: str
-:param lang: {hungarian|english|hunglish}
-:return: str list iterator</p>
+<dd><dl class="simple">
+<dt>Lower, tokenize, filter punctuation and stopwords.</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param text</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+<dt class="field-even">param lang</dt>
+<dd class="field-even"><p>{hungarian|english|hunglish}</p>
+</dd>
+<dt class="field-odd">return</dt>
+<dd class="field-odd"><p>str list iterator</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 </div>
@@ -1100,7 +1241,8 @@ The context is all non stop words in the same sentence or around the token if it
 <dt id="source.train_word2vecf.train">
 <code class="sig-prename descclassname">source.train_word2vecf.</code><code class="sig-name descname">train</code><span class="sig-paren">(</span><em class="sig-param">contexts_file</em>, <em class="sig-param">save_dir</em>, <em class="sig-param">w2v_dir</em>, <em class="sig-param">filename_suffix=''</em>, <em class="sig-param">min_count=10</em>, <em class="sig-param">size=300</em>, <em class="sig-param">negative=15</em>, <em class="sig-param">threads=4</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/train_word2vecf.html#train"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.train_word2vecf.train" title="Permalink to this definition">¶</a></dt>
 <dd><p>Perform the stepst to train word2vecf on a given corpus:</p>
-<ol class="arabic" start="2">
+<blockquote>
+<div><ol class="arabic" start="2">
 <li><p>Create word and context vocabularies:</p>
 <blockquote>
 <div><p>./myword2vec/count_and_filter -train dep.contexts -cvocab cv -wvocab wv -min-count 100</p>
@@ -1129,6 +1271,7 @@ not in <cite>cv</cite> are ignored).</p>
 <ol class="arabic simple" start="4">
 <li><p>convert the embeddings to numpy-readable format.</p></li>
 </ol>
+</div></blockquote>
 </dd></dl>
 
 </div>
@@ -1169,19 +1312,28 @@ not in <cite>cv</cite> are ignored).</p>
 <dl class="function">
 <dt id="source.unsupervised_metrics.compute_cluster_similarities">
 <code class="sig-prename descclassname">source.unsupervised_metrics.</code><code class="sig-name descname">compute_cluster_similarities</code><span class="sig-paren">(</span><em class="sig-param">emb_clusters1</em>, <em class="sig-param">emb_clusters2</em>, <em class="sig-param">compare</em>, <em class="sig-param">order</em>, <em class="sig-param">clmethod</em>, <em class="sig-param">plot</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/unsupervised_metrics.html#compute_cluster_similarities"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.unsupervised_metrics.compute_cluster_similarities" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>emb_clusters1</strong> – </p></li>
-<li><p><strong>emb_clusters2</strong> – </p></li>
-<li><p><strong>compare</strong> – ‘cross’ or ‘dot’</p></li>
-<li><p><strong>order</strong> – </p></li>
-<li><p><strong>clmethod</strong> – </p></li>
-<li><p><strong>plot</strong> – </p></li>
-</ul>
+<dd><dl class="simple">
+<dt>Compute cluster similarities between two embedding cluster structure.</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param emb_clusters1</dt>
+<dd class="field-odd"><p></p></dd>
+<dt class="field-even">param emb_clusters2</dt>
+<dd class="field-even"><p></p></dd>
+<dt class="field-odd">param compare</dt>
+<dd class="field-odd"><p>comparison based on ‘cross’ or ‘dot’ product.</p>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
+<dt class="field-even">param order</dt>
+<dd class="field-even"><p>‘clustermap’ or ‘avgfreq’(average corpus frequency of cluster element words). Default: ‘avgfreq’.</p>
+</dd>
+<dt class="field-odd">param clmethod</dt>
+<dd class="field-odd"><p>‘kmeans’ or ‘agglomerative’.</p>
+</dd>
+<dt class="field-even">param plot</dt>
+<dd class="field-even"><p>bool. If True similarity plot is created.</p>
+</dd>
+<dt class="field-odd">return</dt>
+<dd class="field-odd"><p>jaccard_similarities: dict {&lt;embedding pair label&gt;: similarity matrix}.</p>
+</dd>
+</dl>
 </dd>
 </dl>
 </dd></dl>
@@ -1221,10 +1373,7 @@ not in <cite>cv</cite> are ignored).</p>
 </dl>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>cluster_label_filepath</strong> – </p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
+<dd class="field-odd"><p><strong>cluster_label_filepath</strong> – Path to cluster label file.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1232,12 +1381,7 @@ not in <cite>cv</cite> are ignored).</p>
 <dl class="function">
 <dt id="source.unsupervised_metrics.jaccard_similarity_score">
 <code class="sig-prename descclassname">source.unsupervised_metrics.</code><code class="sig-name descname">jaccard_similarity_score</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/unsupervised_metrics.html#jaccard_similarity_score"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.unsupervised_metrics.jaccard_similarity_score" title="Permalink to this definition">¶</a></dt>
-<dd><dl>
-<dt>Jaccard Similarity J (A,B) = | Intersection (A,B) | /</dt><dd><div class="line-block">
-<div class="line">Union (A,B) |</div>
-</div>
-</dd>
-</dl>
+<dd><p>Jaccard Similarity J (A,B) = | Intersection (A,B) | / | Union (A,B) |</p>
 </dd></dl>
 
 <dl class="function">
@@ -1291,11 +1435,11 @@ not in <cite>cv</cite> are ignored).</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>clusters_WN_filepath</strong> – </p></li>
 <li><p><strong>tablefmt</strong> – printed table format. ‘simple’ - terminal, ‘latex_raw’ - latex table.</p></li>
-<li><p><strong>barfontsize</strong> – </p></li>
+<li><p><strong>barfontsize</strong> – font size in the figure.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
+<dd class="field-even"><p>clusters, printed table</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1395,8 +1539,14 @@ not in <cite>cv</cite> are ignored).</p>
 <dl class="function">
 <dt id="source.utils.latex_table_post_process">
 <code class="sig-prename descclassname">source.utils.</code><code class="sig-name descname">latex_table_post_process</code><span class="sig-paren">(</span><em class="sig-param">table</em>, <em class="sig-param">bottomrule_row_ids: List[int] = []</em>, <em class="sig-param">title=''</em>, <em class="sig-param">fit_to_page=False</em>, <em class="sig-param">label=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/utils.html#latex_table_post_process"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.utils.latex_table_post_process" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add separator lines and align width to page.
-:param bottomrule_row_ids: Row indices (without header) below which we put a separator line.</p>
+<dd><dl class="simple">
+<dt>Add separator lines and align width to page.</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param bottomrule_row_ids</dt>
+<dd class="field-odd"><p>Row indices (without header) below which we put a separator line.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="function">
@@ -1407,10 +1557,20 @@ not in <cite>cv</cite> are ignored).</p>
 <dl class="function">
 <dt id="source.utils.pfont">
 <code class="sig-prename descclassname">source.utils.</code><code class="sig-name descname">pfont</code><span class="sig-paren">(</span><em class="sig-param">fonts: List[str], value: str, format</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/utils.html#pfont"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.utils.pfont" title="Permalink to this definition">¶</a></dt>
-<dd><p>Wrap string in font code.
-:param format: PrintFont or LaTeXFont
-:param fonts: list of font names, eg. [‘red’, ‘bold’]
-:param value: string to wrap in font</p>
+<dd><dl class="simple">
+<dt>Wrap string in font code.</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param format</dt>
+<dd class="field-odd"><p>PrintFont or LaTeXFont</p>
+</dd>
+<dt class="field-even">param fonts</dt>
+<dd class="field-even"><p>list of font names, eg. [‘red’, ‘bold’]</p>
+</dd>
+<dt class="field-odd">param value</dt>
+<dd class="field-odd"><p>string to wrap in font</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="function">
@@ -1431,8 +1591,10 @@ not in <cite>cv</cite> are ignored).</p>
 <dl class="function">
 <dt id="source.utils.tuple_list">
 <code class="sig-prename descclassname">source.utils.</code><code class="sig-name descname">tuple_list</code><span class="sig-paren">(</span><em class="sig-param">arg</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/utils.html#tuple_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.utils.tuple_list" title="Permalink to this definition">¶</a></dt>
-<dd><p>List[Tuple[str]] argument type.
-format: whitespace separated str lists, separated by <a href="#id5"><span class="problematic" id="id6">|</span></a>. eg. ‘embs1 embs2 | embs2 embs3 embs4’</p>
+<dd><dl class="simple">
+<dt>List[Tuple[str]] argument type.</dt><dd><p>format: whitespace separated str lists, separated by <a href="#id5"><span class="problematic" id="id6">|</span></a>. eg. ‘embs1 embs2 | embs2 embs3 embs4’</p>
+</dd>
+</dl>
 </dd></dl>
 
 </div>
@@ -1481,13 +1643,20 @@ the default 6006 port</p></li>
 <dl class="function">
 <dt id="source.visutils.crop_bbox">
 <code class="sig-prename descclassname">source.visutils.</code><code class="sig-name descname">crop_bbox</code><span class="sig-paren">(</span><em class="sig-param">image</em>, <em class="sig-param">x</em>, <em class="sig-param">y</em>, <em class="sig-param">w</em>, <em class="sig-param">h</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/source/visutils.html#crop_bbox"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#source.visutils.crop_bbox" title="Permalink to this definition">¶</a></dt>
-<dd><p>Crops out a bounding box from image.
-:param image: PIL Image
-:param x:
-:param y:
-:param w:
-:param h:
-:return: PIL Image</p>
+<dd><dl class="simple">
+<dt>Crops out a bounding box from image.</dt><dd><dl class="field-list simple">
+<dt class="field-odd">param image</dt>
+<dd class="field-odd"><p>PIL Image</p>
+</dd>
+<dt class="field-even">param x, y, w, h</dt>
+<dd class="field-even"><p>left, upper, right, lower coordinates</p>
+</dd>
+<dt class="field-odd">return</dt>
+<dd class="field-odd"><p>PIL Image</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="function">

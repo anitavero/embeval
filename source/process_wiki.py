@@ -23,7 +23,7 @@ LANG = 'english'
 
 def process_files(data_dir):
     """
-Sentence tokenize and stop word filter all text files
+    Sentence tokenize and stop word filter all text files
     and save the tokenized texts to json files into the 'tokenized' directory."""
     save_dir = os.path.join(data_dir, 'tokenized')
     create_dir(save_dir)
